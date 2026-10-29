@@ -26,10 +26,12 @@ export const Media: CollectionConfig = {
   },
   hooks: {
     beforeOperation: [guardMediaBinary],
-    beforeChange: [({ data, req, operation }) => {
-      if (operation === 'update' && req.file) data.publicRelease = false
-      return data
-    }],
+    beforeChange: [
+      ({ data, req, operation }) => {
+        if (operation === 'update' && req.file) data.publicRelease = false
+        return data
+      },
+    ],
   },
   fields: [
     { name: 'alt', type: 'text', localized: true, required: true },
@@ -53,7 +55,8 @@ export const Media: CollectionConfig = {
       access: { read: editorsField, create: editorsField, update: editorsField },
       admin: {
         position: 'sidebar',
-        description: 'Internal: source of the image and how it was checked against the packaging artwork.',
+        description:
+          'Internal: source of the image and how it was checked against the packaging artwork.',
       },
     },
   ],

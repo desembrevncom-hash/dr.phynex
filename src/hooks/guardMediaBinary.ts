@@ -14,15 +14,27 @@ export const guardMediaBinary: CollectionBeforeOperationHook = async ({ args, op
   if (typeof options.id !== 'string' && typeof options.id !== 'number') {
     throw new APIError('Binary media edits require an individual record.', 403, null, true)
   }
-  const original = await req.payload.findByID({ collection: 'media', id: options.id, req, depth: 0, overrideAccess: true })
-  const focalChanged = ('focalX' in data && data.focalX !== original.focalX) ||
+  const original = await req.payload.findByID({
+    collection: 'media',
+    id: options.id,
+    req,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const focalChanged =
+    ('focalX' in data && data.focalX !== original.focalX) ||
     ('focalY' in data && data.focalY !== original.focalY)
   if (!req.file && !queryEdit && !focalChanged) return args
   if (!isEditorUser(req.user)) {
     throw new APIError('Only editors may replace or transform media binaries.', 403, null, true)
   }
   if (original.publicRelease) {
-    throw new APIError('Create a new unreleased Media record, then approve and replace its relationship. Released binaries cannot be overwritten.', 409, null, true)
+    throw new APIError(
+      'Create a new unreleased Media record, then approve and replace its relationship. Released binaries cannot be overwritten.',
+      409,
+      null,
+      true,
+    )
   }
   return args
 }
