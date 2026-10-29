@@ -128,7 +128,6 @@ it('rejects every Payload JSON image edit before sharp or disk writes, preservin
     }
 })
 it('allows translator alt-only edits without changing binary or release', async () => {
-  const resolved = await config
   const png = await sharp({ create: { width: 10, height: 10, channels: 3, background: 'white' } })
     .png()
     .toBuffer()
@@ -547,4 +546,33 @@ it('rejects implicit live content edits and all-locale publication flags, preser
   expect((await payload.findByID({ collection: 'products', id: p.id, ...guest })).name).toBe(
     'Safe public',
   )
+})
+it('prevents file identity swaps through privileged Local calls carrying a staff user', async () => {
+  const png = await sharp({ create: { width: 20, height: 20, channels: 3, background: 'white' } })
+    .png()
+    .toBuffer()
+  const m = await payload.create({
+    collection: 'media',
+    locale: 'en',
+    data: { alt: 'Identity', publicRelease: true },
+    file: { data: png, name: 'identity-protected.png', mimetype: 'image/png', size: png.length },
+  })
+  for (const user of [translator, editor]) {
+    await expect(
+      payload.update({
+        collection: 'media',
+        id: m.id,
+        user,
+        overrideAccess: true,
+        data: {
+          filename: 'replacement-identity.png',
+          url: '/api/media/file/replacement-identity.png',
+        },
+      }),
+    ).rejects.toThrow(/editors|new unreleased/i)
+  }
+  const saved = await payload.findByID({ collection: 'media', id: m.id })
+  expect(saved.filename).toBe(m.filename)
+  expect(saved.url).toBe(m.url)
+  expect(saved.publicRelease).toBe(true)
 })

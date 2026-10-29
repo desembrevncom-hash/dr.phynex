@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util'
 import { APIError, type CollectionBeforeOperationHook } from 'payload'
 import { isEditorUser } from '@/access/roles'
 
@@ -9,7 +10,19 @@ export const guardMediaBinary: CollectionBeforeOperationHook = async ({ args, op
   const edits = req.query?.uploadEdits
   const queryEdit = edits && typeof edits === 'object' && Object.keys(edits).length > 0
   const focalFields = 'focalX' in data || 'focalY' in data
-  if (!req.file && !queryEdit && !focalFields) return args
+  const identityFields = [
+    'filename',
+    'url',
+    'mimeType',
+    'filesize',
+    'width',
+    'height',
+    'sizes',
+    'prefix',
+    '_objectKey',
+  ]
+  const identitySubmitted = identityFields.some((key) => key in data)
+  if (!req.file && !queryEdit && !focalFields && !identitySubmitted) return args
   // Payload's bulk update has no single original file identity. Never transform in bulk.
   if (typeof options.id !== 'string' && typeof options.id !== 'number') {
     throw new APIError('Binary media edits require an individual record.', 403, null, true)
@@ -24,7 +37,12 @@ export const guardMediaBinary: CollectionBeforeOperationHook = async ({ args, op
   const focalChanged =
     ('focalX' in data && data.focalX !== original.focalX) ||
     ('focalY' in data && data.focalY !== original.focalY)
-  if (!req.file && !queryEdit && !focalChanged) return args
+  const identityChanged = identityFields.some(
+    (key) =>
+      key in data &&
+      !isDeepStrictEqual(data[key], (original as unknown as Record<string, unknown>)[key]),
+  )
+  if (!req.file && !queryEdit && !focalChanged && !identityChanged) return args
   if (!isEditorUser(req.user)) {
     throw new APIError('Only editors may replace or transform media binaries.', 403, null, true)
   }
