@@ -15,10 +15,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const path of staticPaths) entries.push({ url: `${siteURL}/${locale}${path}` })
 
     const [products, articles, ingredients, technologies] = await Promise.all([
-      findPublic('products', locale, { limit: 1000, depth: 0 }),
-      findPublic('articles', locale, { limit: 1000, depth: 0 }),
-      findPublic('ingredients', locale, { limit: 1000, depth: 0 }),
-      findPublic('technologies', locale, { limit: 1000, depth: 0 }),
+      findPublic('products', locale, { limit: 1000, depth: 0, publicOnly: true }),
+      findPublic('articles', locale, { limit: 1000, depth: 0, publicOnly: true }),
+      findPublic('ingredients', locale, { limit: 1000, depth: 0, publicOnly: true }),
+      findPublic('technologies', locale, { limit: 1000, depth: 0, publicOnly: true }),
     ])
     for (const d of products.docs) entries.push({ url: `${siteURL}/${locale}/products/${d.slug}`, lastModified: d.updatedAt })
     for (const d of articles.docs) entries.push({ url: `${siteURL}/${locale}/journal/${d.slug}`, lastModified: d.updatedAt })

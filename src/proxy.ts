@@ -5,7 +5,7 @@ import { routing } from './i18n/routing'
 export default createMiddleware(routing)
 
 export const config = {
-  // Locale handling for site pages only. Excluded: Payload admin and API,
+  // Locale handling for site pages only. Excluded: Payload admin and API, staff preview routes,
   // Next internals, and any path with a file extension (sitemap.xml, robots.txt, media).
-  matcher: ['/((?!(?:admin|api)(?:/|$)|_next|_vercel|.*\\..*).*)'],
+  matcher: ['/((?!(?:admin|api|preview)(?:/|$)|_next|_vercel|.*\\..*).*)'],
 }

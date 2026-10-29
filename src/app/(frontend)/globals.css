@@ -1,26 +1,36 @@
 @import 'tailwindcss';
 
 /*
- * Neutral foundation tokens. Brand colors, fonts and imagery are NOT decided yet
- * (waiting for logo + brand guideline); replace these via DESIGN.md once approved.
- * Contrast on --color-surface: ink 18:1, ink-muted 7.6:1, ink-subtle 4.8:1.
+ * Dr.PhynEX tokens: see DESIGN.md. navy and red are confirmed from the logo SVG;
+ * other values are provisional ([TẠM]). Contrast on white: ink 14.4:1, ink-muted 5.95:1,
+ * ink-subtle 4.6:1. On mx-charcoal: white 15:1, mx-muted 8.2:1, mx-cyan 5.1:1, mx-pink 5.2:1.
  */
 @theme {
-  --color-ink: #111827;
-  --color-ink-muted: #4b5563;
-  --color-ink-subtle: #6b7280;
+  --color-navy: #003a70;
+  --color-navy-strong: #002a52;
+  --color-red: #ce0e2d;
+  --color-yellow: #ffb81c;
+  --color-ink: #1c2b3a;
+  --color-ink-muted: #55657a;
+  --color-ink-subtle: #637387;
   --color-surface: #ffffff;
-  --color-surface-muted: #f9fafb;
-  --color-line: #e5e7eb;
-  --color-line-strong: #d1d5db;
-  --color-focus: #1d4ed8;
-  --color-danger: #b91c1c;
-  --color-success: #166534;
+  --color-surface-muted: #f4f6f8;
+  --color-line: #dde3ea;
+  --color-line-strong: #b9c3ce;
+  --color-mx-charcoal: #23272a;
+  --color-mx-raised: #2e3337;
+  --color-mx-muted: #b8c0c7;
+  --color-mx-cyan: #00a3cf;
+  --color-mx-pink: #ec6ba8;
+  --color-focus: #2f6fb0;
+  --color-danger: #b42318;
+  --color-success: #1e7a46;
 
-  /* System stacks cover Hangul and Vietnamese diacritics until a brand font is chosen. */
-  --font-sans:
-    system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', 'Noto Sans',
-    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* next/font variables are set on <body>; Hangul always falls through to Noto Sans KR. */
+  --font-sans: var(--font-text), system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-display: var(--font-heading), var(--font-text), system-ui, 'Apple SD Gothic Neo', sans-serif;
+
+  --ease-out-soft: cubic-bezier(0.2, 0, 0, 1);
 }
 
 @layer base {
@@ -30,25 +40,63 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  body {
+    line-height: 1.7;
+  }
+
   :lang(ko) {
     word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  :lang(ko) body {
+    line-height: 1.75;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
   }
 
   :focus-visible {
-    outline: 3px solid var(--color-focus);
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-navy);
+    color: #ffffff;
+  }
+
+  input,
+  textarea {
+    caret-color: var(--color-navy);
+  }
+
+  .on-dark :focus-visible {
+    outline-color: #ffffff;
   }
 }
 
 @utility container-page {
   width: 100%;
-  max-width: 72rem;
+  max-width: 80rem;
   margin-inline: auto;
-  padding-inline: 1rem;
+  padding-inline: 1.25rem;
 
   @media (width >= 48rem) {
     padding-inline: 2rem;
   }
+  @media (width >= 80rem) {
+    padding-inline: 3rem;
+  }
+}
+
+/* White-background product shots blend into the muted panel without editing the image. */
+@utility blend-panel {
+  mix-blend-mode: multiply;
 }
 
 @utility prose-basic {
@@ -79,6 +127,19 @@
   & a {
     text-decoration: underline;
     text-underline-offset: 3px;
+  }
+}
+
+/* The one authored moment: the hero product settles in on load. Nothing else animates in. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-enter {
+    animation: hero-enter 720ms var(--ease-out-soft) both;
+  }
+  @keyframes hero-enter {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.985);
+    }
   }
 }
 

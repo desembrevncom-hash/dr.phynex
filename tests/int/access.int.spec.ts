@@ -292,4 +292,43 @@ describe('form submissions and private files', () => {
   it('source documents are not readable by guests', async () => {
     await expect(payload.find({ collection: 'source-documents', ...guest })).rejects.toThrow()
   })
+
+  it('media stays private until an editor clears it for publication', async () => {
+    // 1×1 transparent PNG; deleted again below so ./media is left as it was.
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    )
+    const file = { data: png, mimetype: 'image/png', name: `test-${Date.now()}.png`, size: png.length }
+    const image = await payload.create({
+      collection: 'media',
+      locale: 'ko',
+      data: { alt: 'Test image' },
+      file,
+      overrideAccess: true,
+    })
+    try {
+      expect(image.publicRelease).toBe(false)
+      // A translator cannot clear an image for publication (field access drops the change).
+      const byTranslator = await payload.update({
+        collection: 'media',
+        id: image.id,
+        data: { publicRelease: true },
+        user: translator,
+        overrideAccess: false,
+      })
+      expect(byTranslator.publicRelease).toBe(false)
+
+      const hidden = await payload.find({ collection: 'media', ...guest })
+      expect(hidden.docs.map((d) => d.id)).not.toContain(image.id)
+      await expect(payload.findByID({ collection: 'media', id: image.id, ...guest })).rejects.toThrow()
+
+      await payload.update({ collection: 'media', id: image.id, data: { publicRelease: true }, user: editor, overrideAccess: false })
+      const shown = await payload.find({ collection: 'media', ...guest })
+      expect(shown.docs.map((d) => d.id)).toContain(image.id)
+      expect((shown.docs[0] as unknown as Record<string, unknown>).reviewNote).toBeUndefined()
+    } finally {
+      await payload.delete({ collection: 'media', id: image.id, overrideAccess: true })
+    }
+  })
 })

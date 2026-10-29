@@ -1,32 +1,40 @@
 import 'server-only'
 
-import config from '@payload-config'
 import { cache } from 'react'
-import { getPayload, type CollectionSlug, type GlobalSlug, type Where } from 'payload'
+import type { CollectionSlug, GlobalSlug, Where } from 'payload'
 
 import { locales, type Locale } from '@/i18n/locales'
-import type { Config } from '@/payload-types'
+import type { Config, User } from '@/payload-types'
 
-export const getPayloadClient = () => getPayload({ config })
+import { getPayloadClient } from './content-client'
+import { getPreviewUser } from './preview'
+
+export { getPayloadClient }
 
 type Collections = Config['collections']
 type Globals = Config['globals']
 
 /**
- * All public reads go through these helpers. They never pass a user and always set
- * `overrideAccess: false`, so the same server-side access rules as the public API apply
- * (published + approved for this locale only). No draft mode, no locale fallback.
+ * All site reads go through these helpers and always set `overrideAccess: false`, so the
+ * same server-side access rules as the public API apply. Guests get published + approved
+ * content for this locale only. A staff member in draft preview (see lib/preview.ts) reads
+ * the latest drafts *as themselves*, so access is still decided by their role. No fallback.
  */
-const publicArgs = (locale: Locale) =>
-  ({ locale, fallbackLocale: false, overrideAccess: false, draft: false }) as const
+const readArgs = (locale: Locale, user: User | null) =>
+  user
+    ? ({ locale, fallbackLocale: false, overrideAccess: false, draft: true, user } as const)
+    : ({ locale, fallbackLocale: false, overrideAccess: false, draft: false } as const)
 
 export async function findPublic<S extends CollectionSlug>(
   collection: S,
   locale: Locale,
-  options: { where?: Where; limit?: number; page?: number; sort?: string; depth?: number } = {},
+  {
+    publicOnly = false,
+    ...options
+  }: { where?: Where; limit?: number; page?: number; sort?: string; depth?: number; publicOnly?: boolean } = {},
 ) {
-  const payload = await getPayloadClient()
-  return payload.find({ collection, ...publicArgs(locale), depth: 1, limit: 24, ...options }) as Promise<{
+  const [payload, user] = await Promise.all([getPayloadClient(), publicOnly ? null : getPreviewUser()])
+  return payload.find({ collection, ...readArgs(locale, user), depth: 1, limit: 24, ...options }) as Promise<{
     docs: Collections[S][]
     totalDocs: number
     totalPages: number
@@ -36,10 +44,10 @@ export async function findPublic<S extends CollectionSlug>(
 
 export const findPublicBySlug = cache(
   async <S extends CollectionSlug>(collection: S, slug: string, locale: Locale, depth = 2) => {
-    const payload = await getPayloadClient()
+    const [payload, user] = await Promise.all([getPayloadClient(), getPreviewUser()])
     const { docs } = await payload.find({
       collection,
-      ...publicArgs(locale),
+      ...readArgs(locale, user),
       depth,
       limit: 1,
       where: { slug: { equals: slug } },
@@ -50,6 +58,7 @@ export const findPublicBySlug = cache(
 
 /** Locales in which this document is published and approved (drives hreflang + switcher). */
 export const approvedLocalesFor = cache(async (collection: CollectionSlug, slug: string) => {
+  if (await getPreviewUser()) return [...locales]
   const payload = await getPayloadClient()
   const results = await Promise.all(
     locales.map(async (locale) => {
@@ -65,13 +74,14 @@ export const approvedLocalesFor = cache(async (collection: CollectionSlug, slug:
   return results.filter((l): l is Locale => l !== null)
 })
 
-/** Returns the global only if it is published and approved in this locale. */
+/** Returns the global only if it is published and approved in this locale (any draft in preview). */
 export const findPublicGlobal = cache(async <S extends GlobalSlug>(slug: S, locale: Locale) => {
-  const payload = await getPayloadClient()
-  const doc = (await payload.findGlobal({ slug, ...publicArgs(locale), depth: 1 })) as
+  const [payload, user] = await Promise.all([getPayloadClient(), getPreviewUser()])
+  const doc = (await payload.findGlobal({ slug, ...readArgs(locale, user), depth: 1 })) as
     | (Globals[S] & { translationStatus?: string; _status?: string })
     | null
-  return doc && doc.translationStatus === 'approved' ? (doc as Globals[S]) : null
+  if (!doc) return null
+  return user || doc.translationStatus === 'approved' ? (doc as Globals[S]) : null
 })
 
 export const approvedGlobalLocales = cache(async (slug: GlobalSlug) => {

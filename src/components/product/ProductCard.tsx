@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { MediaImage } from '@/components/ui/MediaImage'
 import type { Locale } from '@/i18n/locales'
+import { keepBrandTogether } from '@/lib/text'
 import { localizedPath } from '@/lib/seo'
 import type { Product } from '@/payload-types'
 
@@ -13,7 +14,7 @@ export function ProductCard({ product, locale }: { product: Product; locale: Loc
         <div className="aspect-square overflow-hidden rounded-lg border border-line bg-surface-muted">
           <MediaImage media={image} className="h-full w-full object-contain" sizes="(min-width: 768px) 25vw, 50vw" />
         </div>
-        <h3 className="mt-3 font-medium group-hover:underline">{product.name}</h3>
+        <h3 className="mt-3 font-medium group-hover:underline">{keepBrandTogether(product.name)}</h3>
         {product.shortDescription ? (
           <p className="mt-1 line-clamp-2 text-sm text-ink-muted">{product.shortDescription}</p>
         ) : null}

@@ -236,6 +236,10 @@ export interface Product {
    * e.g. "50 mL"
    */
   volume?: string | null;
+  /**
+   * Accent colour taken from the product packaging.
+   */
+  accent: 'navy' | 'rx-red' | 'mx-cyan' | 'mx-pink';
   related?: (number | Product)[] | null;
   seo?: {
     title?: string | null;
@@ -254,6 +258,8 @@ export interface Product {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Files stay private until "Cleared for publication" is ticked. Only tick it for images the brand has approved for public use; internal documents go in Source documents.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
@@ -262,6 +268,14 @@ export interface Media {
   alt: string;
   caption?: string | null;
   credit?: string | null;
+  /**
+   * Visitors can only view or list this file when ticked.
+   */
+  publicRelease?: boolean | null;
+  /**
+   * Internal: source of the image and how it was checked against the packaging artwork.
+   */
+  reviewNote?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -413,6 +427,10 @@ export interface ProductLine {
   name: string;
   description?: string | null;
   heroImage?: (number | null) | Media;
+  /**
+   * Section style on the site, matching the line packaging.
+   */
+  appearance: 'light' | 'dark';
   /**
    * Lowercase letters, numbers and hyphens. Shared by all languages.
    */
@@ -812,6 +830,7 @@ export interface ProductsSelect<T extends boolean = true> {
   skinTypes?: T;
   sku?: T;
   volume?: T;
+  accent?: T;
   related?: T;
   seo?:
     | T
@@ -833,6 +852,7 @@ export interface ProductLinesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   heroImage?: T;
+  appearance?: T;
   slug?: T;
   order?: T;
   translationStatus?: T;
@@ -1007,6 +1027,8 @@ export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   caption?: T;
   credit?: T;
+  publicRelease?: T;
+  reviewNote?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

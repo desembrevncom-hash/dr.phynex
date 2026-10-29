@@ -88,11 +88,17 @@ Thành công nghĩa là:
 
 - Tên thương hiệu: **Dr.PhynEX**, giữ đúng chữ hoa/thường. Mọi biến thể khác [CHƯA QUYẾT].
 - Định hướng: mỹ phẩm Hàn Quốc, dermocosmetic, ưu tiên sản phẩm và trải nghiệm mobile [XÁC NHẬN].
-- Màu nhận diện, logo, font, giọng văn: [CHƯA QUYẾT], chờ tài liệu. Không tự chốt.
+- Logo: đã nhận bản SVG màu (29/10/2026). Màu navy `#003A70` và đỏ `#CE0E2D` lấy từ logo [XÁC NHẬN]. Hệ thiết kế: [DESIGN.md](DESIGN.md), hướng A Clinical Label [XÁC NHẬN].
+- Font, giọng văn: [CHƯA QUYẾT]. Font web hiện là đề xuất tạm (xem DESIGN.md §3).
 
 ## Evidence on Hand
 
-Hiện **chưa có tài liệu nào** trong dự án: không logo, ảnh bao bì, danh mục sản phẩm, hồ sơ thương hiệu, chứng nhận hay thông tin liên hệ.
+Đã nhận ngày 29/10/2026 (bản sao trong `brand-assets/`, không commit):
+- logo SVG;
+- file thiết kế bao bì của 4 sản phẩm (RX Matrix Balm, RX Matrix Sheet, MX-01 FORMA, MX-02 LUMA);
+- ảnh mockup sản phẩm, đã kiểm tra trong [docs/image-audit.md](docs/image-audit.md).
+
+Chưa có: hồ sơ thương hiệu, chứng nhận, thông tin liên hệ, điểm bán, xác nhận công dụng và nồng độ được phép công bố, vai trò của các công ty (chủ thương hiệu, nhà sản xuất, đơn vị phân phối).
 
 Không được tự tạo:
 - sản phẩm, thành phần, công dụng, kết quả thử nghiệm;

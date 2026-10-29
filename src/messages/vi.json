@@ -7,7 +7,8 @@
     "language": "Ngôn ngữ",
     "languageUnavailable": "Chưa có ở ngôn ngữ này",
     "backHome": "Về trang chủ",
-    "seeAll": "Xem tất cả"
+    "seeAll": "Xem tất cả",
+    "logoAlt": "Trang chủ Dr.PhynEX"
   },
   "nav": {
     "home": "Trang chủ",
@@ -19,7 +20,9 @@
     "contact": "Liên hệ",
     "partnership": "Hợp tác",
     "privacy": "Chính sách bảo mật",
-    "terms": "Điều khoản sử dụng"
+    "terms": "Điều khoản sử dụng",
+    "menu": "Menu",
+    "close": "Đóng menu"
   },
   "empty": {
     "title": "Nội dung đang được chuẩn bị",
@@ -33,7 +36,19 @@
     "explore": "Khám phá",
     "featuredProducts": "Sản phẩm nổi bật",
     "featuredIngredients": "Thành phần chính",
-    "latestJournal": "Từ Journal"
+    "latestJournal": "Từ Journal",
+    "ctaProducts": "Xem sản phẩm",
+    "ctaStores": "Tìm điểm bán",
+    "viewProduct": "Xem sản phẩm",
+    "lineHeading": "Dòng <code>{line}</code>",
+    "findTitle": "Nơi có Dr.PhynEX",
+    "storesTitle": "Điểm bán",
+    "storesBody": "Cửa hàng và nhà phân phối có bán Dr.PhynEX.",
+    "partnerTitle": "Hợp tác",
+    "partnerBody": "Dành cho nhà phân phối, nhà bán lẻ, spa và phòng khám.",
+    "contactTitle": "Liên hệ",
+    "contactBody": "Câu hỏi về sản phẩm hoặc điểm bán.",
+    "viewLine": "Tất cả sản phẩm dòng {line}"
   },
   "products": {
     "title": "Sản phẩm",
@@ -130,5 +145,9 @@
       "rateLimited": "Bạn đã thử quá nhiều lần. Vui lòng thử lại sau vài phút.",
       "server": "Đã có lỗi xảy ra. Vui lòng thử lại sau."
     }
+  },
+  "preview": {
+    "banner": "Bản xem trước: nội dung nháp, chưa xuất bản. Khách truy cập không thấy nội dung này.",
+    "exit": "Thoát xem trước"
   }
 }

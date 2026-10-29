@@ -7,7 +7,8 @@
     "language": "Language",
     "languageUnavailable": "Not available in this language yet",
     "backHome": "Back to home",
-    "seeAll": "See all"
+    "seeAll": "See all",
+    "logoAlt": "Dr.PhynEX home"
   },
   "nav": {
     "home": "Home",
@@ -19,7 +20,9 @@
     "contact": "Contact",
     "partnership": "Partnership",
     "privacy": "Privacy policy",
-    "terms": "Terms of use"
+    "terms": "Terms of use",
+    "menu": "Menu",
+    "close": "Close menu"
   },
   "empty": {
     "title": "Content coming soon",
@@ -33,7 +36,19 @@
     "explore": "Explore",
     "featuredProducts": "Featured products",
     "featuredIngredients": "Key ingredients",
-    "latestJournal": "From the Journal"
+    "latestJournal": "From the Journal",
+    "ctaProducts": "View products",
+    "ctaStores": "Find a store",
+    "viewProduct": "View product",
+    "lineHeading": "<code>{line}</code> line",
+    "findTitle": "Where to find Dr.PhynEX",
+    "storesTitle": "Stores",
+    "storesBody": "Stores and distributors that carry Dr.PhynEX.",
+    "partnerTitle": "Partnership",
+    "partnerBody": "For distributors, retailers, spas and clinics.",
+    "contactTitle": "Contact",
+    "contactBody": "Questions about products or stores.",
+    "viewLine": "All {line} products"
   },
   "products": {
     "title": "Products",
@@ -130,5 +145,9 @@
       "rateLimited": "Too many attempts. Please try again in a few minutes.",
       "server": "Something went wrong. Please try again later."
     }
+  },
+  "preview": {
+    "banner": "Preview: unpublished drafts. Visitors do not see this content.",
+    "exit": "Exit preview"
   }
 }

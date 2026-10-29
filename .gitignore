@@ -52,3 +52,9 @@ node_modules/
 # Payload uploads (local disk storage)
 /private-uploads
 
+
+# Brand materials supplied for design work (not committed)
+/brand-assets
+
+# Brand logo copied from brand-assets for the local preview; commit only once the brand approves
+/public/brand

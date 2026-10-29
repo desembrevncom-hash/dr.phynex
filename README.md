@@ -1,6 +1,6 @@
 # Dr.PhynEX website
 
-Next.js 16 + Payload CMS 3 + PostgreSQL, ba ngôn ngữ `/ko`, `/en`, `/vi`. Tài liệu: [PRODUCT.md](PRODUCT.md), [docs/phase-1-plan.md](docs/phase-1-plan.md), [docs/phase-2-report.md](docs/phase-2-report.md).
+Next.js 16 + Payload CMS 3 + PostgreSQL, ba ngôn ngữ `/ko`, `/en`, `/vi`. Tài liệu: [PRODUCT.md](PRODUCT.md), [docs/phase-1-plan.md](docs/phase-1-plan.md), [docs/phase-2-report.md](docs/phase-2-report.md), [docs/phase-3-status.md](docs/phase-3-status.md), [docs/dependency-audit.md](docs/dependency-audit.md).
 
 ## Yêu cầu
 
@@ -38,6 +38,20 @@ npm run dev
 ```
 
 Mở http://localhost:3000/admin, tạo **tài khoản đầu tiên** (luôn được gán vai trò `admin`). Website: http://localhost:3000 (tự chuyển theo ngôn ngữ trình duyệt, mặc định `/en`).
+
+## Xem trước bản nháp (preview)
+
+Nội dung nháp và ảnh chưa được phép công bố chỉ hiện với nhân viên đã đăng nhập:
+
+1. Đăng nhập tại http://localhost:3000/admin.
+2. Mở http://localhost:3000/preview?path=/vi (hoặc `/ko`, `/en`, hay một đường dẫn trang bất kỳ). Một thanh màu navy ở đầu trang báo đang ở chế độ xem trước.
+3. Bấm "Thoát xem trước" để quay về giao diện khách.
+
+Nạp lại nội dung xem trước của 4 sản phẩm (chỉ ở bản nháp, ảnh lấy từ `brand-assets/preview-images/`):
+
+```bash
+npm run payload -- run scripts/import-preview-content.ts
+```
 
 ## Lệnh thường dùng
 

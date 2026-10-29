@@ -17,7 +17,7 @@ Ngày: 28/10/2026. Chỉ chạy Local, chưa triển khai công khai, chưa tạ
 
 - `.npmrc`: `engine-strict=true`, `strict-peer-deps=true`, `save-exact=true`. Template gốc có `legacy-peer-deps=true` (bỏ qua lỗi peer), đã thay. Cài đặt không có lỗi engine/peer.
 - `overrides.dompurify = 3.4.17`: bản vá (patch) cho lỗ hổng critical của `dompurify 3.4.8` do `monaco-editor` (trình soạn code trong admin) khóa cứng.
-- `npm audit` còn 14 mục (6 low, 5 moderate, 3 high), không có critical. Chưa có bản sửa không phá vỡ:
+- `npm audit`: xem bảng theo dõi cập nhật tại [dependency-audit.md](dependency-audit.md). Tại thời điểm giai đoạn 2 còn 14 mục (6 low, 5 moderate, 3 high), không có critical. Chưa có bản sửa không phá vỡ:
   - `happy-dom` (qua `@lexical/headless` của Payload): sửa cần lên major 21.
   - `esbuild` cũ qua `drizzle-kit` (chỉ dùng cho CLI migration, lỗi ảnh hưởng dev server của esbuild).
   - `deepmerge` (qua `payload`): chưa có bản sửa.

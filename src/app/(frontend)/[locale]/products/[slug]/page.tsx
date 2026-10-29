@@ -10,6 +10,7 @@ import { RichText } from '@/components/ui/RichText'
 import { approvedLocalesFor, findPublicBySlug, populated, populatedList } from '@/lib/content'
 import { pageLocale, type SlugParams } from '@/lib/locale'
 import { alternatesFor, localizedPath } from '@/lib/seo'
+import { keepBrandTogether } from '@/lib/text'
 import type { Ingredient, Product, ProductLine, Technology } from '@/payload-types'
 
 export async function generateMetadata({ params }: { params: SlugParams }): Promise<Metadata> {
@@ -68,7 +69,7 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
                 </Link>
               </p>
             ) : null}
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">{product.name}</h1>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">{keepBrandTogether(product.name)}</h1>
             {product.volume ? (
               <p className="mt-2 text-sm text-ink-muted">
                 {t('volume')}: {product.volume}
