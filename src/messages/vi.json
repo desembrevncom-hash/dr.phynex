@@ -68,7 +68,14 @@
     "related": "Sản phẩm liên quan",
     "ctaTitle": "Mua ở đâu",
     "ctaStores": "Tìm điểm bán",
-    "ctaContact": "Liên hệ"
+    "ctaContact": "Liên hệ",
+    "breadcrumb": "Đường dẫn",
+    "gallery": "Ảnh sản phẩm",
+    "showImage": "Xem ảnh",
+    "details": "Thông tin sản phẩm",
+    "partnerPrompt": "Mua cho doanh nghiệp?",
+    "partnerLink": "Liên hệ hợp tác",
+    "relatedSameLine": "Sản phẩm khác của dòng {line}"
   },
   "ingredients": {
     "title": "Thành phần & Công nghệ",
@@ -149,5 +156,21 @@
   "preview": {
     "banner": "Bản xem trước: nội dung nháp, chưa xuất bản. Khách truy cập không thấy nội dung này.",
     "exit": "Thoát xem trước"
+  },
+  "pending": {
+    "prefix": "CHỜ CUNG CẤP",
+    "headline": "tiêu đề trang chủ",
+    "intro": "đoạn giới thiệu trang chủ",
+    "lineDescription": "mô tả dòng {line}",
+    "heroImage": "ảnh hero riêng (ảnh nhóm hoặc ảnh chiến dịch đúng bao bì)",
+    "productImage": "ảnh sản phẩm",
+    "moreImages": "thêm ảnh sản phẩm đúng bao bì (tuýp, texture)",
+    "shortDescription": "mô tả ngắn",
+    "description": "mô tả sản phẩm",
+    "claims": "công dụng được phép công bố, kèm tài liệu nguồn",
+    "keyIngredients": "thành phần chính (kèm mô tả có nguồn)",
+    "howToUse": "cách dùng",
+    "cautions": "lưu ý khi sử dụng",
+    "inci": "bảng thành phần INCI đầy đủ"
   }
 }

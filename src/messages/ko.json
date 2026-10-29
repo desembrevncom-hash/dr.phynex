@@ -68,7 +68,14 @@
     "related": "관련 제품",
     "ctaTitle": "구매처 안내",
     "ctaStores": "판매처 찾기",
-    "ctaContact": "문의하기"
+    "ctaContact": "문의하기",
+    "breadcrumb": "이동 경로",
+    "gallery": "제품 이미지",
+    "showImage": "이미지 보기",
+    "details": "제품 정보",
+    "partnerPrompt": "비즈니스 구매를 원하시나요?",
+    "partnerLink": "파트너십 문의",
+    "relatedSameLine": "{line} 라인의 다른 제품"
   },
   "ingredients": {
     "title": "성분 & 기술",
@@ -149,5 +156,21 @@
   "preview": {
     "banner": "미리보기: 게시되지 않은 초안입니다. 방문자에게는 보이지 않습니다.",
     "exit": "미리보기 종료"
+  },
+  "pending": {
+    "prefix": "제공 대기",
+    "headline": "홈 화면 헤드라인",
+    "intro": "홈 화면 소개 문구",
+    "lineDescription": "{line} 라인 설명",
+    "heroImage": "히어로 전용 이미지 (패키지와 일치하는 단체 또는 캠페인 이미지)",
+    "productImage": "제품 이미지",
+    "moreImages": "패키지와 일치하는 추가 제품 이미지 (튜브, 텍스처)",
+    "shortDescription": "짧은 설명",
+    "description": "제품 설명",
+    "claims": "근거 자료가 있는 승인된 효능 문구",
+    "keyIngredients": "핵심 성분 (근거가 있는 설명 포함)",
+    "howToUse": "사용 방법",
+    "cautions": "주의 사항",
+    "inci": "전성분 (INCI) 목록"
   }
 }

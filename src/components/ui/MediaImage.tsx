@@ -6,11 +6,13 @@ import type { Media } from '@/payload-types'
 
 type Props = { media: unknown; className?: string; sizes?: string; priority?: boolean; alt?: string }
 
+/** Payload returns absolute URLs; keep same-origin files relative so next/image treats them as local. */
+export const mediaSrc = (url: string) => (url.startsWith(siteURL) ? url.slice(siteURL.length) : url)
+
 export function MediaImage({ media, className, sizes = '(min-width: 768px) 50vw, 100vw', priority, alt }: Props) {
   const doc = populated<Media>(media)
   if (!doc?.url) return null
-  // Payload returns absolute URLs; keep same-origin files relative so next/image treats them as local.
-  const src = doc.url.startsWith(siteURL) ? doc.url.slice(siteURL.length) : doc.url
+  const src = mediaSrc(doc.url)
   return (
     <Image
       src={src}

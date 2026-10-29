@@ -252,3 +252,61 @@ Sau khi bạn chọn hướng: tạo DESIGN.md (tách thông số đã xác nh�
 - Tên tiếng Việt "Tế bào gốc…" do khách cung cấp. Tôi chuẩn hóa "DR. PHYNEX" thành "Dr. PhynEX" theo quy tắc tên thương hiệu. Cụm "tế bào gốc" nên được đối chiếu pháp lý trước khi công bố.
 - Nhãn lọ ghi 이스터너생명과학(주) / ENBIOSCIENCE CO., LTD ở mục "[화장품제조업자/화장품책임판매업자]" (nhà sản xuất / người chịu trách nhiệm đưa ra thị trường theo luật Hàn). Website **chưa** dùng thông tin này. Vai trò chủ thương hiệu và đơn vị phân phối tại Việt Nam vẫn chưa xác định.
 - Tài khoản QA tạm đã xóa. Để xem preview, bạn cần tạo tài khoản admin tại `/admin`.
+
+## 8. Font thực tế, nội dung nháp và trang sản phẩm đại diện (29/10/2026)
+
+Commit mốc: `044c271` "Phase 3: homepage preview — pending design approval".
+
+**Font đã hiển thị thật.** Đo bằng Chrome DevTools Protocol (`CSS.getPlatformFontsForNode`) trên bản build production, kèm danh sách `document.fonts` đã tải:
+
+| Ngôn ngữ | Phần tử | Font vẽ glyph |
+|---|---|---|
+| ko | H1 "Dr.PhynEX", chữ Latin trong tiêu đề | Plus Jakarta Sans (web font) |
+| ko | Tiêu đề "RX 라인", tên sản phẩm, menu, nút, đoạn văn | **Hangul: Noto Sans KR (web font)**; chữ Latin trong tiêu đề: Plus Jakarta Sans |
+| en | Tiêu đề, tên sản phẩm | Plus Jakarta Sans |
+| en | Menu, nút, đoạn văn | Noto Sans KR (phần chữ Latin của font) |
+| vi | Tiêu đề, tên sản phẩm (có ư, ỡ…) | **Plus Jakarta Sans** (35/35 glyph, không rơi về font khác) |
+| vi | Menu, nút, đoạn văn | Noto Sans KR (phần chữ Latin + tiếng Việt) |
+
+Không phần tử nào dùng font hệ thống. DevTools báo tên "Noto Sans KR Thin", nhưng đó chỉ là tên family trong file font biến thiên (variable font); độ đậm thật vẫn do trục `wght` quyết định (400/500/700).
+
+**Nội dung nháp:** xem [content-drafts.md](content-drafts.md). Tiêu đề, giới thiệu và mô tả dòng RX/MX đã nạp vào CMS ở `draft` + `ai-draft`. Mỗi câu có ghi căn cứ.
+
+**Trang chi tiết RX Matrix Balm (`/[locale]/products/[slug]`)**
+- Đường dẫn breadcrumb; gallery (1 ảnh, nút thumbnail tự xuất hiện khi có từ 2 ảnh); tên, dòng, dung tích; khối "Mua ở đâu" dẫn tới Điểm bán, Liên hệ và Hợp tác.
+- Các khối Công dụng, Thành phần chính, Cách dùng, Lưu ý, INCI lấy từ CMS. Khi trống: trong preview hiện `[CHỜ CUNG CẤP]`; với khách thì ẩn hẳn.
+- Sản phẩm liên quan: ưu tiên lựa chọn của biên tập viên, nếu không có thì lấy các sản phẩm cùng dòng.
+- Đã kiểm tra trên bản production: VI 390/1440, KO 390, EN 768, VI 390 reduced motion; không tràn ngang, không ảnh lỗi. Các trang MX-02 LUMA, MX-01 FORMA, RX Matrix Sheet cũng hiển thị được với cùng template.
+- Khách: các trang sản phẩm nháp vẫn trả 404. `npm test` 15/15; typecheck, lint, build sạch.
+- Ảnh chụp: `brand-assets/screenshots/phase-3-review/`.
+
+**Ghi chú về preview:** Payload chỉ nhận cookie đăng nhập khi request đến từ chính site hoặc được gõ trực tiếp. Request từ trang ngoài (`Sec-Fetch-Site: cross-site`) bị chuyển về trang đăng nhập. Đây là hành vi mong muốn (chống CSRF).
+
+## 9. Vòng chỉnh 2 (29/10/2026): chờ duyệt thiết kế
+
+**Trang sản phẩm**
+- DOM theo thứ tự: tên (H1 duy nhất), dung tích, dòng → gallery → mô tả + "Mua ở đâu". Ở 390 và 768 px, tên và dung tích hiện trước ảnh. Ở 1440 px, gallery chiếm cột trái.
+- Ảnh cao tối đa `clamp(300px, 56vh, 440px)` ở mobile và 460px ở 768 px. `object-contain` giữ nguyên tỷ lệ, không cắt bao bì. Ở 768 px, nút "Find a store" và "Contact us" nằm cạnh ảnh, trong màn hình đầu.
+- Thu gọn khoảng cách các khối thông tin (`py-6/8` thay cho `py-8/10`) và khoảng trước "sản phẩm liên quan".
+- Bàn phím: nút Liên hệ là điểm dừng thứ 9 khi nhấn Tab (trước đây nằm sau gallery và mô tả).
+
+**Trang chủ**
+- Hero có typography riêng theo ngôn ngữ (`display-hero`): tiếng Việt tăng line-height để dấu chồng không chạm dòng trên; tiếng Hàn dùng độ đậm 700, cỡ nhỏ hơn một chút, `keep-all`.
+- Khối dòng sản phẩm: thẻ đầu rộng 7/12, thẻ sau rộng 5/12 và đặt thấp hơn, thay cho lưới đều. Khoảng cách giữa các section giảm (`py-16/24`).
+- **Tài nguyên còn thiếu: ảnh hero riêng.** Preview hiện đánh dấu chỗ này. Không tự tạo ảnh nhóm sản phẩm.
+
+**Header/footer/logo**
+- Logo bản web (`public/brand/drphynex-logo-web.svg`): hình vẽ giống hệt file gốc, chỉ cắt khung sát nội dung, nên to hơn khoảng 40% ở cùng chiều cao. Không vẽ lại, không bỏ tagline.
+- Đề xuất wordmark bỏ tagline: `brand-assets/proposals/drphynex-wordmark-web-PROPOSAL.svg`. **Chưa dùng**, chờ duyệt. So sánh: `brand-assets/screenshots/round-2/compare/8-logo-variants.png`.
+- Footer mobile: liên kết chính 2 cột, liên kết pháp lý trên một hàng.
+
+**Ba ngôn ngữ:** nhãn chờ của preview hiện theo ngôn ngữ trang (`[제공 대기: …]`, `[TO BE SUPPLIED: …]`, `[CHỜ CUNG CẤP: …]`). Tên sản phẩm giữ theo tài liệu, không đổi.
+
+**Tài sản trong Git:** `/public/brand` bỏ khỏi `.gitignore`; chỉ commit logo bản web. File gốc, mockup và ảnh xem trước vẫn ở `brand-assets/` (không commit). README có mục "Tài sản thương hiệu".
+
+**Kiểm tra (bản build production)**
+- 2 trang × 3 ngôn ngữ × 390/768/1440 px, cộng VI 390 reduced motion: không tràn ngang, không ảnh lỗi.
+- Bàn phím, menu mobile, chuyển ngôn ngữ trên trang sản phẩm (/vi → /en, giữ nguyên trang), thoát preview → 404 như khách.
+- Khách: trang chủ không lộ nội dung nháp; sản phẩm nháp 404; ảnh riêng tư 403; API trả 0 tài liệu nháp. Preview từ trang ngoài bị chặn.
+- `npm test` 15/15, typecheck, lint, build sạch. Tài khoản QA tạm đã xóa (database còn 0 user).
+- Ảnh trước/sau: `brand-assets/screenshots/round-2/compare/`.

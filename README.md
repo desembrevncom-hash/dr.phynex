@@ -53,6 +53,16 @@ Nạp lại nội dung xem trước của 4 sản phẩm (chỉ ở bản nháp,
 npm run payload -- run scripts/import-preview-content.ts
 ```
 
+## Tài sản thương hiệu
+
+| Vị trí | Nội dung | Git |
+|---|---|---|
+| `public/brand/` | Tài sản công khai bản web mà build cần (hiện có `drphynex-logo-web.svg`) | **Có commit**: clone mới sẽ có logo |
+| `brand-assets/` | File gốc (logo, bao bì), mockup, ảnh xem trước, đề xuất, ảnh chụp kiểm tra | Không commit (`.gitignore`) |
+| `media/`, `private-uploads/` | Tệp tải lên CMS (local) | Không commit; trên Vercel sẽ chuyển sang R2/S3 |
+
+Ảnh sản phẩm **không** nằm trong repo: biên tập viên tải lên CMS (Media). Script `scripts/import-preview-content.ts` đọc ảnh xem trước từ `brand-assets/preview-images/`; một clone mới không có thư mục này cần được cung cấp lại, nếu không script sẽ báo thiếu tệp.
+
 ## Lệnh thường dùng
 
 | Lệnh | Việc |

@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element -- the logo is the brand's original SVG, shown unmodified */
+/* eslint-disable @next/next/no-img-element -- the logo is the brand's SVG artwork, shown unmodified */
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
@@ -36,8 +36,9 @@ type Props = {
 }
 
 function Logo({ className }: { className: string }) {
-  // Original artwork, 1280×462 viewBox. Shown on light backgrounds only (DESIGN.md §2).
-  return <img src="/brand/drphynex-logo.svg" alt="" width={1280} height={462} className={className} />
+  // Web copy of the original artwork: identical paths, viewBox trimmed to the artwork (1178×330)
+  // so it renders larger at the same height. Light backgrounds only (DESIGN.md §2).
+  return <img src="/brand/drphynex-logo-web.svg" alt="" width={1178} height={330} className={className} />
 }
 
 export async function PageShell({ locale, path, available = locales, bleed = false, children }: Props) {
@@ -111,24 +112,24 @@ export async function PageShell({ locale, path, available = locales, bleed = fal
       </main>
 
       <footer className="border-t border-navy bg-surface">
-        <div className="container-page grid gap-10 py-12 md:grid-cols-[auto_1fr] md:gap-16 lg:py-16">
+        <div className="container-page grid gap-8 py-10 md:grid-cols-[auto_1fr] md:gap-16 lg:py-14">
           <Link href={href('')} aria-label={t('common.logoAlt')} className="self-start">
-            <Logo className="h-12 w-auto" />
+            <Logo className="h-12 w-auto lg:h-14" />
           </Link>
-          <nav aria-label={t('common.footerNav')} className="grid gap-8 sm:grid-cols-2 md:justify-self-end">
-            <ul className="grid gap-1 text-sm">
+          <nav aria-label={t('common.footerNav')} className="grid gap-6 md:grid-cols-[auto_auto] md:justify-self-end md:gap-16">
+            <ul className="grid grid-cols-2 items-start gap-x-6 text-sm sm:grid-cols-3 md:grid-cols-2">
               {items.map((item) => (
                 <li key={item.key}>
-                  <Link href={item.href} className="inline-flex min-h-9 items-center text-ink-muted hover:text-navy">
+                  <Link href={item.href} className="inline-block py-2.5 leading-snug text-ink-muted hover:text-navy">
                     {item.label}
                   </Link>
                 </li>
               ))}
             </ul>
-            <ul className="grid content-start gap-1 text-sm">
+            <ul className="flex flex-wrap gap-x-6 border-t border-line pt-4 text-sm md:grid md:content-start md:border-t-0 md:pt-0">
               {legalNav.map(([key, p]) => (
                 <li key={key}>
-                  <Link href={href(p)} className="inline-flex min-h-9 items-center text-ink-muted hover:text-navy">
+                  <Link href={href(p)} className="inline-flex min-h-10 items-center text-ink-muted hover:text-navy">
                     {t(`nav.${key}`)}
                   </Link>
                 </li>

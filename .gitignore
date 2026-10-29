@@ -53,8 +53,6 @@ node_modules/
 /private-uploads
 
 
-# Brand materials supplied for design work (not committed)
+# Brand source files, internal documents, mockups and review screenshots (not committed).
+# Web-ready public assets that the build needs live in public/brand/ and ARE committed.
 /brand-assets
-
-# Brand logo copied from brand-assets for the local preview; commit only once the brand approves
-/public/brand

@@ -68,7 +68,14 @@
     "related": "Related products",
     "ctaTitle": "Where to find it",
     "ctaStores": "Find a store",
-    "ctaContact": "Contact us"
+    "ctaContact": "Contact us",
+    "breadcrumb": "Breadcrumb",
+    "gallery": "Product images",
+    "showImage": "Show image",
+    "details": "Details",
+    "partnerPrompt": "Buying for a business?",
+    "partnerLink": "Partnership enquiries",
+    "relatedSameLine": "More from the {line} line"
   },
   "ingredients": {
     "title": "Ingredients & Technology",
@@ -149,5 +156,21 @@
   "preview": {
     "banner": "Preview: unpublished drafts. Visitors do not see this content.",
     "exit": "Exit preview"
+  },
+  "pending": {
+    "prefix": "TO BE SUPPLIED",
+    "headline": "home page headline",
+    "intro": "home page introduction",
+    "lineDescription": "{line} line description",
+    "heroImage": "dedicated hero image (group or campaign shot matching the packaging)",
+    "productImage": "product image",
+    "moreImages": "more product images matching the packaging (tube, texture)",
+    "shortDescription": "short description",
+    "description": "product description",
+    "claims": "approved claims with source documents",
+    "keyIngredients": "key ingredients (with sourced descriptions)",
+    "howToUse": "how to use",
+    "cautions": "cautions",
+    "inci": "full INCI list"
   }
 }

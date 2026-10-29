@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 
 import { PageShell } from '@/components/layout/PageShell'
+import { accentText, firstImage, ProductTile } from '@/components/product/ProductTile'
+import { Arrow } from '@/components/ui/Arrow'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { MediaImage } from '@/components/ui/MediaImage'
 import { Pending } from '@/components/ui/Pending'
@@ -27,93 +29,6 @@ export async function generateMetadata({ params }: { params: LocaleParams }): Pr
   }
 }
 
-// Accent colours come from each product's packaging (DESIGN.md §2).
-const accentBar: Record<Product['accent'], string> = {
-  navy: 'bg-navy',
-  'rx-red': 'bg-red',
-  'mx-cyan': 'bg-mx-cyan',
-  'mx-pink': 'bg-mx-pink',
-}
-const accentText: Record<Product['accent'], string> = {
-  navy: 'text-navy',
-  'rx-red': 'text-red',
-  'mx-cyan': 'text-mx-cyan',
-  'mx-pink': 'text-mx-pink',
-}
-
-const firstImage = (product?: Product) =>
-  Array.isArray(product?.images) ? product.images[0] : undefined
-
-function Arrow() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 16 16"
-      width="16"
-      height="16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
-    >
-      <path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" />
-    </svg>
-  )
-}
-
-function ProductTile({
-  product,
-  locale,
-  dark,
-  label,
-}: {
-  product: Product
-  locale: Locale
-  dark: boolean
-  label: string
-}) {
-  return (
-    <li>
-      <Link
-        href={localizedPath(locale, `/products/${product.slug}`)}
-        className={`group block rounded-lg ${dark ? 'bg-mx-raised p-3 sm:p-4' : ''}`}
-      >
-        <div className="overflow-hidden rounded-md bg-surface-muted">
-          <div className="flex aspect-[4/5] items-center justify-center p-8 transition-transform duration-300 ease-out group-hover:scale-[1.02] sm:p-12">
-            <MediaImage
-              media={firstImage(product)}
-              alt=""
-              sizes="(min-width: 1024px) 40vw, (min-width: 768px) 50vw, 100vw"
-              className="blend-panel max-h-full w-auto object-contain"
-            />
-          </div>
-        </div>
-        <div className={dark ? 'px-1 pb-2 pt-5' : 'pt-5'}>
-          <span aria-hidden="true" className={`block h-0.5 w-6 ${accentBar[product.accent]}`} />
-          <h3
-            className={`mt-4 text-xl font-bold leading-snug lg:text-2xl ${dark ? 'text-white' : 'text-navy'}`}
-          >
-            {keepBrandTogether(product.name)}
-          </h3>
-          {product.volume ? (
-            <p className={`mt-1 text-sm ${dark ? 'text-mx-muted' : 'text-ink-muted'}`}>
-              {product.volume}
-            </p>
-          ) : null}
-          <p
-            className={`mt-4 inline-flex items-center gap-2 text-sm font-medium ${dark ? 'text-white' : 'text-navy'}`}
-          >
-            {label}
-            <Arrow />
-          </p>
-        </div>
-      </Link>
-    </li>
-  )
-}
-
 async function LineSection({
   line,
   products,
@@ -133,9 +48,9 @@ async function LineSection({
       aria-labelledby={headingId}
       className={dark ? 'on-dark bg-mx-charcoal text-white' : 'bg-surface'}
     >
-      <div className="container-page py-20 lg:py-28">
+      <div className="container-page py-16 lg:py-24">
         <div
-          className={`grid gap-6 border-t pt-6 md:grid-cols-12 md:gap-8 ${dark ? 'border-white/40' : 'border-navy'}`}
+          className={`grid gap-5 border-t pt-6 md:grid-cols-12 md:gap-8 ${dark ? 'border-white/40' : 'border-navy'}`}
         >
           <h2
             id={headingId}
@@ -148,12 +63,13 @@ async function LineSection({
           </h2>
           <div className="md:col-span-7 md:pt-2">
             {line.description ? (
-              <p className={`max-w-prose ${dark ? 'text-mx-muted' : 'text-ink-muted'}`}>
+              <p className={`max-w-prose text-base lg:text-lg ${dark ? 'text-mx-muted' : 'text-ink-muted'}`}>
                 {line.description}
               </p>
             ) : (
               <Pending
-                label={`mô tả dòng ${line.name}`}
+                label="lineDescription"
+                values={{ line: line.name }}
                 className={dark ? 'text-mx-muted' : 'text-ink-muted'}
               />
             )}
@@ -169,14 +85,23 @@ async function LineSection({
           </div>
         </div>
 
-        <ul className="mt-12 grid gap-x-6 gap-y-12 md:grid-cols-2 lg:mt-16 lg:gap-x-10">
-          {products.map((product) => (
+        {/* Two products: a wide lead tile and a narrower one set lower, so the line reads as a
+            composition rather than a catalogue grid. Other counts fall back to an even grid. */}
+        <ul className="mt-10 grid gap-x-6 gap-y-12 md:grid-cols-12 lg:mt-14 lg:gap-x-10">
+          {products.map((product, i) => (
             <ProductTile
               key={product.id}
               product={product}
               locale={locale}
               dark={dark}
               label={t('viewProduct')}
+              className={
+                products.length === 2
+                  ? i === 0
+                    ? 'md:col-span-7'
+                    : 'md:col-span-5 md:mt-28 lg:mt-40'
+                  : 'md:col-span-6 lg:col-span-4'
+              }
             />
           ))}
         </ul>
@@ -228,21 +153,18 @@ export default async function HomePage({ params }: { params: LocaleParams }) {
   return (
     <PageShell locale={locale} path="" bleed>
       <section aria-labelledby="hero-title" className="bg-surface">
-        <div className="container-page grid items-center gap-10 py-12 md:grid-cols-12 md:gap-8 lg:py-20">
+        <div className="container-page grid items-center gap-10 py-10 md:grid-cols-12 md:gap-8 lg:py-16">
           <div className="md:col-span-6 lg:col-span-6 xl:col-span-6">
-            <h1
-              id="hero-title"
-              className="text-4xl font-extrabold leading-[1.08] tracking-tight text-navy sm:text-5xl lg:text-6xl"
-            >
+            <h1 id="hero-title" className="display-hero text-navy">
               {home?.headline || t('common.siteName')}
             </h1>
             {home?.headline ? null : (
-              <Pending label="tiêu đề trang chủ" className="mt-4 text-ink-muted" />
+              <Pending label="headline" className="mt-4 text-ink-muted" />
             )}
-            <div className="mt-6 max-w-md text-lg text-ink-muted">
-              {home?.intro ? <p>{home.intro}</p> : <Pending label="đoạn giới thiệu trang chủ" />}
+            <div className="mt-6 max-w-[34rem] text-base text-ink-muted sm:text-lg">
+              {home?.intro ? <p>{home.intro}</p> : <Pending label="intro" />}
             </div>
-            <div className="mt-10 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-3 lg:mt-10">
               <Link
                 href={localizedPath(locale, '/products')}
                 className="inline-flex min-h-12 items-center rounded bg-navy px-6 text-sm font-semibold text-white transition-colors hover:bg-navy-strong"
@@ -268,7 +190,7 @@ export default async function HomePage({ params }: { params: LocaleParams }) {
                   className="blend-panel h-full max-h-full w-auto object-contain"
                 />
               ) : (
-                <Pending label="ảnh sản phẩm chính" className="text-ink-muted" />
+                <Pending label="productImage" className="text-ink-muted" />
               )}
             </div>
             {heroProduct ? (
@@ -284,6 +206,7 @@ export default async function HomePage({ params }: { params: LocaleParams }) {
                 ) : null}
               </figcaption>
             ) : null}
+            {home?.heroImage ? null : <Pending label="heroImage" className="mt-3 text-ink-muted" />}
           </figure>
         </div>
       </section>
@@ -293,7 +216,7 @@ export default async function HomePage({ params }: { params: LocaleParams }) {
       ))}
 
       <section aria-labelledby="find-title" className="bg-surface-muted">
-        <div className="container-page py-20 lg:py-28">
+        <div className="container-page py-16 lg:py-24">
           <h2 id="find-title" className="text-2xl font-bold tracking-tight text-navy lg:text-4xl">
             {t('home.findTitle')}
           </h2>

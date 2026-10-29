@@ -94,6 +94,32 @@
   }
 }
 
+/*
+ * Hero headline, tuned per script. Latin: tight and large. Vietnamese: more leading so stacked
+ * diacritics (ố, ữ) never touch the line above. Korean: Noto Sans KR bold, slightly smaller,
+ * looser tracking and keep-all so phrases break between words.
+ */
+@utility display-hero {
+  font-weight: 800;
+  font-size: clamp(2.5rem, 1.4rem + 4.4vw, 4.5rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  max-width: 11ch;
+
+  &:lang(vi) {
+    line-height: 1.16;
+    letter-spacing: -0.015em;
+    max-width: 12ch;
+  }
+  &:lang(ko) {
+    font-weight: 700;
+    font-size: clamp(2.125rem, 1.3rem + 3.4vw, 3.75rem);
+    line-height: 1.24;
+    letter-spacing: -0.01em;
+    max-width: 12em;
+  }
+}
+
 /* White-background product shots blend into the muted panel without editing the image. */
 @utility blend-panel {
   mix-blend-mode: multiply;

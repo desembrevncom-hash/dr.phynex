@@ -44,6 +44,11 @@ Nguồn: `brand-assets/logo/`, `brand-assets/packaging/`, [docs/phase-3-status.m
 
 Logo màu chỉ đặt trên `surface` hoặc `surface-muted`. Trên nền than không đặt logo, vì đỏ trên navy hay than đều không đạt tương phản và chưa có bản logo đảo màu.
 
+File logo:
+- `brand-assets/logo/drphynex-logo-original.svg`: file gốc, không commit.
+- `public/brand/drphynex-logo-web.svg`: bản web đang dùng, có commit. Hình vẽ giống hệt bản gốc (30/30 hình, đã so sánh tự động); chỉ cắt `viewBox` sát nội dung (1178×330) và bỏ metadata của Illustrator. Ở cùng chiều cao, logo hiện to hơn khoảng 40%.
+- `brand-assets/proposals/drphynex-wordmark-web-PROPOSAL.svg`: **đề xuất, chưa dùng**. Giống bản web nhưng bỏ dòng tagline, dành cho header mobile và favicon. Cần thương hiệu duyệt.
+
 ## 3. Typography
 
 | Vai trò | Font | Ghi chú |
@@ -59,6 +64,7 @@ Cỡ chữ (rem, co giãn theo `clamp`):
 | Cấp | Mobile → desktop | Độ đậm | Line-height |
 |---|---|---|---|
 | Display (tên sản phẩm lớn) | 2.25 → 4 | 800 | 1.05 |
+| Hero (`display-hero`) | en/vi 2.5 → 4.5; ko 2.125 → 3.75 | en/vi 800; ko 700 | en 1.04; vi 1.16 (chừa chỗ cho dấu chồng); ko 1.24 |
 | H1 | 2 → 3.25 | 700 | 1.1 |
 | H2 | 1.5 → 2.25 | 700 | 1.15 |
 | H3 | 1.125 → 1.25 | 600 | 1.3 |
@@ -79,8 +85,11 @@ Không dùng nhãn nhỏ (eyebrow) phía trên tiêu đề: tiêu đề tự đ�
 
 | Component | Mô tả |
 |---|---|
-| Header | Logo SVG gốc bên trái. Trên ≥1024px: menu ngang. Dưới 1024px: nút "Menu" mở bảng điều hướng (có `aria-expanded`, đóng bằng phím Esc). Bên phải là bộ chọn ngôn ngữ KO / EN / VI. Có đường kẻ `line` ở cạnh dưới |
-| Hero | Tiêu đề và đoạn mở đầu lấy từ CMS (`HomePage`); khi chưa có tiêu đề thì hiện tên thương hiệu. Một ảnh sản phẩm lớn trên khung dọc `surface-muted`. Có hai CTA: Sản phẩm, Điểm bán |
+| Header | Logo bản web bên trái (cao 40px mobile, 48px desktop). Trên ≥1024px: menu ngang. Dưới 1024px: nút "Menu" mở bảng điều hướng (có `aria-expanded`, đóng bằng phím Esc). Bên phải là bộ chọn ngôn ngữ KO / EN / VI. Có đường kẻ `line` ở cạnh dưới |
+| Hero | Tiêu đề và đoạn mở đầu lấy từ CMS (`HomePage`); khi chưa có tiêu đề thì hiện tên thương hiệu. Một ảnh sản phẩm lớn trên khung dọc `surface-muted`. Có hai CTA: Sản phẩm, Điểm bán. **Còn thiếu ảnh hero riêng**; hiện dùng ảnh sản phẩm nổi bật, và preview đánh dấu chỗ này |
+| Khối dòng (2 sản phẩm) | Không dùng lưới catalogue đều nhau: thẻ đầu rộng 7/12, thẻ sau rộng 5/12 và đặt thấp hơn. Dòng có số sản phẩm khác thì dùng lưới đều |
+| Trang sản phẩm | DOM theo thứ tự: tên (H1) + dung tích → gallery → mô tả + khối "Mua ở đâu". Trên desktop, gallery chiếm cột trái qua cả hai hàng. Ảnh dưới 1024px cao tối đa `clamp(300px, 56vh, 440px)`, ở 768px cao 460px; dùng `object-contain`, không cắt bao bì |
+| Footer | Logo; liên kết chính 2 cột (mobile), 3 cột (≥640px); liên kết pháp lý trên một hàng, có đường kẻ ngăn cách |
 | Khối dòng sản phẩm | Mã dòng và mô tả dòng lấy từ CMS, cùng danh sách thẻ sản phẩm. Dòng MX dùng giao diện `dark` |
 | Thẻ sản phẩm | Ảnh trên `surface-muted` (với MX: thẻ `mx-charcoal-raised`), tên sản phẩm, quy cách, liên kết "Xem chi tiết". Có một vạch 24×2px màu nhấn của sản phẩm phía trên tên |
 | Khung thành phần | Viền 1px màu nhấn, bo 4px, chữ navy. **Chỉ dùng trên trang chi tiết**, tối đa một hàng |
@@ -88,7 +97,7 @@ Không dùng nhãn nhỏ (eyebrow) phía trên tiêu đề: tiêu đề tự đ�
 | Nút | Chính: nền navy, chữ trắng. Phụ: viền navy. Cao tối thiểu 44px |
 | Dải liên hệ | Liên kết tới Điểm bán và Hợp tác B2B. Không có giá, không có giỏ hàng |
 | Thanh xem trước | Chỉ hiện ở chế độ preview: "Bản xem trước: nội dung nháp, chưa xuất bản", kèm nút thoát |
-| Khung chờ ảnh | Nền `surface-muted`, viền nét đứt, chữ `[CHỜ CUNG CẤP: …]`. Chỉ hiện trong preview |
+| Khung chờ | Viền nét đứt, chữ theo ngôn ngữ trang: `[제공 대기: …]`, `[TO BE SUPPLIED: …]`, `[CHỜ CUNG CẤP: …]`. Chỉ hiện trong preview |
 
 ## 6. Hình ảnh
 
