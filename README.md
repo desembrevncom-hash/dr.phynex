@@ -53,6 +53,12 @@ Nạp lại nội dung xem trước của 4 sản phẩm (chỉ ở bản nháp,
 npm run payload -- run scripts/import-preview-content.ts
 ```
 
+Nạp nội dung chi tiết lấy từ bao bì (mô tả, công dụng, thành phần, INCI, cách dùng, lưu ý; chỉ bản nháp). Cần `brand-assets/packaging/*.pdf`; xem [docs/product-content.md](docs/product-content.md):
+
+```bash
+npm run payload -- run scripts/import-product-content.ts
+```
+
 ## Tài sản thương hiệu
 
 | Vị trí | Nội dung | Git |
@@ -62,6 +68,34 @@ npm run payload -- run scripts/import-preview-content.ts
 | `media/`, `private-uploads/` | Tệp tải lên CMS (local) | Không commit; trên Vercel sẽ chuyển sang R2/S3 |
 
 Ảnh sản phẩm **không** nằm trong repo: biên tập viên tải lên CMS (Media). Script `scripts/import-preview-content.ts` đọc ảnh xem trước từ `brand-assets/preview-images/`; một clone mới không có thư mục này cần được cung cấp lại, nếu không script sẽ báo thiếu tệp.
+
+## Dữ liệu nằm ở đâu, và sao lưu
+
+**Commit mã không có nghĩa là đã sao lưu database.** Nội dung soạn trong CMS, trạng thái duyệt và file tải lên không nằm trong Git.
+
+| Loại | Vị trí | Trong Git? |
+|---|---|---|
+| Mã nguồn, migration, kiểm thử, tài liệu, logo web | repo | Có |
+| Dữ liệu nạp mẫu (`scripts/data/*.ts`: chữ chép từ bao bì, bản dịch nháp) | repo | Có, nhưng chỉ là đầu vào, không phải bản đang sửa trong CMS |
+| Nội dung CMS (sản phẩm, bản dịch, ghi chú biên tập, trạng thái duyệt, form gửi về, tài khoản) | PostgreSQL trong Docker, volume `drphynex_pgdata` | Không |
+| Ảnh Media | `media/` | Không |
+| Tài liệu nguồn (PDF bao bì đã tải vào CMS) | `private-uploads/source-documents/` | Không |
+| File gốc thương hiệu, bản chép chữ, ảnh xem trước, ảnh chụp kiểm tra | `brand-assets/` | Không |
+| Secret | `.env` | Không |
+
+Sao lưu Local (chạy khi Postgres đang bật):
+
+```bash
+docker exec drphynex-postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > backup-drphynex.dump
+```
+
+Kèm theo đó, sao chép các thư mục `media/`, `private-uploads/` và `brand-assets/` ra nơi lưu trữ an toàn. Không commit file dump.
+
+Các script nạp (`scripts/import-*.ts`) chạy lại được nhiều lần một cách an toàn:
+- không tạo trùng (khớp theo slug hoặc tên file);
+- chỉ điền vào trường đang trống, nên không ghi đè nội dung đã sửa trong CMS;
+- bỏ qua tài liệu đã xuất bản hoặc có ngôn ngữ đã approved;
+- không đổi trạng thái xuất bản.
 
 ## Lệnh thường dùng
 

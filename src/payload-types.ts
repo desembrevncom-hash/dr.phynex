@@ -250,6 +250,10 @@ export interface Product {
    */
   slug: string;
   /**
+   * Staff only, never shown on the site or in the public API: where this language version came from (copied from packaging, translated, AI-proposed) and open questions for the brand.
+   */
+  editorialNote?: string | null;
+  /**
    * Per language. Only "Approved" + Published content is visible on the public site.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
@@ -839,6 +843,7 @@ export interface ProductsSelect<T extends boolean = true> {
         description?: T;
       };
   slug?: T;
+  editorialNote?: T;
   translationStatus?: T;
   updatedAt?: T;
   createdAt?: T;

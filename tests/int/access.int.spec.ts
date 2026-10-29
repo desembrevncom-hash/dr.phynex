@@ -23,6 +23,7 @@ const fixture = {
   slug: 'test-product',
   translationStatus: 'approved' as const,
   claims: [{ text: 'Test claim', sourceDocument: 'Test source ref' }],
+  editorialNote: 'Internal: open question for the brand',
 }
 
 beforeAll(async () => {
@@ -149,11 +150,14 @@ describe('publishing and translation approval', () => {
     expect(vi.totalDocs).toBe(0)
   })
 
-  it('claim sources are hidden from guests', async () => {
+  it('claim sources and the editorial note are hidden from guests', async () => {
     const ko = await payload.find({ collection: 'products', locale: 'ko', ...guest })
     const claim = ko.docs[0]?.claims?.[0] as Record<string, unknown>
     expect(claim.text).toBe('Test claim')
     expect(claim.sourceDocument).toBeUndefined()
+    expect((ko.docs[0] as unknown as Record<string, unknown>).editorialNote).toBeUndefined()
+    const asStaff = await payload.find({ collection: 'products', locale: 'ko', overrideAccess: false, user: translator })
+    expect(asStaff.docs[0]?.editorialNote).toBe('Internal: open question for the brand')
   })
 
   it('guests cannot bypass approval with locale=all or a fallback locale', async () => {

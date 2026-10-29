@@ -7,7 +7,9 @@
  *   concentrations or company details: those wait for the brand's confirmation.
  * - Home headline/intro and line descriptions are draft copy from docs/content-drafts.md
  *   (`translationStatus: ai-draft`), built only from sourced facts.
- * - Idempotent: documents are matched by slug, images by filename.
+ * - Idempotent and fill-only: documents are matched by slug, images by filename; on re-run only
+ *   empty fields are filled, so edits made in the CMS are kept. Published or approved documents
+ *   are skipped, and _status / existing translationStatus are never changed.
  *
  * Run (local only): npm run payload -- run scripts/import-preview-content.ts
  * Images are read from brand-assets/preview-images/ (git-ignored; see docs/image-audit.md).
@@ -17,12 +19,14 @@ import path from 'path'
 import { getPayload, type Payload } from 'payload'
 
 import config from '../src/payload.config'
+import { isEmpty, isLocked, onlyEmpty } from './lib/fill'
 
 if (process.env.NODE_ENV === 'production') throw new Error('Preview content is for local development only')
 
 const imageDir = path.resolve(process.cwd(), 'brand-assets/preview-images')
 const locales = ['ko', 'en', 'vi'] as const
-type Localized = Record<(typeof locales)[number], string>
+type Locale = (typeof locales)[number]
+type Localized = Record<Locale, string>
 
 const lines = [
   {
@@ -123,42 +127,64 @@ async function upsertImage(payload: Payload, filename: string, alt: Localized, n
     })
     id = created.id
   }
+  // Alt text: fill missing languages only; publicRelease is never touched after creation.
   for (const locale of locales) {
-    await payload.update({ collection: 'media', id, locale, data: { alt: alt[locale] }, overrideAccess: true })
+    const current = await payload.findByID({ collection: 'media', id, locale, fallbackLocale: false, overrideAccess: true })
+    if (isEmpty(current.alt)) {
+      await payload.update({ collection: 'media', id, locale, data: { alt: alt[locale] }, overrideAccess: true })
+    }
   }
   return id
 }
 
+/**
+ * Creates the document if it does not exist; otherwise only fills empty fields, per language.
+ * Published or approved documents are skipped. Existing translationStatus is never changed.
+ */
 async function upsertDraft(
   payload: Payload,
   collection: 'product-lines' | 'products',
   slug: string,
   shared: Record<string, unknown>,
   localized: Record<string, Localized>,
-  translationStatus: 'ai-draft' | 'in-review' = 'in-review',
+  statusOnCreate: 'ai-draft' | 'in-review' = 'in-review',
 ) {
-  const found = await payload.find({
-    collection,
-    where: { slug: { equals: slug } },
-    limit: 1,
-    draft: true,
-    overrideAccess: true,
-  })
-  let id = found.docs[0]?.id
-  for (const [i, locale] of locales.entries()) {
-    const data = {
-      ...(i === 0 ? { ...shared, slug } : {}),
-      ...Object.fromEntries(Object.entries(localized).map(([k, v]) => [k, v[locale]])),
-      translationStatus,
+  const current = await Promise.all(
+    locales.map(async (locale) => {
+      const { docs } = await payload.find({
+        collection,
+        where: { slug: { equals: slug } },
+        limit: 1,
+        locale,
+        fallbackLocale: false,
+        draft: true,
+        depth: 0,
+        overrideAccess: true,
+      })
+      return docs[0] as unknown as Record<string, unknown> | undefined
+    }),
+  )
+  const valuesFor = (locale: Locale) => Object.fromEntries(Object.entries(localized).map(([k, v]) => [k, v[locale]]))
+
+  let id = current[0]?.id as number | string | undefined
+  if (!id) {
+    for (const [i, locale] of locales.entries()) {
+      const data = { ...(i === 0 ? { ...shared, slug } : {}), ...valuesFor(locale), translationStatus: statusOnCreate }
+      if (!id) id = (await payload.create({ collection, locale, draft: true, data: data as never, overrideAccess: true })).id
+      else await payload.update({ collection, id, locale, draft: true, data: data as never, overrideAccess: true })
     }
-    if (!id) {
-      const created = await payload.create({ collection, locale, draft: true, data: data as never, overrideAccess: true })
-      id = created.id
-    } else {
-      await payload.update({ collection, id, locale, draft: true, data: data as never, overrideAccess: true })
-    }
+    return id!
   }
-  return id!
+  if (isLocked(current as never)) {
+    payload.logger.warn(`${collection}/${slug} is published or approved: left untouched`)
+    return id
+  }
+  for (const [i, locale] of locales.entries()) {
+    const data = onlyEmpty(current[i], { ...(i === 0 ? shared : {}), ...valuesFor(locale) })
+    if (Object.keys(data).length === 0) continue
+    await payload.update({ collection, id, locale, draft: true, data: data as never, overrideAccess: true })
+  }
+  return id
 }
 
 const payload = await getPayload({ config })
@@ -188,20 +214,39 @@ for (const product of products) {
   )
 }
 
-for (const locale of locales) {
-  await payload.updateGlobal({
-    slug: 'home-page',
-    locale,
-    draft: true,
-    data: {
-      featuredProducts: productIds as never,
+const homeCurrent = await Promise.all(
+  locales.map(
+    async (locale) =>
+      (await payload.findGlobal({
+        slug: 'home-page',
+        locale,
+        fallbackLocale: false,
+        draft: true,
+        depth: 0,
+        overrideAccess: true,
+      })) as unknown as Record<string, unknown>,
+  ),
+)
+if (isLocked(homeCurrent as never)) {
+  payload.logger.warn('home-page is published or approved: left untouched')
+} else {
+  for (const [i, locale] of locales.entries()) {
+    const fresh = isEmpty(homeCurrent[i]?.headline) && isEmpty(homeCurrent[i]?.intro)
+    const data = onlyEmpty(homeCurrent[i], {
+      featuredProducts: productIds,
       headline: home.headline[locale],
       intro: home.intro[locale],
-      translationStatus: 'ai-draft',
-    },
-    overrideAccess: true,
-  })
+    })
+    if (Object.keys(data).length === 0) continue
+    await payload.updateGlobal({
+      slug: 'home-page',
+      locale,
+      draft: true,
+      data: { ...data, ...(fresh ? { translationStatus: 'ai-draft' } : {}) } as never,
+      overrideAccess: true,
+    })
+  }
 }
 
-payload.logger.info(`Preview drafts ready: ${lines.length} lines, ${products.length} products (nothing published)`)
+payload.logger.info(`Preview drafts checked: ${lines.length} lines, ${products.length} products (fill-only, nothing published)`)
 process.exit(0)

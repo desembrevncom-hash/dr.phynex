@@ -111,5 +111,17 @@ export const Products = contentCollection({
       ],
     },
     slugField,
+    {
+      name: 'editorialNote',
+      label: 'Editorial note (internal)',
+      type: 'textarea',
+      localized: true,
+      access: { read: staffField, create: staffField, update: staffField },
+      admin: {
+        position: 'sidebar',
+        description:
+          'Staff only, never shown on the site or in the public API: where this language version came from (copied from packaging, translated, AI-proposed) and open questions for the brand.',
+      },
+    },
   ],
 })
