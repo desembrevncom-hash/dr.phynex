@@ -2,6 +2,8 @@
 
 Cập nhật: 29/10/2026, sau mốc nghiệm thu Local `2d2d7a5`. **Chưa tạo dịch vụ, chưa phát sinh phí, chưa push, chưa triển khai.** Giá và giới hạn gói dịch vụ dưới đây cần kiểm tra lại trên trang của nhà cung cấp trước khi đăng ký.
 
+> Cập nhật sau review độc lập: xem [independent-review-remediation.md](independent-review-remediation.md). Cache nội dung chia sẻ đã được gỡ để ưu tiên thu hồi; URL optimizer bị chặn, upload dùng no-store. Storage có migration schema riêng chưa chạy trên database thật. Các bảng kiểm tra cũ dưới đây là lịch sử, không thay thế báo cáo mới.
+
 ## 1. Trạng thái chuẩn bị
 
 | Hạng mục | Đã làm trên Local | Đã kiểm tra trên Local | Phải kiểm tra lại sau khi kết nối |

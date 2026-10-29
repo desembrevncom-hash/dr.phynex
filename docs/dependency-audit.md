@@ -4,6 +4,8 @@ Cập nhật: 29/10/2026 (`npm audit`, Payload 3.92.1, Next.js 16.4.3). Không d
 
 Hiện còn **15 mục: 4 low, 5 moderate, 6 high, 0 critical**. Nhiều mục chỉ là gói trung gian bị đánh dấu vì phụ thuộc vào một gói lỗi bên dưới. Bảng dưới gom theo **gói gốc thật sự có lỗ hổng**.
 
+> Rà lại trong đợt fix independent-review ngày 29/10/2026: npm audit hiện trả 19 package (7 low, 5 moderate, 7 high, 0 critical), không phải 15; dependency không đổi trong đợt fix. Phân tích phiên bản/đường gọi và nguồn chính thức: [báo cáo remediation](independent-review-remediation.md). Các số liệu còn lại dưới đây là lịch sử.
+
 ## Đã xử lý
 
 | Ngày | Gói | Việc |
