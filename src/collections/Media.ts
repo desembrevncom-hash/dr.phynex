@@ -1,7 +1,8 @@
 import { privateUploadHeaders } from '@/lib/uploadHeaders'
-import { APIError, type Access, type CollectionConfig } from 'payload'
+import type { Access, CollectionConfig } from 'payload'
+import { guardMediaBinary } from '@/hooks/guardMediaBinary'
 
-import { editors, editorsField, isStaffUser, isEditorUser, staff } from '@/access/roles'
+import { editors, editorsField, isStaffUser, staff } from '@/access/roles'
 
 // Guests only see files an editor has cleared for publication; staff see everything
 // (draft previews load unreleased files with the admin session cookie).
@@ -24,18 +25,7 @@ export const Media: CollectionConfig = {
     delete: editors,
   },
   hooks: {
-    beforeOperation: [async ({ args, operation, req }) => {
-      if (operation === 'update' && req.file && !isEditorUser(req.user)) {
-        throw new APIError('Only editors may replace media binaries.', 403, null, true)
-      }
-      if (operation === 'update' && req.file && 'id' in args && (typeof args.id === 'string' || typeof args.id === 'number')) {
-        const original = await req.payload.findByID({ collection: 'media', id: args.id, req, overrideAccess: true })
-        if (original.publicRelease) {
-          throw new APIError('Create a new unreleased Media record, then approve and replace its relationship. Released binaries cannot be overwritten.', 409, null, true)
-        }
-      }
-      return args
-    }],
+    beforeOperation: [guardMediaBinary],
     beforeChange: [({ data, req, operation }) => {
       if (operation === 'update' && req.file) data.publicRelease = false
       return data
