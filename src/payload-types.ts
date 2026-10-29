@@ -154,7 +154,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * Introduction only: no prices or purchase links. Calls to action point to Stores and Contact.
+ * Introduction only: no prices or purchase links. Calls to action point to Stores and Contact. Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products".
@@ -254,7 +254,7 @@ export interface Product {
    */
   editorialNote?: string | null;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -319,6 +319,8 @@ export interface SourceDocument {
   focalY?: number | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ingredients".
  */
@@ -367,7 +369,7 @@ export interface Ingredient {
   slug: string;
   order?: number | null;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -375,6 +377,8 @@ export interface Ingredient {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "technologies".
  */
@@ -419,7 +423,7 @@ export interface Technology {
   slug: string;
   order?: number | null;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -427,6 +431,8 @@ export interface Technology {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "product-lines".
  */
@@ -445,7 +451,7 @@ export interface ProductLine {
   slug: string;
   order?: number | null;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -453,6 +459,8 @@ export interface ProductLine {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "product-categories".
  */
@@ -465,7 +473,7 @@ export interface ProductCategory {
   slug: string;
   order?: number | null;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -473,6 +481,8 @@ export interface ProductCategory {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "skin-concerns".
  */
@@ -485,7 +495,7 @@ export interface SkinConcern {
   slug: string;
   order?: number | null;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -493,6 +503,8 @@ export interface SkinConcern {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "articles".
  */
@@ -529,7 +541,7 @@ export interface Article {
    */
   slug: string;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -537,6 +549,8 @@ export interface Article {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "journal-topics".
  */
@@ -549,7 +563,7 @@ export interface JournalTopic {
   slug: string;
   order?: number | null;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -557,6 +571,8 @@ export interface JournalTopic {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "stores".
  */
@@ -577,7 +593,7 @@ export interface Store {
   lng?: number | null;
   order?: number | null;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -585,6 +601,8 @@ export interface Store {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "legal-pages".
  */
@@ -608,7 +626,7 @@ export interface LegalPage {
     [k: string]: unknown;
   } | null;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -1174,6 +1192,8 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home-page".
  */
@@ -1189,7 +1209,7 @@ export interface HomePage {
     description?: string | null;
   };
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   _status?: ('draft' | 'published') | null;
@@ -1197,6 +1217,8 @@ export interface HomePage {
   createdAt?: string | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-page".
  */
@@ -1224,7 +1246,7 @@ export interface BrandPage {
     description?: string | null;
   };
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   _status?: ('draft' | 'published') | null;
@@ -1232,6 +1254,8 @@ export interface BrandPage {
   createdAt?: string | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "partnership-page".
  */
@@ -1259,7 +1283,7 @@ export interface PartnershipPage {
     description?: string | null;
   };
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   _status?: ('draft' | 'published') | null;
@@ -1267,6 +1291,8 @@ export interface PartnershipPage {
   createdAt?: string | null;
 }
 /**
+ * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings".
  */
@@ -1287,7 +1313,7 @@ export interface SiteSetting {
       }[]
     | null;
   /**
-   * Per language. Only "Approved" + Published content is visible on the public site.
+   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   _status?: ('draft' | 'published') | null;

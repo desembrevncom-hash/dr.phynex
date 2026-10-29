@@ -51,6 +51,7 @@ function review(
   fields: Field[],
   user: unknown,
   savingDraft: unknown,
+  approvalIntent: unknown,
 ) {
   if (data._status === 'published' && user && !isEditorUser(user as never)) {
     throw new APIError(
@@ -76,8 +77,7 @@ function review(
   }
   if (changed) data.translationStatus = 'in-review'
   const approval = data.translationStatus ?? original?.translationStatus
-  const withdrawal =
-    !changed && (data.translationStatus === 'in-review' || data.translationStatus === 'ai-draft')
+  const withdrawal = !changed && (approvalIntent === 'in-review' || approvalIntent === 'ai-draft')
   if (data._status === 'published' && (changed || (approval !== 'approved' && !withdrawal))) {
     throw new APIError(
       'Save the draft and review it before publishing this locale.',
@@ -101,6 +101,14 @@ export const guardPublishing: CollectionBeforeChangeHook = ({
     collection.fields,
     req.user,
     req.context.reviewSavingDraft,
+    req.context.reviewApprovalIntent,
   )
 export const guardGlobalPublishing: GlobalBeforeChangeHook = ({ data, originalDoc, global, req }) =>
-  review(data, originalDoc, global.fields, req.user, req.context.reviewSavingDraft)
+  review(
+    data,
+    originalDoc,
+    global.fields,
+    req.user,
+    req.context.reviewSavingDraft,
+    req.context.reviewApprovalIntent,
+  )

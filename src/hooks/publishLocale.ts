@@ -29,6 +29,9 @@ export const publishOnlyRequestedLocale: CollectionBeforeOperationHook = ({
       )
     }
     req.context.reviewSavingDraft = options.draft === true || options.draft === 'true'
+    req.context.reviewApprovalIntent = (
+      options.data as Record<string, unknown> | undefined
+    )?.translationStatus
     req.fallbackLocale = false
     options.publishSpecificLocale = req.locale
     options.publishAllLocales = false
