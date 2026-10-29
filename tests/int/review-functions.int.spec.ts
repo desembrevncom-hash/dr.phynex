@@ -21,3 +21,10 @@ it('normalizes invalid pages and preserves validated topic/page query parameters
  expect(journalSearch('skin',2)).toBe('?topic=skin&page=2')
  expect(journalSearch(undefined,1)).toBe('')
 })
+
+it('refuses a live database identity even if a test marker is supplied', async () => {
+ const {assertDisposableDatabase, TEST_DATABASE, TEST_MARKER}=await import('../helpers/database')
+ const fake=(name:string,marker:string)=>({db:{drizzle:{execute:async()=>({rows:[{name,marker}]})}}}) as unknown as import('payload').Payload
+ await expect(assertDisposableDatabase(fake('drphynex', TEST_MARKER))).rejects.toThrow(/identity/)
+ await expect(assertDisposableDatabase(fake(TEST_DATABASE, 'unmarked'))).rejects.toThrow(/identity/)
+})

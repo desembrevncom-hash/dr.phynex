@@ -41,3 +41,12 @@ it('inserts the same fields with the S3 adapter disabled and enabled, without co
   expect(names(disabled)?.[0]).toContain('prefix')
  } finally { for (const key of ['S3_BUCKET','S3_ACCESS_KEY_ID','S3_SECRET_ACCESS_KEY','S3_ENDPOINT']) delete process.env[key] }
 })
+
+it('has no schema drift from the committed storage migration snapshot', async () => {
+ const {readFileSync}=await import('node:fs')
+ const adapter=payload.db as unknown as PostgresAdapter
+ const kit=adapter.requireDrizzleKit()
+ const generated=await kit.generateDrizzleJson(adapter.schema)
+ const saved=JSON.parse(readFileSync('src/migrations/20261029_100000_storage_fields.json','utf8'))
+ expect(await kit.generateMigration(saved,generated)).toEqual([])
+})
