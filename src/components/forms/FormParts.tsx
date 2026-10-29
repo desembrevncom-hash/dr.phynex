@@ -7,7 +7,7 @@ import { useFormStatus } from 'react-dom'
 import type { FormState } from '@/lib/formState'
 
 const inputClass =
-  'mt-1 block w-full rounded-md border border-line-strong bg-surface px-3 py-2.5 text-base aria-[invalid=true]:border-danger'
+  'mt-1.5 block w-full rounded border border-line-strong bg-surface px-3.5 py-3 text-base text-ink transition-colors hover:border-ink-muted focus:border-navy aria-[invalid=true]:border-danger'
 
 type BaseProps = {
   name: string
@@ -21,7 +21,7 @@ function FieldShell({ name, label, state, required, children }: BaseProps & { ch
   const error = state.errors?.[name]
   return (
     <div>
-      <label htmlFor={`f-${name}`} className="block text-sm font-medium">
+      <label htmlFor={`f-${name}`} className="block text-sm font-semibold text-ink">
         {label}
         {required ? (
           <span className="text-ink-muted">
@@ -107,11 +107,11 @@ export function ConsentField({ state, privacyHref }: { state: FormState; privacy
           defaultChecked={state.values?.consent === 'on'}
           aria-invalid={invalid || undefined}
           aria-describedby={invalid ? 'f-consent-error' : undefined}
-          className="mt-1 size-5 shrink-0"
+          className="mt-0.5 size-5 shrink-0 accent-navy"
         />
-        <label htmlFor="f-consent" className="text-sm">
+        <label htmlFor="f-consent" className="text-sm text-ink-muted">
           {t('form.consent')}{' '}
-          <a href={privacyHref} className="underline underline-offset-2">
+          <a href={privacyHref} className="font-medium text-navy underline underline-offset-2">
             {t('nav.privacy')}
           </a>
         </label>
@@ -145,7 +145,7 @@ export function SubmitButton() {
       type="submit"
       disabled={pending}
       aria-disabled={pending}
-      className="rounded-md bg-ink px-5 py-3 font-medium text-surface hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+      className="inline-flex min-h-12 items-center rounded bg-navy px-7 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:cursor-wait disabled:opacity-60"
     >
       {pending ? t('sending') : t('submit')}
     </button>
@@ -171,7 +171,7 @@ export function FormStatus({ state }: { state: FormState }) {
       ref={ref}
       tabIndex={-1}
       role={state.status === 'success' ? 'status' : 'alert'}
-      className={`rounded-md border p-4 ${state.status === 'success' ? 'border-success text-success' : 'border-danger text-danger'}`}
+      className={`rounded border bg-surface p-4 text-sm font-medium ${state.status === 'success' ? 'border-success text-success' : 'border-danger text-danger'}`}
     >
       {message}
     </div>

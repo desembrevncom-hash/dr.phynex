@@ -90,6 +90,11 @@ Không dùng nhãn nhỏ (eyebrow) phía trên tiêu đề: tiêu đề tự đ�
 | Khối dòng (2 sản phẩm) | Không dùng lưới catalogue đều nhau: thẻ đầu rộng 7/12, thẻ sau rộng 5/12 và đặt thấp hơn. Dòng có số sản phẩm khác thì dùng lưới đều |
 | Trang sản phẩm | DOM theo thứ tự: tên (H1) + dung tích → gallery → mô tả + khối "Mua ở đâu". Trên desktop, gallery chiếm cột trái qua cả hai hàng. Ảnh dưới 1024px cao tối đa `clamp(300px, 56vh, 440px)`, ở 768px cao 460px; dùng `object-contain`, không cắt bao bì |
 | Footer | Logo; liên kết chính 2 cột (mobile), 3 cột (≥640px); liên kết pháp lý trên một hàng, có đường kẻ ngăn cách |
+| Mở đầu trang (`PageIntro`) | Dùng cho trang nội dung: đường kẻ navy, H1 navy, đoạn dẫn ở cột phải (desktop) |
+| Bộ lọc (`FilterTabs`) | Link dạng tab, gạch dưới navy khi đang chọn, `aria-current`; hoạt động không cần JavaScript |
+| Nhóm dòng (`LineGroup`) | Danh mục: lưới đều 1/2/3 cột; dòng MX trên nền than. Khác với bố cục so le ở trang chủ |
+| Form | Ô nhập viền `line-strong`, focus navy; nút chính navy cao 48px; form đặt trên khung `surface-muted`; thông báo lỗi/thành công nhận focus |
+| Trạng thái trống (Điểm bán) | Khung `surface-muted`: tiêu đề, một câu giải thích, liên kết sang Liên hệ và Hợp tác. Không có dữ liệu mẫu |
 | Khối dòng sản phẩm | Mã dòng và mô tả dòng lấy từ CMS, cùng danh sách thẻ sản phẩm. Dòng MX dùng giao diện `dark` |
 | Thẻ sản phẩm | Ảnh trên `surface-muted` (với MX: thẻ `mx-charcoal-raised`), tên sản phẩm, quy cách, liên kết "Xem chi tiết". Có một vạch 24×2px màu nhấn của sản phẩm phía trên tên |
 | Khung thành phần | Viền 1px màu nhấn, bo 4px, chữ navy. **Chỉ dùng trên trang chi tiết**, tối đa một hàng |

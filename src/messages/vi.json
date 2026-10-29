@@ -75,7 +75,10 @@
     "details": "Thông tin sản phẩm",
     "partnerPrompt": "Mua cho doanh nghiệp?",
     "partnerLink": "Liên hệ hợp tác",
-    "relatedSameLine": "Sản phẩm khác của dòng {line}"
+    "relatedSameLine": "Sản phẩm khác của dòng {line}",
+    "count": "{count, plural, =0 {Chưa có sản phẩm} other {# sản phẩm}}",
+    "viewAll": "Xem tất cả sản phẩm",
+    "filterLabel": "Lọc theo dòng"
   },
   "ingredients": {
     "title": "Thành phần & Công nghệ",
@@ -101,7 +104,11 @@
       "store": "Cửa hàng",
       "distributor": "Nhà phân phối",
       "other": "Khác"
-    }
+    },
+    "emptyTitle": "Danh sách điểm bán đang được cập nhật",
+    "emptyBody": "Điểm bán và nhà phân phối sẽ được liệt kê tại đây khi đã xác nhận.",
+    "askContact": "Hỏi nơi mua sản phẩm",
+    "becomePartner": "Liên hệ hợp tác"
   },
   "contact": {
     "title": "Liên hệ",
@@ -109,11 +116,15 @@
     "email": "Email",
     "phone": "Điện thoại",
     "address": "Địa chỉ",
-    "hours": "Giờ làm việc"
+    "hours": "Giờ làm việc",
+    "lead": "Câu hỏi về sản phẩm hoặc điểm bán.",
+    "otherWays": "Cách liên hệ khác",
+    "detailsTitle": "Thông tin liên hệ"
   },
   "partnership": {
     "title": "Hợp tác",
-    "formTitle": "Yêu cầu hợp tác"
+    "formTitle": "Yêu cầu hợp tác",
+    "forWho": "Dành cho nhà phân phối, nhà bán lẻ, spa và phòng khám."
   },
   "form": {
     "name": "Họ tên",
@@ -138,7 +149,7 @@
       "other": "Khác"
     },
     "channels": "Kênh bán hiện tại (không bắt buộc)",
-    "consent": "Tôi đồng ý cho lưu thông tin để phản hồi yêu cầu này, theo chính sách bảo mật.",
+    "consent": "Tôi đồng ý cho lưu thông tin để phản hồi yêu cầu này.",
     "required": "Bắt buộc",
     "submit": "Gửi",
     "sending": "Đang gửi…",
@@ -171,6 +182,10 @@
     "keyIngredients": "thành phần chính (kèm mô tả có nguồn)",
     "howToUse": "cách dùng",
     "cautions": "lưu ý khi sử dụng",
-    "inci": "bảng thành phần INCI đầy đủ"
+    "inci": "bảng thành phần INCI đầy đủ",
+    "contactDetails": "thông tin liên hệ chính thức (Site settings)",
+    "partnershipIntro": "đoạn giới thiệu trang hợp tác",
+    "partnershipBody": "nội dung chương trình hợp tác",
+    "stores": "danh sách điểm bán và nhà phân phối đã xác nhận"
   }
 }

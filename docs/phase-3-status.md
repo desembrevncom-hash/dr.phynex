@@ -310,3 +310,27 @@ Không phần tử nào dùng font hệ thống. DevTools báo tên "Noto Sans K
 - Khách: trang chủ không lộ nội dung nháp; sản phẩm nháp 404; ảnh riêng tư 403; API trả 0 tài liệu nháp. Preview từ trang ngoài bị chặn.
 - `npm test` 15/15, typecheck, lint, build sạch. Tài khoản QA tạm đã xóa (database còn 0 user).
 - Ảnh trước/sau: `brand-assets/screenshots/round-2/compare/`.
+
+## 10. Danh mục, Liên hệ, Hợp tác, Điểm bán (29/10/2026)
+
+Mốc nội dung: commit `f5775d2` (dữ liệu nháp có nguồn, ghi chú biên tập nội bộ, import chỉ điền chỗ trống).
+
+**Trang mới theo hệ thiết kế** (trang chủ không đổi):
+- `/products`: tiêu đề, số sản phẩm, bộ lọc Tất cả/RX/MX (link, không cần JS), nhóm theo dòng; MX trên nền than. Lọc theo nhu cầu da tự xuất hiện khi CMS có dữ liệu. Không có kết quả thì hiện thông báo và link "Xem tất cả".
+- `/products/line/[slug]`: breadcrumb + nhóm dòng, tên dòng là H1.
+- `/contact`: form trên khung xám nhạt. Thông tin liên hệ **chỉ** lấy từ Site settings đã xuất bản và approved; hiện trống, nên khách không thấy khối này, còn preview hiện nhãn chờ. Có liên kết sang Điểm bán và Hợp tác.
+- `/partnership`: dòng mô tả đối tượng (nhãn giao diện), form B2B. Nội dung chương trình chỉ lấy từ global Partnership page; hiện trống nên preview hiện nhãn chờ.
+- `/stores`: chưa có điểm bán nào được xuất bản, nên hiện trạng thái trống, kèm liên kết "Hỏi nơi mua sản phẩm" và "Liên hệ hợp tác". Không có dữ liệu mẫu.
+- Form: theo màu navy; sửa câu đồng ý bị lặp "chính sách bảo mật" (lỗi có từ giai đoạn 2) ở cả ba ngôn ngữ.
+
+**Kiểm tra (bản build production)**
+- Khách: 4 trang × ko/en/vi × 390/768/1440 px, tổng 36 lần chụp: không tràn ngang, không ảnh lỗi, không lộ nhãn chờ hay nội dung nháp. Ảnh ở `brand-assets/screenshots/pages-guest/`.
+- Form Hợp tác (vi, 390 px): gửi trống thì có lỗi từng trường, thông báo tổng nhận focus. Gửi dữ liệu thử thì hiện thông báo thành công (`role=status`) và lưu 1 bản ghi; khách đọc API bị 403. Bản ghi thử đã xóa bằng Local API.
+- Preview khi chưa đăng nhập: chuyển tới `/admin/login` kèm đường dẫn quay lại.
+- `npm test` 15/15, typecheck, lint, build sạch.
+- **Chưa kiểm tra bằng mắt ở chế độ preview** (danh mục có sản phẩm nháp, nhãn chờ của Liên hệ/Hợp tác/Điểm bán), vì cần tài khoản nhân viên đăng nhập. Không tạo thêm tài khoản QA theo yêu cầu.
+
+**Kiểm tra ở chế độ preview** (bạn đăng nhập trong trình duyệt tích hợp, 29/10/2026; tôi không tạo thêm tài khoản):
+- Danh mục: 4 sản phẩm nháp, hai nhóm RX (nền trắng) và MX (nền than). Tab Tất cả / RX / MX hoạt động bằng chuột và bàn phím (`?line=mx`, `aria-current`). Khi chỉ còn một dòng thì bỏ số đếm lặp lại ở nhóm. Không tràn ngang ở 390/768/1440 px.
+- Liên hệ, Hợp tác, Điểm bán: nhãn chờ hiển thị theo ngôn ngữ trang, chỉ trong preview.
+- Ảnh chụp: `brand-assets/screenshots/pages-preview/`. Ảnh 1440 px có độ phân giải thấp, vì khung trình duyệt thu nhỏ trang để vừa màn hình.

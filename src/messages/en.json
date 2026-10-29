@@ -75,7 +75,10 @@
     "details": "Details",
     "partnerPrompt": "Buying for a business?",
     "partnerLink": "Partnership enquiries",
-    "relatedSameLine": "More from the {line} line"
+    "relatedSameLine": "More from the {line} line",
+    "count": "{count, plural, =0 {No products} one {# product} other {# products}}",
+    "viewAll": "View all products",
+    "filterLabel": "Filter by line"
   },
   "ingredients": {
     "title": "Ingredients & Technology",
@@ -101,7 +104,11 @@
       "store": "Store",
       "distributor": "Distributor",
       "other": "Other"
-    }
+    },
+    "emptyTitle": "Store list coming soon",
+    "emptyBody": "Stores and distributors will be listed here once they are confirmed.",
+    "askContact": "Ask where to buy",
+    "becomePartner": "Partnership enquiries"
   },
   "contact": {
     "title": "Contact",
@@ -109,11 +116,15 @@
     "email": "Email",
     "phone": "Phone",
     "address": "Address",
-    "hours": "Hours"
+    "hours": "Hours",
+    "lead": "Questions about products or where to buy.",
+    "otherWays": "Other ways to reach us",
+    "detailsTitle": "Contact details"
   },
   "partnership": {
     "title": "Partnership",
-    "formTitle": "Partnership inquiry"
+    "formTitle": "Partnership inquiry",
+    "forWho": "For distributors, retailers, spas and clinics."
   },
   "form": {
     "name": "Name",
@@ -138,7 +149,7 @@
       "other": "Other"
     },
     "channels": "Current sales channels (optional)",
-    "consent": "I agree that my information is stored to answer this request, as described in the privacy policy.",
+    "consent": "I agree that my information is stored to answer this request.",
     "required": "Required",
     "submit": "Send",
     "sending": "Sending…",
@@ -171,6 +182,10 @@
     "keyIngredients": "key ingredients (with sourced descriptions)",
     "howToUse": "how to use",
     "cautions": "cautions",
-    "inci": "full INCI list"
+    "inci": "full INCI list",
+    "contactDetails": "official contact details (Site settings)",
+    "partnershipIntro": "partnership page introduction",
+    "partnershipBody": "partnership programme details",
+    "stores": "confirmed list of stores and distributors"
   }
 }

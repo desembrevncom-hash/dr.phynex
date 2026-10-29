@@ -75,7 +75,10 @@
     "details": "제품 정보",
     "partnerPrompt": "비즈니스 구매를 원하시나요?",
     "partnerLink": "파트너십 문의",
-    "relatedSameLine": "{line} 라인의 다른 제품"
+    "relatedSameLine": "{line} 라인의 다른 제품",
+    "count": "{count, plural, =0 {제품 없음} other {제품 #개}}",
+    "viewAll": "전체 제품 보기",
+    "filterLabel": "라인별 보기"
   },
   "ingredients": {
     "title": "성분 & 기술",
@@ -101,7 +104,11 @@
       "store": "매장",
       "distributor": "유통사",
       "other": "기타"
-    }
+    },
+    "emptyTitle": "판매처 목록 준비 중",
+    "emptyBody": "판매처와 유통사가 확정되면 이곳에 안내합니다.",
+    "askContact": "판매처 문의하기",
+    "becomePartner": "파트너십 문의"
   },
   "contact": {
     "title": "문의",
@@ -109,11 +116,15 @@
     "email": "이메일",
     "phone": "전화",
     "address": "주소",
-    "hours": "운영 시간"
+    "hours": "운영 시간",
+    "lead": "제품 또는 판매처에 관한 문의.",
+    "otherWays": "다른 문의 방법",
+    "detailsTitle": "연락처"
   },
   "partnership": {
     "title": "파트너십",
-    "formTitle": "파트너십 문의"
+    "formTitle": "파트너십 문의",
+    "forWho": "유통사, 소매점, 스파 및 클리닉을 위한 문의."
   },
   "form": {
     "name": "이름",
@@ -138,7 +149,7 @@
       "other": "기타"
     },
     "channels": "현재 판매 채널 (선택)",
-    "consent": "개인정보 처리방침에 따라 문의 응대를 위해 정보가 저장되는 것에 동의합니다.",
+    "consent": "문의 응대를 위해 정보가 저장되는 것에 동의합니다.",
     "required": "필수",
     "submit": "보내기",
     "sending": "전송 중…",
@@ -171,6 +182,10 @@
     "keyIngredients": "핵심 성분 (근거가 있는 설명 포함)",
     "howToUse": "사용 방법",
     "cautions": "주의 사항",
-    "inci": "전성분 (INCI) 목록"
+    "inci": "전성분 (INCI) 목록",
+    "contactDetails": "공식 연락처 (사이트 설정)",
+    "partnershipIntro": "파트너십 페이지 소개 문구",
+    "partnershipBody": "파트너십 프로그램 상세 내용",
+    "stores": "확정된 판매처 및 유통사 목록"
   }
 }

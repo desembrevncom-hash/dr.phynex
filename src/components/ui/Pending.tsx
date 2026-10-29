@@ -16,6 +16,10 @@ export type PendingKey =
   | 'howToUse'
   | 'cautions'
   | 'inci'
+  | 'contactDetails'
+  | 'partnershipIntro'
+  | 'partnershipBody'
+  | 'stores'
 
 /**
  * Marks content the brand still has to supply, in the page's language.
