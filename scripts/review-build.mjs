@@ -1,7 +1,8 @@
 import 'dotenv/config'
+import { parse } from 'dotenv'
 import { spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { writeFileSync, realpathSync } from 'node:fs'
+import { writeFileSync, readFileSync, existsSync, realpathSync } from 'node:fs'
 import { resolve } from 'node:path'
 import pg from 'pg'
 const target = realpathSync(process.argv[2] || '')
@@ -17,6 +18,11 @@ try {
 } finally { await client.end() }
 const env={...process.env,DATABASE_URL:url.toString(),PAYLOAD_SECRET:randomBytes(32).toString('hex'),NEXT_PUBLIC_SERVER_URL:'http://localhost:3015'}
 for(const key of ['S3_BUCKET','S3_ACCESS_KEY_ID','S3_SECRET_ACCESS_KEY','S3_ENDPOINT','SMTP_HOST','SMTP_USER','SMTP_PASS','FORM_NOTIFY_TO','VERCEL']) delete env[key]
-writeFileSync(resolve(target,'.env.local'), ['DATABASE_URL='+env.DATABASE_URL,'PAYLOAD_SECRET='+env.PAYLOAD_SECRET,'NEXT_PUBLIC_SERVER_URL='+env.NEXT_PUBLIC_SERVER_URL].join('\n')+'\n', {flag:'wx'})
+const envPath = resolve(target,'.env.local')
+if (existsSync(envPath)) {
+ const saved = parse(readFileSync(envPath))
+ if (saved.DATABASE_URL !== env.DATABASE_URL || !saved.PAYLOAD_SECRET) throw new Error('Existing build environment mismatch')
+ env.PAYLOAD_SECRET = saved.PAYLOAD_SECRET
+} else writeFileSync(envPath, ['DATABASE_URL='+env.DATABASE_URL,'PAYLOAD_SECRET='+env.PAYLOAD_SECRET,'NEXT_PUBLIC_SERVER_URL='+env.NEXT_PUBLIC_SERVER_URL].join('\n')+'\n', {flag:'wx'})
 const result=spawnSync(process.execPath,[resolve(target,'node_modules/next/dist/bin/next'),'build','--webpack'],{cwd:target,env,stdio:'inherit'})
 process.exit(result.status ?? 1)

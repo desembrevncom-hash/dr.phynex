@@ -36,15 +36,16 @@ export default async function JournalPage({ params, searchParams }: { params: Lo
   const topic = topicSlug ? topics.docs.find((x) => x.slug === topicSlug) : undefined
   const base = localizedPath(locale, '/journal')
   if (topicSlug && !topic) redirect(base)
-  const articles = await findPublic('articles', locale, {
-    where: topicSlug ? { topic: { equals: topic?.id ?? -1 } } : undefined,
-    depth: 1,
-    limit: 24,
-    page: requestedPage,
-    sort: '-publishedAt',
-  })
-  const currentPage = Math.min(requestedPage, Math.max(1, articles.totalPages))
+  const where = topic ? { topic: { equals: topic.id } } : undefined
+  // Some adapters return zero totals when the requested offset is beyond the result set.
+  // Determine the valid range from the first page before requesting the actual offset.
+  const summary = await findPublic('articles', locale, { where, limit: 1, depth: 0 })
+  const totalPages = Math.max(1, Math.ceil(summary.totalDocs / 24))
+  const currentPage = Math.min(requestedPage, totalPages)
   if (currentPage !== requestedPage) redirect(base + journalSearch(topic?.slug, currentPage))
+  const articles = await findPublic('articles', locale, {
+    where, depth: 1, limit: 24, page: currentPage, sort: ['-publishedAt', '-id'],
+  })
 
   return (
     <PageShell locale={locale} path="/journal" search={journalSearch(topic?.slug, currentPage)} bleed>
