@@ -77,7 +77,10 @@ function review(
   }
   if (changed) data.translationStatus = 'in-review'
   const approval = data.translationStatus ?? original?.translationStatus
-  const withdrawal = !changed && (approvalIntent === 'in-review' || approvalIntent === 'ai-draft')
+  // A full admin form repeats In review when Publish is clicked. Only a real
+  // Approved -> lower-review transition is an intentional approval withdrawal.
+  const withdrawal = !changed && original?.translationStatus === 'approved' &&
+    (approvalIntent === 'in-review' || approvalIntent === 'ai-draft')
   if (data._status === 'published' && (changed || (approval !== 'approved' && !withdrawal))) {
     throw new APIError(
       'Save the draft and review it before publishing this locale.',
