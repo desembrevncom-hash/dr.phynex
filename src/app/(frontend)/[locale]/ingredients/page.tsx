@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: LocaleParams }): Pr
 
 type Entry = { id: number; slug: string; name: string; summary?: string | null; inciName?: string | null }
 
-async function EntryList({ id, title, entries, locale }: { id: string; title: string; entries: Entry[]; locale: Locale }) {
+async function EntryList({ id, title, entries, locale, kind = 'ingredients' }: { id: string; title: string; entries: Entry[]; locale: Locale; kind?: 'ingredients' | 'technologies' }) {
   const t = await getTranslations('ingredients')
   return (
     <section aria-labelledby={id} className="py-8 lg:py-10">
@@ -29,7 +29,7 @@ async function EntryList({ id, title, entries, locale }: { id: string; title: st
       <ul className="mt-6 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
         {entries.map((e) => (
           <li key={e.id} className="border-t border-navy">
-            <Link href={localizedPath(locale, `/ingredients/${e.slug}`)} className="group flex h-full flex-col gap-2 py-5">
+            <Link href={localizedPath(locale, `/${kind}/${e.slug}`)} className="group flex h-full flex-col gap-2 py-5">
               <span className="text-lg font-bold text-navy group-hover:underline">{e.name}</span>
               {e.inciName && e.inciName !== e.name ? (
                 <span lang="en" className="text-sm text-ink-muted">
@@ -73,7 +73,7 @@ export default async function IngredientsPage({ params }: { params: LocaleParams
         ) : (
           <>
             {technologies.docs.length > 0 ? (
-              <EntryList id="technologies" title={t('ingredients.technologies')} entries={technologies.docs} locale={locale} />
+              <EntryList kind="technologies" id="technologies" title={t('ingredients.technologies')} entries={technologies.docs} locale={locale} />
             ) : null}
             {ingredients.docs.length > 0 ? (
               <EntryList id="ingredients" title={t('ingredients.ingredients')} entries={ingredients.docs} locale={locale} />

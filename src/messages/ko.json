@@ -100,7 +100,11 @@
     "empty": "아직 게시된 글이 없습니다.",
     "noResults": "이 주제의 글이 없습니다.",
     "allTopics": "전체 주제",
-    "by": "글: {author}"
+    "by": "글: {author}",
+    "pagination": "저널 페이지",
+    "previous": "이전",
+    "next": "다음",
+    "pageOf": "{page} / {total} 페이지"
   },
   "stores": {
     "title": "판매처",

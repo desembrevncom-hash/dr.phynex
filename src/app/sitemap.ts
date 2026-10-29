@@ -22,9 +22,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ])
     for (const d of products.docs) entries.push({ url: `${siteURL}/${locale}/products/${d.slug}`, lastModified: d.updatedAt })
     for (const d of articles.docs) entries.push({ url: `${siteURL}/${locale}/journal/${d.slug}`, lastModified: d.updatedAt })
-    for (const d of [...ingredients.docs, ...technologies.docs]) {
-      entries.push({ url: `${siteURL}/${locale}/ingredients/${d.slug}`, lastModified: d.updatedAt })
-    }
+    for (const d of ingredients.docs) entries.push({ url: `${siteURL}/${locale}/ingredients/${d.slug}`, lastModified: d.updatedAt })
+    for (const d of technologies.docs) entries.push({ url: `${siteURL}/${locale}/technologies/${d.slug}`, lastModified: d.updatedAt })
   }
   return entries
 }

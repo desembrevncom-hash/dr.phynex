@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation'
+import { pageNumber, journalSearch } from '@/lib/pagination'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getFormatter, getTranslations } from 'next-intl/server'
@@ -14,31 +16,38 @@ import { firstParam, pageLocale, type LocaleParams, type SearchParams } from '@/
 import { alternatesFor, localizedPath } from '@/lib/seo'
 import type { JournalTopic } from '@/payload-types'
 
-export async function generateMetadata({ params }: { params: LocaleParams }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: LocaleParams; searchParams: SearchParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
   const t = await getTranslations({ locale, namespace: 'journal' })
-  return { title: t('title'), alternates: alternatesFor(locale, '/journal') }
+  const query = await searchParams
+  return { title: t('title'), alternates: alternatesFor(locale, '/journal' + journalSearch(firstParam(query.topic), pageNumber(firstParam(query.page)))) }
 }
 
 export default async function JournalPage({ params, searchParams }: { params: LocaleParams; searchParams: SearchParams }) {
   const locale = await pageLocale(params)
-  const topicSlug = firstParam((await searchParams).topic)
+  const query = await searchParams
+  const topicSlug = firstParam(query.topic)
+  const requestedPage = pageNumber(firstParam(query.page))
   const [t, format, topics] = await Promise.all([
     getTranslations(),
     getFormatter(),
     findPublic('journal-topics', locale, { limit: 100, depth: 0, sort: 'order' }),
   ])
   const topic = topicSlug ? topics.docs.find((x) => x.slug === topicSlug) : undefined
+  const base = localizedPath(locale, '/journal')
+  if (topicSlug && !topic) redirect(base)
   const articles = await findPublic('articles', locale, {
     where: topicSlug ? { topic: { equals: topic?.id ?? -1 } } : undefined,
     depth: 1,
     limit: 24,
+    page: requestedPage,
     sort: '-publishedAt',
   })
-  const base = localizedPath(locale, '/journal')
+  const currentPage = Math.min(requestedPage, Math.max(1, articles.totalPages))
+  if (currentPage !== requestedPage) redirect(base + journalSearch(topic?.slug, currentPage))
 
   return (
-    <PageShell locale={locale} path="/journal" search={topic ? `?topic=${topic.slug}` : ''} bleed>
+    <PageShell locale={locale} path="/journal" search={journalSearch(topic?.slug, currentPage)} bleed>
       <PageIntro title={t('journal.title')} />
 
       {topics.docs.length > 0 ? (
@@ -104,6 +113,13 @@ export default async function JournalPage({ params, searchParams }: { params: Lo
             />
           </>
         )}
+        {articles.totalPages > 1 ? (
+          <nav aria-label={t('journal.pagination')} className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
+            {currentPage > 1 ? <Link className="inline-flex min-h-11 items-center text-navy underline" href={base + journalSearch(topic?.slug, currentPage - 1)}>{t('journal.previous')}</Link> : <span />}
+            <span className="text-sm text-ink-muted">{t('journal.pageOf', {page: currentPage, total: articles.totalPages})}</span>
+            {currentPage < articles.totalPages ? <Link className="inline-flex min-h-11 items-center text-navy underline" href={base + journalSearch(topic?.slug, currentPage + 1)}>{t('journal.next')}</Link> : <span />}
+          </nav>
+        ) : null}
       </div>
     </PageShell>
   )

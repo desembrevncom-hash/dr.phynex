@@ -222,10 +222,10 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
           <InfoSection title={t('products.keyIngredients')} pending="keyIngredients" preview={!!preview}>
             {ingredients.length + technologies.length > 0 ? (
               <ul className={`flex flex-wrap gap-2 ${accentText[product.accent]}`}>
-                {[...ingredients, ...technologies].map((item) => (
-                  <li key={`${item.id}-${item.slug}`}>
+                {[...ingredients.map(item => ({ item, kind: 'ingredients' })), ...technologies.map(item => ({ item, kind: 'technologies' }))].map(({ item, kind }) => (
+                  <li key={`${kind}-${item.id}-${item.slug}`}>
                     <Link
-                      href={href(`/ingredients/${item.slug}`)}
+                      href={href(`/${kind}/${item.slug}`)}
                       className={`inline-flex min-h-11 items-center rounded px-4 text-sm font-semibold text-navy transition-colors hover:bg-surface-muted ${frame}`}
                     >
                       {item.name}

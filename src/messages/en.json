@@ -100,7 +100,11 @@
     "empty": "No articles yet.",
     "noResults": "No articles in this topic.",
     "allTopics": "All topics",
-    "by": "By {author}"
+    "by": "By {author}",
+    "pagination": "Journal pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {total}"
   },
   "stores": {
     "title": "Stores",

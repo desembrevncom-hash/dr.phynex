@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { legal } = await params
   if (!isLegalSlug(legal)) return {}
   const [t, page] = await Promise.all([getTranslations({ locale, namespace: 'nav' }), findPublicBySlug('legal-pages', legal, locale)])
-  return { title: page?.title || t(legal), alternates: alternatesFor(locale, `/${legal}`) }
+  return { title: page?.title || t(legal), alternates: alternatesFor(locale, `/${legal}`, await approvedLocalesFor('legal-pages', legal)) }
 }
 
 export default async function LegalPage({ params }: { params: Params }) {

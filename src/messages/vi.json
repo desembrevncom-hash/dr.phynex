@@ -100,7 +100,11 @@
     "empty": "Chưa có bài viết.",
     "noResults": "Chưa có bài viết thuộc chủ đề này.",
     "allTopics": "Tất cả chủ đề",
-    "by": "Tác giả: {author}"
+    "by": "Tác giả: {author}",
+    "pagination": "Các trang Journal",
+    "previous": "Trước",
+    "next": "Tiếp",
+    "pageOf": "Trang {page}/{total}"
   },
   "stores": {
     "title": "Điểm bán",

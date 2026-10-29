@@ -31,9 +31,8 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
     message: { required: true, max: 5000 },
   })
   if (!ok) return { status: 'error', code: 'invalid', errors, values }
-  if (await rateLimited('contact')) return { status: 'error', code: 'rateLimited', values }
-
   try {
+    if (await rateLimited('contact')) return { status: 'error', code: 'rateLimited', values }
     const payload = await getPayloadClient()
     // Public API cannot create submissions; this trusted server path writes after validation.
     await payload.create({
@@ -52,7 +51,7 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
     })
     return { status: 'success' }
   } catch (error) {
-    console.error('[contact] failed to store submission', error)
+    console.error('[contact] failed to store submission', error instanceof Error ? error.name : 'UnknownError')
     return { status: 'error', code: 'server', values }
   }
 }
@@ -71,9 +70,8 @@ export async function submitPartnership(_prev: FormState, formData: FormData): P
     message: { required: true, max: 5000 },
   })
   if (!ok) return { status: 'error', code: 'invalid', errors, values }
-  if (await rateLimited('partnership')) return { status: 'error', code: 'rateLimited', values }
-
   try {
+    if (await rateLimited('partnership')) return { status: 'error', code: 'rateLimited', values }
     const payload = await getPayloadClient()
     await payload.create({
       collection: 'partner-inquiries',
@@ -94,7 +92,7 @@ export async function submitPartnership(_prev: FormState, formData: FormData): P
     })
     return { status: 'success' }
   } catch (error) {
-    console.error('[partnership] failed to store inquiry', error)
+    console.error('[partnership] failed to store inquiry', error instanceof Error ? error.name : 'UnknownError')
     return { status: 'error', code: 'server', values }
   }
 }
