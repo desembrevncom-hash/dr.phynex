@@ -334,3 +334,33 @@ Mốc nội dung: commit `f5775d2` (dữ liệu nháp có nguồn, ghi chú biê
 - Danh mục: 4 sản phẩm nháp, hai nhóm RX (nền trắng) và MX (nền than). Tab Tất cả / RX / MX hoạt động bằng chuột và bàn phím (`?line=mx`, `aria-current`). Khi chỉ còn một dòng thì bỏ số đếm lặp lại ở nhóm. Không tràn ngang ở 390/768/1440 px.
 - Liên hệ, Hợp tác, Điểm bán: nhãn chờ hiển thị theo ngôn ngữ trang, chỉ trong preview.
 - Ảnh chụp: `brand-assets/screenshots/pages-preview/`. Ảnh 1440 px có độ phân giải thấp, vì khung trình duyệt thu nhỏ trang để vừa màn hình.
+
+## 11. Các trang còn lại, điều hướng, sao lưu (29/10/2026)
+
+**Trang hoàn thiện theo hệ thiết kế** (dùng PageIntro, EmptyState mới, Breadcrumb):
+- `/brand`: nội dung chỉ lấy từ global Brand page. Hiện trống: khách thấy "Đang cập nhật" kèm liên kết sang Sản phẩm và Liên hệ; preview hiện nhãn chờ.
+- `/ingredients`: danh sách thẻ tên + INCI. Chỉ hiện tóm tắt do biên tập viên nhập; không tự viết mô tả. Sắp theo `order`, sau đó theo thời gian tạo.
+- `/ingredients/[slug]`: breadcrumb, tên, INCI, mô tả (nếu có; nếu không, preview hiện nhãn chờ), sản phẩm chứa thành phần, chỉ những sản phẩm người xem được phép thấy.
+- `/journal` và `/journal/[slug]`: lọc theo chủ đề, thẻ bài viết; breadcrumb có chủ đề; sản phẩm liên quan. Hiện chưa có bài: trạng thái trống.
+- `/privacy` và `/terms`: văn bản chỉ lấy từ CMS. Hiện trống: trạng thái trống kèm liên kết sang trang còn lại và Liên hệ.
+- Đề xuất nội dung riêng (chưa nạp CMS): [brand-and-legal-drafts.md](brand-and-legal-drafts.md), gồm danh mục dữ liệu website thực sự thu thập để pháp lý soạn chính sách.
+
+**Điều hướng**
+- Bộ chuyển ngôn ngữ giữ bộ lọc đang chọn: `?line=` và `?concern=` ở Sản phẩm, `?topic=` ở Journal, `?country=` ở Điểm bán. Đã kiểm tra trong preview: /vi/products?line=mx → bấm KO → /ko/products?line=mx, tab MX vẫn được chọn.
+- Crawl ở góc nhìn khách trên bản production: 36 trang (12 trang × 3 ngôn ngữ, cộng mọi liên kết nội bộ tìm thấy), tất cả trả 200. Không có liên kết nào dẫn tới trang nháp; không lộ nhãn chờ, banner preview hay chữ nháp. Các trang nháp gọi trực tiếp đều trả 404; ảnh riêng tư trả 403; `robots.txt` chặn toàn bộ; noindex giữ nguyên.
+- Preview (bạn đăng nhập): 9 thành phần nháp hiển thị; trang PDRN có INCI, nhãn chờ mô tả và 4 sản phẩm; nhãn chờ ở Thương hiệu hiển thị. Phiên đăng nhập hết hạn sau 2 giờ (mặc định của Payload), nên Journal và trang pháp lý ở chế độ preview chưa được xem bằng mắt; hai trang này dùng cùng thành phần nhãn chờ đã kiểm tra.
+- Ảnh khách: `brand-assets/screenshots/pages-guest-2/` (5 trang × 3 ngôn ngữ × 3 chiều rộng, không tràn ngang).
+
+**Sao lưu Local**
+- Vị trí: `/c/Users/THAI/Websites/drphynex-backups/2026-10-29_1305` (ngoài repo, ngoài mọi Git repo). Gồm dump database (pg_dump custom), `media/`, `private-uploads/`, `brand-assets/`, `files.sha256`, `RESTORE.md`. Không có `.env` hay secret.
+- Đã kiểm tra phục hồi:
+  - phục hồi vào database riêng `drphynex_restore_check`: số bản ghi các bảng chính và mã băm danh sách slug sản phẩm khớp với database đang chạy;
+  - Payload đọc được đủ bản nháp, trạng thái dịch và ghi chú biên tập;
+  - 134 file phục hồi vào thư mục thử khớp checksum.
+
+  Sau đó đã xóa database và thư mục thử; database đang chạy không bị ghi đè.
+- Script dùng lại: `bash scripts/backup-local.sh`.
+
+**Kiểm tra:** `npm test` 15/15, typecheck, lint, build sạch.
+
+**Ghi chú môi trường:** cổng 3000 đang có một server `next dev` của dự án, khởi động lúc 13:06; tôi không khởi động và không tắt server này. Bản production để kiểm tra chạy ở cổng 3001.

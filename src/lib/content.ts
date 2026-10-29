@@ -31,7 +31,7 @@ export async function findPublic<S extends CollectionSlug>(
   {
     publicOnly = false,
     ...options
-  }: { where?: Where; limit?: number; page?: number; sort?: string; depth?: number; publicOnly?: boolean } = {},
+  }: { where?: Where; limit?: number; page?: number; sort?: string | string[]; depth?: number; publicOnly?: boolean } = {},
 ) {
   const [payload, user] = await Promise.all([getPayloadClient(), publicOnly ? null : getPreviewUser()])
   return payload.find({ collection, ...readArgs(locale, user), depth: 1, limit: 24, ...options }) as Promise<{

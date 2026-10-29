@@ -3,11 +3,13 @@ import { getTranslations } from 'next-intl/server'
 
 import { PageShell } from '@/components/layout/PageShell'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { PageHeading } from '@/components/ui/PageHeading'
+import { PageIntro } from '@/components/ui/PageIntro'
+import { Pending } from '@/components/ui/Pending'
 import { RichText } from '@/components/ui/RichText'
 import { findPublicGlobal } from '@/lib/content'
 import { pageLocale, type LocaleParams } from '@/lib/locale'
-import { alternatesFor } from '@/lib/seo'
+import { alternatesFor, localizedPath } from '@/lib/seo'
+import { hasRichText } from '@/lib/text'
 
 export async function generateMetadata({ params }: { params: LocaleParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
@@ -21,12 +23,30 @@ export async function generateMetadata({ params }: { params: LocaleParams }): Pr
 
 export default async function BrandPage({ params }: { params: LocaleParams }) {
   const locale = await pageLocale(params)
-  const [t, page] = await Promise.all([getTranslations('nav'), findPublicGlobal('brand-page', locale)])
+  const [t, page] = await Promise.all([getTranslations(), findPublicGlobal('brand-page', locale)])
+  // Brand story comes only from the Brand page global (published + approved); nothing is written here.
+  const filled = Boolean(page && (page.intro || hasRichText(page.body)))
 
   return (
-    <PageShell locale={locale} path="/brand">
-      <PageHeading intro={page?.intro}>{page?.title || t('brand')}</PageHeading>
-      {page ? <RichText data={page.body} /> : <EmptyState />}
+    <PageShell locale={locale} path="/brand" bleed>
+      <PageIntro title={page?.title || t('nav.brand')} lead={page?.intro ? <p>{page.intro}</p> : null} />
+      <div className="container-page py-10 lg:py-14">
+        {filled ? (
+          <div className="max-w-3xl">
+            {hasRichText(page?.body) ? <RichText data={page?.body} className="text-ink" /> : null}
+          </div>
+        ) : (
+          <>
+            <Pending label="brandBody" className="mb-6 text-ink-muted" />
+            <EmptyState
+              links={[
+                { href: localizedPath(locale, '/products'), title: t('common.viewProducts'), body: t('common.productsBody') },
+                { href: localizedPath(locale, '/contact'), title: t('contact.title'), body: t('contact.lead') },
+              ]}
+            />
+          </>
+        )}
+      </div>
     </PageShell>
   )
 }

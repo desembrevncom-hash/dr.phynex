@@ -20,6 +20,10 @@ export type PendingKey =
   | 'partnershipIntro'
   | 'partnershipBody'
   | 'stores'
+  | 'brandBody'
+  | 'ingredientDescription'
+  | 'legalBody'
+  | 'articles'
 
 /**
  * Marks content the brand still has to supply, in the page's language.

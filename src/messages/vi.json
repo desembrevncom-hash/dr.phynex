@@ -8,7 +8,10 @@
     "languageUnavailable": "Chưa có ở ngôn ngữ này",
     "backHome": "Về trang chủ",
     "seeAll": "Xem tất cả",
-    "logoAlt": "Trang chủ Dr.PhynEX"
+    "logoAlt": "Trang chủ Dr.PhynEX",
+    "breadcrumb": "Đường dẫn",
+    "viewProducts": "Xem sản phẩm",
+    "productsBody": "Dòng sản phẩm RX và MX."
   },
   "nav": {
     "home": "Trang chủ",
@@ -25,8 +28,8 @@
     "close": "Đóng menu"
   },
   "empty": {
-    "title": "Nội dung đang được chuẩn bị",
-    "body": "Mục này chưa được xuất bản với bản dịch đã duyệt ở đủ ba ngôn ngữ (tiếng Hàn, tiếng Anh và tiếng Việt)."
+    "title": "Đang cập nhật",
+    "body": "Nội dung này sẽ sớm được cập nhật."
   },
   "notFound": {
     "title": "Không tìm thấy trang",
@@ -85,13 +88,18 @@
     "ingredients": "Thành phần",
     "technologies": "Công nghệ",
     "inciName": "Tên INCI",
-    "productsContaining": "Sản phẩm chứa thành phần này"
+    "productsContaining": "Sản phẩm chứa thành phần này",
+    "empty": "Thông tin thành phần sẽ sớm được bổ sung.",
+    "view": "Xem thành phần"
   },
   "journal": {
     "title": "Journal",
     "topics": "Chủ đề",
     "readMore": "Đọc bài",
-    "relatedProducts": "Sản phẩm được nhắc tới"
+    "relatedProducts": "Sản phẩm được nhắc tới",
+    "empty": "Chưa có bài viết.",
+    "allTopics": "Tất cả chủ đề",
+    "by": "Tác giả: {author}"
   },
   "stores": {
     "title": "Điểm bán",
@@ -186,6 +194,10 @@
     "contactDetails": "thông tin liên hệ chính thức (Site settings)",
     "partnershipIntro": "đoạn giới thiệu trang hợp tác",
     "partnershipBody": "nội dung chương trình hợp tác",
-    "stores": "danh sách điểm bán và nhà phân phối đã xác nhận"
+    "stores": "danh sách điểm bán và nhà phân phối đã xác nhận",
+    "brandBody": "câu chuyện thương hiệu và nội dung trang thương hiệu",
+    "ingredientDescription": "mô tả thành phần có nguồn",
+    "legalBody": "văn bản chính sách đã được pháp lý duyệt",
+    "articles": "bài viết Journal"
   }
 }

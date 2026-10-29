@@ -91,6 +91,14 @@ docker exec drphynex-postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_D
 
 Kèm theo đó, sao chép các thư mục `media/`, `private-uploads/` và `brand-assets/` ra nơi lưu trữ an toàn. Không commit file dump.
 
+Hoặc chạy script làm cả hai việc, ghi vào `../drphynex-backups/<thời điểm>/` kèm checksum từng file:
+
+```bash
+bash scripts/backup-local.sh
+```
+
+File dump chứa cả tài khoản (mã băm mật khẩu) và dữ liệu form, nên cần lưu ở nơi an toàn. Cách phục hồi xem file `RESTORE.md` trong thư mục sao lưu.
+
 Các script nạp (`scripts/import-*.ts`) chạy lại được nhiều lần một cách an toàn:
 - không tạo trùng (khớp theo slug hoặc tên file);
 - chỉ điền vào trường đang trống, nên không ghi đè nội dung đã sửa trong CMS;

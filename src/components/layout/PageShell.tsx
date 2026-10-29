@@ -32,6 +32,8 @@ type Props = {
   available?: readonly Locale[]
   /** Full-width sections manage their own container (home page). */
   bleed?: boolean
+  /** Active filter query (e.g. "?line=mx") kept when switching language; slugs are shared. */
+  search?: string
   children: ReactNode
 }
 
@@ -41,7 +43,7 @@ function Logo({ className }: { className: string }) {
   return <img src="/brand/drphynex-logo-web.svg" alt="" width={1178} height={330} className={className} />
 }
 
-export async function PageShell({ locale, path, available = locales, bleed = false, children }: Props) {
+export async function PageShell({ locale, path, available = locales, bleed = false, search = '', children }: Props) {
   const [t, preview] = await Promise.all([getTranslations(), getPreviewUser()])
   const href = (p: string) => localizedPath(locale, p)
   const items = mainNav.map(([key, p]) => ({
@@ -50,7 +52,7 @@ export async function PageShell({ locale, path, available = locales, bleed = fal
     href: href(p),
     current: path === p || path.startsWith(`${p}/`),
   }))
-  const switcher = <LanguageSwitcher locale={locale} path={path} available={available} />
+  const switcher = <LanguageSwitcher locale={locale} path={path} search={search} available={available} />
 
   return (
     <>

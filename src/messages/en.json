@@ -8,7 +8,10 @@
     "languageUnavailable": "Not available in this language yet",
     "backHome": "Back to home",
     "seeAll": "See all",
-    "logoAlt": "Dr.PhynEX home"
+    "logoAlt": "Dr.PhynEX home",
+    "breadcrumb": "Breadcrumb",
+    "viewProducts": "View products",
+    "productsBody": "RX and MX product lines."
   },
   "nav": {
     "home": "Home",
@@ -25,8 +28,8 @@
     "close": "Close menu"
   },
   "empty": {
-    "title": "Content coming soon",
-    "body": "This section has not yet been published with approved translations in all three languages (Korean, English and Vietnamese)."
+    "title": "Coming soon",
+    "body": "This section will be available soon."
   },
   "notFound": {
     "title": "Page not found",
@@ -85,13 +88,18 @@
     "ingredients": "Ingredients",
     "technologies": "Technologies",
     "inciName": "INCI name",
-    "productsContaining": "Products with this ingredient"
+    "productsContaining": "Products with this ingredient",
+    "empty": "Ingredient information will be added soon.",
+    "view": "View ingredient"
   },
   "journal": {
     "title": "Journal",
     "topics": "Topics",
     "readMore": "Read article",
-    "relatedProducts": "Products mentioned"
+    "relatedProducts": "Products mentioned",
+    "empty": "No articles yet.",
+    "allTopics": "All topics",
+    "by": "By {author}"
   },
   "stores": {
     "title": "Stores",
@@ -186,6 +194,10 @@
     "contactDetails": "official contact details (Site settings)",
     "partnershipIntro": "partnership page introduction",
     "partnershipBody": "partnership programme details",
-    "stores": "confirmed list of stores and distributors"
+    "stores": "confirmed list of stores and distributors",
+    "brandBody": "brand story and brand page content",
+    "ingredientDescription": "ingredient description with source",
+    "legalBody": "policy text reviewed by the legal team",
+    "articles": "Journal articles"
   }
 }

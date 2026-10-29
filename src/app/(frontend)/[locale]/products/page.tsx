@@ -62,7 +62,19 @@ export default async function ProductsPage({ params, searchParams }: { params: L
   const ungrouped = products.docs.filter((p) => !groups.some((g) => g.items.includes(p)))
 
   return (
-    <PageShell locale={locale} path="/products" bleed>
+    <PageShell
+      locale={locale}
+      path="/products"
+      search={(() => {
+        // Keep only filters that matched something; line and concern slugs are shared across languages.
+        const qs = new URLSearchParams()
+        if (line) qs.set('line', line.slug)
+        if (concern) qs.set('concern', concern.slug)
+        const s = qs.toString()
+        return s ? `?${s}` : ''
+      })()}
+      bleed
+    >
       <PageIntro
         title={t('products.title')}
         lead={products.totalDocs > 0 ? <p role="status">{t('products.count', { count: products.totalDocs })}</p> : null}

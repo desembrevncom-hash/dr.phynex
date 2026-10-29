@@ -48,7 +48,7 @@ export default async function StoresPage({ params, searchParams }: { params: Loc
   const base = localizedPath(locale, '/stores')
 
   return (
-    <PageShell locale={locale} path="/stores" bleed>
+    <PageShell locale={locale} path="/stores" search={country && countries.includes(country) ? `?country=${country}` : ''} bleed>
       <PageIntro title={t('stores.title')} />
 
       {stores.docs.length === 0 ? (
