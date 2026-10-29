@@ -29,10 +29,19 @@ async function main() {
     return { status: r.status, html: await r.text() }
   }
   try {
+    await payload.create({
+      collection: 'users',
+      data: {
+        email: 'p1-http-admin-' + suffix + '@test.local',
+        password: randomBytes(24).toString('hex'),
+        role: 'admin',
+      },
+    })
     for (const role of ['editor', 'translator'] as const) {
       const password = randomBytes(24).toString('hex'),
         email = 'p1-http-' + role + '-' + suffix + '@test.local'
-      await payload.create({ collection: 'users', data: { email, password, role } })
+      const user = await payload.create({ collection: 'users', data: { email, password, role } })
+      assert.equal(user.role, role, 'HTTP fixture role must match the requested role')
       tokens[role] = (
         await payload.login({ collection: 'users', data: { email, password } })
       ).token!

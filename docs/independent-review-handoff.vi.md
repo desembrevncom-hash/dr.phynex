@@ -1,5 +1,7 @@
 # Bàn giao xử lý review độc lập — 29/10/2026
 
+> Đính chính sau review lần hai: các kết luận đóng toàn bộ binary/locale/restore tại fa51fd1 không đủ rộng. Xem [khắc phục P1 và giới hạn restore](independent-review-p1-followup.vi.md) trước khi dùng kết luận hoặc số test cũ bên dưới. Đây là báo cáo lịch sử, không thay kết quả xác minh ứng viên mới.
+
 Đã hoàn tất bốn nhóm để review lại, **chưa phải nghiệm thu ra mắt**. Giữ Clinical Label, CSS, ảnh thương hiệu và nội dung CMS thật; chỉ thêm nhãn điều hướng phân trang. Một agent thực hiện tuần tự.
 
 Mốc đầu: 2c35a5261048b3fedf515518188b72a291c77827. Các thay đổi triển khai cũ đã được lưu trong b765ca6 và 2c35a52. Commit checkpoint 30d896a ghi rõ còn chưa hoàn chỉnh; nhánh sửa fix/independent-review tạo từ mốc này. Ba thư mục công cụ chưa tracked được giữ nguyên, không đưa vào commit ứng dụng.

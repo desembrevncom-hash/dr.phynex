@@ -1,5 +1,7 @@
 # Independent review remediation — 2026-10-29
 
+> Đính chính sau review lần hai: các kết luận đóng toàn bộ binary/locale/restore tại fa51fd1 không đủ rộng. Xem [khắc phục P1 và giới hạn restore](independent-review-p1-followup.vi.md) trước khi dùng kết luận hoặc số test cũ bên dưới. Đây là báo cáo lịch sử, không thay kết quả xác minh ứng viên mới.
+
 Status: implementation ready for independent re-review, **not launch approval**.
 No push, deploy, external account, bucket connection, SMTP transmission or paid service.
 One agent performed all edits sequentially. Clinical Label, CSS, brand assets and actual CMS content were retained; only pagination UI labels were added.
