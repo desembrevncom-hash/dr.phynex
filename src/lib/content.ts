@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 import type { CollectionSlug, GlobalSlug, Where } from 'payload'
 
@@ -8,6 +9,7 @@ import type { Config, User } from '@/payload-types'
 
 import { getPayloadClient } from './content-client'
 import { getPreviewUser } from './preview'
+import { PUBLIC_CONTENT_TAG } from './revalidate'
 
 export { getPayloadClient }
 
@@ -25,40 +27,45 @@ const readArgs = (locale: Locale, user: User | null) =>
     ? ({ locale, fallbackLocale: false, overrideAccess: false, draft: true, user } as const)
     : ({ locale, fallbackLocale: false, overrideAccess: false, draft: false } as const)
 
+/**
+ * Guest reads are identical for every visitor (published + approved only), so they are shared
+ * through the Next data cache, tagged and cleared by Payload hooks on any content change
+ * (lib/revalidate.ts). Staff preview never goes through here, and Next itself neither reads
+ * nor writes the data cache in draft mode, so drafts cannot enter the public cache.
+ */
+export const GUEST_CACHE_SECONDS = 3600
+const guestCache = <A extends unknown[], R>(name: string, fn: (...args: A) => Promise<R>) =>
+  unstable_cache(fn, ['cms', name], { tags: [PUBLIC_CONTENT_TAG], revalidate: GUEST_CACHE_SECONDS })
+
+type FindOptions = { where?: Where; limit?: number; page?: number; sort?: string | string[]; depth?: number }
+type FindResult<S extends CollectionSlug> = { docs: Collections[S][]; totalDocs: number; totalPages: number; page?: number }
+
+const find = async (collection: CollectionSlug, locale: Locale, user: User | null, options: FindOptions) => {
+  const payload = await getPayloadClient()
+  return payload.find({ collection, ...readArgs(locale, user), depth: 1, limit: 24, ...options })
+}
+const guestFind = guestCache('find', (collection: CollectionSlug, locale: Locale, options: FindOptions) =>
+  find(collection, locale, null, options),
+)
+
 export async function findPublic<S extends CollectionSlug>(
   collection: S,
   locale: Locale,
-  {
-    publicOnly = false,
-    ...options
-  }: { where?: Where; limit?: number; page?: number; sort?: string | string[]; depth?: number; publicOnly?: boolean } = {},
+  { publicOnly = false, ...options }: FindOptions & { publicOnly?: boolean } = {},
 ) {
-  const [payload, user] = await Promise.all([getPayloadClient(), publicOnly ? null : getPreviewUser()])
-  return payload.find({ collection, ...readArgs(locale, user), depth: 1, limit: 24, ...options }) as Promise<{
-    docs: Collections[S][]
-    totalDocs: number
-    totalPages: number
-    page?: number
-  }>
+  const user = publicOnly ? null : await getPreviewUser()
+  return (await (user ? find(collection, locale, user, options) : guestFind(collection, locale, options))) as unknown as FindResult<S>
 }
 
 export const findPublicBySlug = cache(
   async <S extends CollectionSlug>(collection: S, slug: string, locale: Locale, depth = 2) => {
-    const [payload, user] = await Promise.all([getPayloadClient(), getPreviewUser()])
-    const { docs } = await payload.find({
-      collection,
-      ...readArgs(locale, user),
-      depth,
-      limit: 1,
-      where: { slug: { equals: slug } },
-    })
-    return (docs[0] as Collections[S] | undefined) ?? null
+    const { docs } = await findPublic(collection, locale, { depth, limit: 1, where: { slug: { equals: slug } } })
+    return docs[0] ?? null
   },
 )
 
 /** Locales in which this document is published and approved (drives hreflang + switcher). */
-export const approvedLocalesFor = cache(async (collection: CollectionSlug, slug: string) => {
-  if (await getPreviewUser()) return [...locales]
+const guestApprovedLocales = guestCache('approvedLocales', async (collection: CollectionSlug, slug: string) => {
   const payload = await getPayloadClient()
   const results = await Promise.all(
     locales.map(async (locale) => {
@@ -74,14 +81,25 @@ export const approvedLocalesFor = cache(async (collection: CollectionSlug, slug:
   return results.filter((l): l is Locale => l !== null)
 })
 
+export const approvedLocalesFor = cache(async (collection: CollectionSlug, slug: string) => {
+  if (await getPreviewUser()) return [...locales]
+  return guestApprovedLocales(collection, slug)
+})
+
 /** Returns the global only if it is published and approved in this locale (any draft in preview). */
-export const findPublicGlobal = cache(async <S extends GlobalSlug>(slug: S, locale: Locale) => {
-  const [payload, user] = await Promise.all([getPayloadClient(), getPreviewUser()])
-  const doc = (await payload.findGlobal({ slug, ...readArgs(locale, user), depth: 1 })) as
-    | (Globals[S] & { translationStatus?: string; _status?: string })
+const findGlobal = async (slug: GlobalSlug, locale: Locale, user: User | null) => {
+  const payload = await getPayloadClient()
+  const doc = (await payload.findGlobal({ slug, ...readArgs(locale, user), depth: 1 })) as unknown as
+    | ({ translationStatus?: string; _status?: string } & Record<string, unknown>)
     | null
   if (!doc) return null
-  return user || doc.translationStatus === 'approved' ? (doc as Globals[S]) : null
+  return user || doc.translationStatus === 'approved' ? doc : null
+}
+const guestGlobal = guestCache('global', (slug: GlobalSlug, locale: Locale) => findGlobal(slug, locale, null))
+
+export const findPublicGlobal = cache(async <S extends GlobalSlug>(slug: S, locale: Locale) => {
+  const user = await getPreviewUser()
+  return (await (user ? findGlobal(slug, locale, user) : guestGlobal(slug, locale))) as Globals[S] | null
 })
 
 export const approvedGlobalLocales = cache(async (slug: GlobalSlug) => {

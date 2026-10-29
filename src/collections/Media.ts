@@ -7,7 +7,7 @@ import { editors, editorsField, isStaffUser, staff } from '@/access/roles'
 const releasedOrStaff: Access = ({ req }) =>
   isStaffUser(req.user) ? true : { publicRelease: { equals: true } }
 
-// Local: files on disk (./media, git-ignored). Production: swap to @payloadcms/storage-s3 (R2/S3).
+// Local: files on disk (./media, git-ignored). With S3_BUCKET set: private object storage (src/config/storage.ts).
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: {

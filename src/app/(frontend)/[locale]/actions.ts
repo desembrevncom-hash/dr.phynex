@@ -4,15 +4,15 @@ import { headers } from 'next/headers'
 
 import { isLocale } from '@/i18n/locales'
 import { getPayloadClient } from '@/lib/content'
-import { isBot, rateLimited, validate, type FormState } from '@/lib/forms'
+import { isBot, validate, type FormState } from '@/lib/forms'
+import { clientIp, rateLimitKey, sharedRateLimited } from '@/lib/rate-limit'
 
 const contactTopics = ['product', 'store', 'other'] as const
 const businessTypes = ['distributor', 'retailer', 'spa-clinic', 'online', 'other'] as const
 
-async function clientKey(form: string) {
-  const h = await headers()
-  const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() || h.get('x-real-ip') || 'unknown'
-  return `${form}:${ip}`
+async function rateLimited(form: 'contact' | 'partnership') {
+  const payload = await getPayloadClient()
+  return sharedRateLimited(payload, rateLimitKey(form, clientIp(await headers())))
 }
 
 const localeOf = (formData: FormData) => {
@@ -31,7 +31,7 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
     message: { required: true, max: 5000 },
   })
   if (!ok) return { status: 'error', code: 'invalid', errors, values }
-  if (rateLimited(await clientKey('contact'))) return { status: 'error', code: 'rateLimited', values }
+  if (await rateLimited('contact')) return { status: 'error', code: 'rateLimited', values }
 
   try {
     const payload = await getPayloadClient()
@@ -71,7 +71,7 @@ export async function submitPartnership(_prev: FormState, formData: FormData): P
     message: { required: true, max: 5000 },
   })
   if (!ok) return { status: 'error', code: 'invalid', errors, values }
-  if (rateLimited(await clientKey('partnership'))) return { status: 'error', code: 'rateLimited', values }
+  if (await rateLimited('partnership')) return { status: 'error', code: 'rateLimited', values }
 
   try {
     const payload = await getPayloadClient()

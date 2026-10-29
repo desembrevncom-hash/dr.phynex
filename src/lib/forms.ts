@@ -37,10 +37,10 @@ export const isBot = (formData: FormData) => {
   return typeof trap === 'string' && trap.trim().length > 0
 }
 
-// Basic in-memory rate limit (per server instance). On serverless hosting this is
-// best-effort only; replace with a shared store (e.g. Postgres/KV) before launch.
-const WINDOW_MS = 10 * 60 * 1000
-const MAX_PER_WINDOW = 5
+// Per-instance memory limit. The forms use the shared Postgres limit (lib/rate-limit.ts);
+// this is only its fallback when the database cannot be reached.
+export const WINDOW_MS = 10 * 60 * 1000
+export const MAX_PER_WINDOW = 5
 const hits = new Map<string, number[]>()
 
 export function rateLimited(key: string, now = Date.now()) {

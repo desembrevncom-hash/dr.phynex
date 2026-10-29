@@ -1,6 +1,6 @@
 # Dr.PhynEX website
 
-Next.js 16 + Payload CMS 3 + PostgreSQL, ba ngôn ngữ `/ko`, `/en`, `/vi`. Tài liệu: [PRODUCT.md](PRODUCT.md), [docs/phase-1-plan.md](docs/phase-1-plan.md), [docs/phase-2-report.md](docs/phase-2-report.md), [docs/phase-3-status.md](docs/phase-3-status.md), [docs/dependency-audit.md](docs/dependency-audit.md).
+Next.js 16 + Payload CMS 3 + PostgreSQL, ba ngôn ngữ `/ko`, `/en`, `/vi`. Tài liệu: [PRODUCT.md](PRODUCT.md), [docs/phase-1-plan.md](docs/phase-1-plan.md), [docs/phase-2-report.md](docs/phase-2-report.md), [docs/phase-3-status.md](docs/phase-3-status.md), [docs/dependency-audit.md](docs/dependency-audit.md), [docs/deployment-plan.md](docs/deployment-plan.md) (triển khai), [docs/huong-dan-quan-tri.md](docs/huong-dan-quan-tri.md) (hướng dẫn quản trị).
 
 ## Yêu cầu
 

@@ -4,7 +4,7 @@ import { en } from '@payloadcms/translations/languages/en'
 import { ko } from '@payloadcms/translations/languages/ko'
 import { vi } from '@payloadcms/translations/languages/vi'
 import path from 'path'
-import { buildConfig } from 'payload'
+import { buildConfig, type CollectionConfig, type GlobalConfig } from 'payload'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
@@ -18,8 +18,11 @@ import { Stores } from './collections/Stores'
 import { ContactSubmissions, PartnerInquiries } from './collections/Submissions'
 import { JournalTopics, ProductCategories, ProductLines, SkinConcerns } from './collections/Taxonomies'
 import { Users } from './collections/Users'
+import { emailAdapter } from './config/email'
+import { objectStorage } from './config/storage'
 import { BrandPage, HomePage, PartnershipPage, SiteSettings } from './globals'
 import { contentDefaultLocale, localeLabels, locales } from './i18n/locales'
+import { revalidateAfterChange, revalidateAfterDelete, revalidateGlobalAfterChange } from './lib/revalidate'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -28,6 +31,21 @@ const secret = process.env.PAYLOAD_SECRET
 if (!secret) throw new Error('PAYLOAD_SECRET is not set. Copy .env.example to .env.')
 
 const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+
+// Changes to anything a visitor can see clear the cached public reads (lib/content.ts).
+// Source documents, form submissions and users never appear on the public site.
+const revalidating = (collection: CollectionConfig): CollectionConfig => ({
+  ...collection,
+  hooks: {
+    ...collection.hooks,
+    afterChange: [...(collection.hooks?.afterChange ?? []), revalidateAfterChange],
+    afterDelete: [...(collection.hooks?.afterDelete ?? []), revalidateAfterDelete],
+  },
+})
+const revalidatingGlobal = (global: GlobalConfig): GlobalConfig => ({
+  ...global,
+  hooks: { ...global.hooks, afterChange: [...(global.hooks?.afterChange ?? []), revalidateGlobalAfterChange] },
+})
 
 export default buildConfig({
   serverURL,
@@ -46,33 +64,38 @@ export default buildConfig({
     fallback: false,
   },
   collections: [
-    Products,
-    ProductLines,
-    ProductCategories,
-    SkinConcerns,
-    Ingredients,
-    Technologies,
-    Articles,
-    JournalTopics,
-    Stores,
-    LegalPages,
-    Media,
+    ...[
+      Products,
+      ProductLines,
+      ProductCategories,
+      SkinConcerns,
+      Ingredients,
+      Technologies,
+      Articles,
+      JournalTopics,
+      Stores,
+      LegalPages,
+      Media,
+    ].map(revalidating),
     SourceDocuments,
     ContactSubmissions,
     PartnerInquiries,
     Users,
   ],
-  globals: [HomePage, BrandPage, PartnershipPage, SiteSettings],
+  globals: [HomePage, BrandPage, PartnershipPage, SiteSettings].map(revalidatingGlobal),
   editor: lexicalEditor(),
   secret,
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
-  graphQL: { disablePlaygroundInProduction: true },
+  // The site and the admin use the REST/Local API only. Disabled routes answer 404.
+  graphQL: { disable: true },
+  email: emailAdapter(),
   db: postgresAdapter({
-    pool: { connectionString: process.env.DATABASE_URL || '' },
+    // On Vercel use the provider's pooled connection string (see docs/deployment-plan.md).
+    pool: { connectionString: process.env.DATABASE_URL || '', max: process.env.VERCEL ? 3 : 10 },
     // Schema changes go through migrations (npm run migrate:create / migrate), also locally.
     push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
   }),
   sharp,
-  plugins: [],
+  plugins: [...objectStorage()],
 })

@@ -51,6 +51,7 @@ Mục tiêu: một bản sao nằm ngoài máy này, được mã hóa trước 
 | `DATABASE_URL` | Kết nối Payload → Postgres | Ghép lại từ các biến ở trên |
 | `PAYLOAD_SECRET` | Ký phiên đăng nhập (JWT) | Tạo chuỗi mới. Mọi người phải đăng nhập lại; nội dung và mật khẩu không bị ảnh hưởng |
 | `NEXT_PUBLIC_SERVER_URL` | Địa chỉ site (CORS/CSRF, hreflang) | Đặt lại theo môi trường |
+| `S3_*`, `SMTP_*`, `EMAIL_FROM_*`, `FORM_NOTIFY_TO` | Chỉ dùng khi triển khai (storage, email); Local để trống | Tạo khóa mới ở nhà cung cấp và thu hồi khóa cũ; xem [deployment-plan.md](deployment-plan.md) §4 |
 
 Khôi phục trên máy mới:
 1. `cp .env.example .env`

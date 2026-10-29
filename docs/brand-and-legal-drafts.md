@@ -22,11 +22,11 @@ Phần này liệt kê dữ liệu **theo đúng mã nguồn hiện tại**, đ�
 |---|---|---|---|
 | Form Liên hệ (`/contact`) | Họ tên, email, số điện thoại (không bắt buộc), chủ đề, nội dung, ngôn ngữ trang, đồng ý lưu trữ | Database CMS, collection Contact submissions | Chỉ tài khoản admin |
 | Form Hợp tác (`/partnership`) | Tên công ty, người liên hệ, email, số điện thoại (không bắt buộc), quốc gia, loại hình kinh doanh, kênh bán hiện có, nội dung, ngôn ngữ, đồng ý lưu trữ | Database CMS, collection Partner inquiries | Chỉ tài khoản admin |
-| Chống spam | Địa chỉ IP, chỉ dùng để giới hạn số lần gửi | Bộ nhớ tạm của server (không ghi vào database), mất khi server khởi động lại | Không ai xem |
+| Chống spam | Mã băm có muối của địa chỉ IP (không lưu IP gốc) và số lần gửi, chỉ dùng để giới hạn 5 lần / 10 phút | Bảng `form_rate_limits` trong database, tự xóa sau khoảng 1 ngày | Không hiển thị trong admin |
 | Cookie `NEXT_LOCALE` | Ngôn ngữ đã chọn | Trình duyệt khách | — |
 | Cookie `payload-token` và cookie chế độ xem trước | Phiên đăng nhập và chế độ preview | Trình duyệt **nhân viên** | — |
 
-Hiện **không** có: analytics, pixel quảng cáo, gửi email thông báo, chia sẻ dữ liệu với bên thứ ba.
+Hiện **không** có: analytics, pixel quảng cáo, chia sẻ dữ liệu với bên thứ ba. Email thông báo form đã được viết nhưng chưa bật; khi bật, email chỉ chứa số thứ tự và liên kết vào admin, không chứa dữ liệu form, và đi qua nhà cung cấp email được chọn.
 
 **Cần pháp lý và thương hiệu quyết định:**
 - Bên kiểm soát dữ liệu (tên pháp lý, địa chỉ, email liên hệ về dữ liệu cá nhân).
