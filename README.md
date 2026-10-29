@@ -97,7 +97,7 @@ Hoặc chạy script làm cả hai việc, ghi vào `../drphynex-backups/<thời
 bash scripts/backup-local.sh
 ```
 
-File dump chứa cả tài khoản (mã băm mật khẩu) và dữ liệu form, nên cần lưu ở nơi an toàn. Cách phục hồi xem file `RESTORE.md` trong thư mục sao lưu.
+File dump chứa **mã băm mật khẩu** và có thể chứa **dữ liệu cá nhân** (dữ liệu form), nên cần lưu ở nơi an toàn. Bản sao ngoài máy phải được mã hóa. `.env` không nằm trong bản sao lưu, mà phải lưu trong trình quản lý mật khẩu. Hướng dẫn đầy đủ: [docs/backup-and-restore.md](docs/backup-and-restore.md).
 
 Các script nạp (`scripts/import-*.ts`) chạy lại được nhiều lần một cách an toàn:
 - không tạo trùng (khớp theo slug hoặc tên file);

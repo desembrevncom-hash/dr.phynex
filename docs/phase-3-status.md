@@ -364,3 +364,7 @@ Mốc nội dung: commit `f5775d2` (dữ liệu nháp có nguồn, ghi chú biê
 **Kiểm tra:** `npm test` 15/15, typecheck, lint, build sạch.
 
 **Ghi chú môi trường:** cổng 3000 đang có một server `next dev` của dự án, khởi động lúc 13:06; tôi không khởi động và không tắt server này. Bản production để kiểm tra chạy ở cổng 3001.
+
+## 12. Nghiệm thu Local (29/10/2026)
+
+Bảng nghiệm thu duy nhất: [acceptance-status.md](acceptance-status.md). Sao lưu: [backup-and-restore.md](backup-and-restore.md). Script nghiệm thu nằm trong `scripts/acceptance/`.
