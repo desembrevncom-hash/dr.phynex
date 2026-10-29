@@ -30,7 +30,7 @@ it('upgrades existing upload rows without losing metadata', async () => {
  expect(read.docs[0].filename).toBe('existing.png')
 })
 it('inserts the same fields with the S3 adapter disabled and enabled, without contacting a bucket', async () => {
- const base = { collections: [{ slug:'media', fields:[], upload:{ staticDir:'media' } }, { slug:'source-documents', fields:[], upload:{ staticDir:'private' } }] } as Config
+ const base = { collections: [{ slug:'media', fields:[], upload:{ staticDir:'media' } }, { slug:'source-documents', fields:[], upload:{ staticDir:'private' } }] } as unknown as Config
  const disabled = await objectStorage()[0](base)
  Object.assign(process.env, { S3_BUCKET:'test-invalid', S3_ACCESS_KEY_ID:'test', S3_SECRET_ACCESS_KEY:'test', S3_ENDPOINT:'http://127.0.0.1:1' })
  try {

@@ -10,7 +10,7 @@ export const ProductLines = contentCollection({
   fields: [
     { name: 'name', type: 'text', localized: true, required: true },
     { name: 'description', type: 'textarea', localized: true },
-    { name: 'heroImage', type: 'upload', relationTo: 'media' },
+    { name: 'heroImage', type: 'upload', relationTo: 'media', access: { create: editorsField, update: editorsField } },
     {
       name: 'appearance',
       type: 'select',

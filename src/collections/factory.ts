@@ -1,3 +1,4 @@
+import { publishOnlyRequestedLocale, publishOnlyRequestedGlobalLocale } from '@/hooks/publishLocale'
 import type { CollectionConfig, Field, GlobalConfig } from 'payload'
 
 import { editors, publishedAndApproved, staff } from '@/access/roles'
@@ -25,6 +26,7 @@ export const contentCollection = ({ fields, hooks, ...config }: ContentCollectio
   versions: { drafts: true, maxPerDoc: 50 },
   hooks: {
     ...hooks,
+    beforeOperation: [publishOnlyRequestedLocale, ...(hooks?.beforeOperation ?? [])],
     beforeChange: [guardPublishing, ...(hooks?.beforeChange ?? [])],
   },
   fields: [...fields, translationStatusField],
@@ -42,6 +44,7 @@ export const contentGlobal = ({ fields, hooks, ...config }: ContentGlobalArgs): 
   versions: { drafts: true, max: 50 },
   hooks: {
     ...hooks,
+    beforeOperation: [publishOnlyRequestedGlobalLocale, ...(hooks?.beforeOperation ?? [])],
     beforeChange: [guardGlobalPublishing, ...(hooks?.beforeChange ?? [])],
   },
   fields: [...fields, translationStatusField],

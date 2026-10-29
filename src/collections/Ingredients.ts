@@ -21,7 +21,7 @@ const sharedFields: Field[] = [
   { name: 'name', type: 'text', localized: true, required: true },
   { name: 'summary', type: 'textarea', localized: true },
   { name: 'body', type: 'richText', localized: true },
-  { name: 'image', type: 'upload', relationTo: 'media' },
+  { name: 'image', type: 'upload', relationTo: 'media', access: { create: editorsField, update: editorsField } },
   sourcesField,
   seoField,
   slugField,
