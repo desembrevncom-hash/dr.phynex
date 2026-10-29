@@ -576,3 +576,43 @@ it('prevents file identity swaps through privileged Local calls carrying a staff
   expect(saved.url).toBe(m.url)
   expect(saved.publicRelease).toBe(true)
 })
+it('allows deliberate approval withdrawal after publishing a previously pending draft', async () => {
+  const p = await payload.create({
+    collection: 'products',
+    locale: 'en',
+    data: {
+      name: 'First public',
+      slug: 'p1-withdrawal',
+      accent: 'navy',
+      translationStatus: 'approved',
+      _status: 'published',
+    },
+  })
+  await payload.update({
+    collection: 'products',
+    id: p.id,
+    locale: 'en',
+    draft: true,
+    data: { name: 'Second reviewed' },
+  })
+  await payload.update({
+    collection: 'products',
+    id: p.id,
+    locale: 'en',
+    draft: true,
+    data: { translationStatus: 'approved' },
+  })
+  await payload.update({
+    collection: 'products',
+    id: p.id,
+    locale: 'en',
+    data: { _status: 'published' },
+  })
+  await payload.update({
+    collection: 'products',
+    id: p.id,
+    locale: 'en',
+    data: { translationStatus: 'in-review', _status: 'published' },
+  })
+  await expect(payload.findByID({ collection: 'products', id: p.id, ...guest })).rejects.toThrow()
+})

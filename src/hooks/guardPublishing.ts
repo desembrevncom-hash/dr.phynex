@@ -77,9 +77,7 @@ function review(
   if (changed) data.translationStatus = 'in-review'
   const approval = data.translationStatus ?? original?.translationStatus
   const withdrawal =
-    !changed &&
-    original?._status === 'published' &&
-    (data.translationStatus === 'in-review' || data.translationStatus === 'ai-draft')
+    !changed && (data.translationStatus === 'in-review' || data.translationStatus === 'ai-draft')
   if (data._status === 'published' && (changed || (approval !== 'approved' && !withdrawal))) {
     throw new APIError(
       'Save the draft and review it before publishing this locale.',
