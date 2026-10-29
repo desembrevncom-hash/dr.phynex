@@ -1,3 +1,4 @@
+import { assertDisposableDatabase } from '../helpers/database'
 import { randomBytes } from 'crypto'
 import { getPayload, type Migration, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -29,6 +30,7 @@ const fixture = {
 beforeAll(async () => {
   if (!process.env.DATABASE_URL?.includes('_test')) throw new Error('Refusing to run outside the test database')
   payload = await getPayload({ config: await config })
+  await assertDisposableDatabase(payload)
   // Fresh schema from the committed migrations (passed in directly so Vite handles the TS).
   await payload.db.dropDatabase({ adapter: payload.db as never })
   await payload.db.migrate({ migrations: migrations as unknown as Migration[] })

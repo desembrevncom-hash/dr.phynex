@@ -1,3 +1,4 @@
+import { assertDisposableDatabase } from '../helpers/database'
 import { sql, type PostgresAdapter } from '@payloadcms/db-postgres'
 import { getPayload, type Migration, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
@@ -17,6 +18,7 @@ let payload: Payload
 beforeAll(async () => {
   if (!process.env.DATABASE_URL?.includes('_test')) throw new Error('Refusing to run outside the test database')
   payload = await getPayload({ config: await config })
+  await assertDisposableDatabase(payload)
   await payload.db.migrate({ migrations: migrations as unknown as Migration[] })
   await (payload.db as unknown as PostgresAdapter).drizzle.execute(sql`DELETE FROM "form_rate_limits"`)
 })
@@ -77,7 +79,7 @@ describe('configuration', () => {
 
   it('keeps uploads on local disk when no bucket is configured', () => {
     expect(process.env.S3_BUCKET).toBeUndefined()
-    expect(payload.collections.media.config.upload.staticDir).toBe('media')
+    expect(payload.collections.media.config.upload.staticDir).toContain('drphynex-review-')
   })
 })
 

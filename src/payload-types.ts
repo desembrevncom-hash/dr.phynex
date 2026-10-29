@@ -280,6 +280,8 @@ export interface Media {
    * Internal: source of the image and how it was checked against the packaging artwork.
    */
   reviewNote?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -302,6 +304,8 @@ export interface SourceDocument {
   id: number;
   title: string;
   note?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1034,6 +1038,8 @@ export interface MediaSelect<T extends boolean = true> {
   credit?: T;
   publicRelease?: T;
   reviewNote?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1053,6 +1059,8 @@ export interface MediaSelect<T extends boolean = true> {
 export interface SourceDocumentsSelect<T extends boolean = true> {
   title?: T;
   note?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

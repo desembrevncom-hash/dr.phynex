@@ -18,16 +18,18 @@ export function objectStorage(): Plugin[] {
     if (process.env.VERCEL) {
       throw new Error('S3_BUCKET is not set. On Vercel uploads must go to object storage (see docs/deployment-plan.md).')
     }
-    return []
+    // Insert storage fields even when the Local adapter is disabled.
   }
 
   const accessKeyId = process.env.S3_ACCESS_KEY_ID
   const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY
-  if (!accessKeyId || !secretAccessKey) throw new Error('S3_BUCKET is set but S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY are missing.')
+  if (bucket && (!accessKeyId || !secretAccessKey)) throw new Error('S3_BUCKET is set but S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY are missing.')
 
   return [
     s3Storage({
-      bucket,
+      bucket: bucket || 'disabled-local-storage',
+      enabled: Boolean(bucket),
+      alwaysInsertFields: true,
       acl: 'private',
       // Vercel functions accept request bodies up to 4.5 MB. With S3_CLIENT_UPLOADS=true the admin
       // uploads straight to the bucket (needs a bucket CORS rule allowing PUT from the site origin).
@@ -41,7 +43,7 @@ export function objectStorage(): Plugin[] {
         region: process.env.S3_REGION || 'auto',
         endpoint: process.env.S3_ENDPOINT || undefined,
         forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true',
-        credentials: { accessKeyId, secretAccessKey },
+        credentials: accessKeyId && secretAccessKey ? { accessKeyId, secretAccessKey } : undefined,
       },
     }),
   ]
