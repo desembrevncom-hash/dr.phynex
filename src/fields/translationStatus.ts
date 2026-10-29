@@ -24,12 +24,17 @@ export const translationStatusField: Field = {
   admin: {
     position: 'sidebar',
     description:
-      'Per language. Only "Approved" + Published content is visible on the public site.',
+      'Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.',
   },
   hooks: {
     beforeChange: [
       ({ value, previousValue, req }) => {
-        if (value === 'approved' && previousValue !== 'approved' && req.user && !isEditorUser(req.user)) {
+        if (
+          value === 'approved' &&
+          previousValue !== 'approved' &&
+          req.user &&
+          !isEditorUser(req.user)
+        ) {
           throw new APIError('Only editors or admins can approve a translation.', 403, null, true)
         }
         // A translator's draft is a new revision, never the previously approved text.

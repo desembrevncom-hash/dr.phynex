@@ -28,7 +28,8 @@ const fixture = {
 }
 
 beforeAll(async () => {
-  if (!process.env.DATABASE_URL?.includes('_test')) throw new Error('Refusing to run outside the test database')
+  if (!process.env.DATABASE_URL?.includes('_test'))
+    throw new Error('Refusing to run outside the test database')
   payload = await getPayload({ config: await config })
   await assertDisposableDatabase(payload)
   // Fresh schema from the committed migrations (passed in directly so Vite handles the TS).
@@ -68,7 +69,11 @@ describe('accounts', () => {
 
   it('guests and non-admins cannot list accounts', async () => {
     await expect(payload.find({ collection: 'users', ...guest })).rejects.toThrow()
-    const asEditor = await payload.find({ collection: 'users', overrideAccess: false, user: editor })
+    const asEditor = await payload.find({
+      collection: 'users',
+      overrideAccess: false,
+      user: editor,
+    })
     expect(asEditor.docs.map((u) => u.email)).toEqual(['editor@test.local'])
   })
 
@@ -116,7 +121,7 @@ describe('publishing and translation approval', () => {
         user: editor,
         overrideAccess: false,
       }),
-    ).rejects.toThrow(/sourceDocument|Source|claims/i)
+    ).rejects.toThrow(/sourceDocument|Source|claims|review/i)
   })
 
   it('guests never see drafts, even with draft=true', async () => {
@@ -129,7 +134,25 @@ describe('publishing and translation approval', () => {
       collection: 'products',
       id: productId,
       locale: 'ko',
-      data: { ...fixture, _status: 'published' },
+      draft: true,
+      data: fixture,
+      user: editor,
+      overrideAccess: false,
+    })
+    await payload.update({
+      collection: 'products',
+      id: productId,
+      locale: 'ko',
+      draft: true,
+      data: { translationStatus: 'approved' },
+      user: editor,
+      overrideAccess: false,
+    })
+    await payload.update({
+      collection: 'products',
+      id: productId,
+      locale: 'ko',
+      data: { _status: 'published' },
       user: editor,
       overrideAccess: false,
     })
@@ -138,7 +161,8 @@ describe('publishing and translation approval', () => {
       collection: 'products',
       id: productId,
       locale: 'en',
-      data: { name: 'Test product EN', translationStatus: 'in-review', _status: 'published' },
+      draft: true,
+      data: { name: 'Test product EN', translationStatus: 'in-review' },
       user: editor,
       overrideAccess: false,
     })
@@ -158,14 +182,26 @@ describe('publishing and translation approval', () => {
     expect(claim.text).toBe('Test claim')
     expect(claim.sourceDocument).toBeUndefined()
     expect((ko.docs[0] as unknown as Record<string, unknown>).editorialNote).toBeUndefined()
-    const asStaff = await payload.find({ collection: 'products', locale: 'ko', overrideAccess: false, user: translator })
+    const asStaff = await payload.find({
+      collection: 'products',
+      locale: 'ko',
+      overrideAccess: false,
+      user: translator,
+    })
     expect(asStaff.docs[0]?.editorialNote).toBe('Internal: open question for the brand')
   })
 
   it('guests cannot bypass approval with locale=all or a fallback locale', async () => {
-    await expect(payload.find({ collection: 'products', locale: 'all', overrideAccess: false })).rejects.toThrow()
     await expect(
-      payload.find({ collection: 'products', locale: 'en', fallbackLocale: 'ko', overrideAccess: false }),
+      payload.find({ collection: 'products', locale: 'all', overrideAccess: false }),
+    ).rejects.toThrow()
+    await expect(
+      payload.find({
+        collection: 'products',
+        locale: 'en',
+        fallbackLocale: 'ko',
+        overrideAccess: false,
+      }),
     ).rejects.toThrow()
     await expect(
       payload.findByID({ collection: 'products', id: productId, locale: 'en', ...guest }),
@@ -185,7 +221,12 @@ describe('publishing and translation approval', () => {
     const published = await payload.find({ collection: 'products', locale: 'ko', ...guest })
     expect(published.docs.map((d) => d.name)).toEqual(['Test product KO'])
     // draft=true: the latest version is a draft, so guests get nothing rather than the draft.
-    const asDraft = await payload.find({ collection: 'products', locale: 'ko', ...guest, draft: true })
+    const asDraft = await payload.find({
+      collection: 'products',
+      locale: 'ko',
+      ...guest,
+      draft: true,
+    })
     expect(asDraft.docs.map((d) => d.name)).not.toContain('Unpublished change')
     await expect(
       payload.findVersions({ collection: 'products', locale: 'ko', overrideAccess: false }),
@@ -242,7 +283,13 @@ describe('publishing and translation approval', () => {
 
   it('guests cannot write content', async () => {
     await expect(
-      payload.update({ collection: 'products', id: productId, locale: 'ko', data: { name: 'x' }, ...guest }),
+      payload.update({
+        collection: 'products',
+        id: productId,
+        locale: 'ko',
+        data: { name: 'x' },
+        ...guest,
+      }),
     ).rejects.toThrow()
   })
 })
@@ -263,7 +310,23 @@ describe('globals', () => {
     await payload.updateGlobal({
       slug: 'home-page',
       locale: 'en',
-      data: { headline: 'Published headline', translationStatus: 'approved', _status: 'published' },
+      draft: true,
+      data: { headline: 'Published headline' },
+      user: editor,
+      overrideAccess: false,
+    })
+    await payload.updateGlobal({
+      slug: 'home-page',
+      locale: 'en',
+      draft: true,
+      data: { translationStatus: 'approved' },
+      user: editor,
+      overrideAccess: false,
+    })
+    await payload.updateGlobal({
+      slug: 'home-page',
+      locale: 'en',
+      data: { _status: 'published' },
       user: editor,
       overrideAccess: false,
     })
@@ -278,9 +341,16 @@ describe('globals', () => {
 describe('form submissions and private files', () => {
   it('only admins can read submissions; nobody can create them through the API', async () => {
     const data = { name: 'T', email: 't@test.local', message: 'Hello', consent: true }
-    await expect(payload.create({ collection: 'contact-submissions', data, ...guest })).rejects.toThrow()
     await expect(
-      payload.create({ collection: 'contact-submissions', data, user: admin, overrideAccess: false }),
+      payload.create({ collection: 'contact-submissions', data, ...guest }),
+    ).rejects.toThrow()
+    await expect(
+      payload.create({
+        collection: 'contact-submissions',
+        data,
+        user: admin,
+        overrideAccess: false,
+      }),
     ).rejects.toThrow()
 
     // Trusted server path (server action) uses the Local API with overrideAccess.
@@ -291,7 +361,11 @@ describe('form submissions and private files', () => {
     await expect(
       payload.find({ collection: 'contact-submissions', overrideAccess: false, user: editor }),
     ).rejects.toThrow()
-    const asAdmin = await payload.find({ collection: 'contact-submissions', overrideAccess: false, user: admin })
+    const asAdmin = await payload.find({
+      collection: 'contact-submissions',
+      overrideAccess: false,
+      user: admin,
+    })
     expect(asAdmin.totalDocs).toBe(1)
   })
 
@@ -305,7 +379,12 @@ describe('form submissions and private files', () => {
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
       'base64',
     )
-    const file = { data: png, mimetype: 'image/png', name: `test-${Date.now()}.png`, size: png.length }
+    const file = {
+      data: png,
+      mimetype: 'image/png',
+      name: `test-${Date.now()}.png`,
+      size: png.length,
+    }
     const image = await payload.create({
       collection: 'media',
       locale: 'ko',
@@ -327,9 +406,17 @@ describe('form submissions and private files', () => {
 
       const hidden = await payload.find({ collection: 'media', ...guest })
       expect(hidden.docs.map((d) => d.id)).not.toContain(image.id)
-      await expect(payload.findByID({ collection: 'media', id: image.id, ...guest })).rejects.toThrow()
+      await expect(
+        payload.findByID({ collection: 'media', id: image.id, ...guest }),
+      ).rejects.toThrow()
 
-      await payload.update({ collection: 'media', id: image.id, data: { publicRelease: true }, user: editor, overrideAccess: false })
+      await payload.update({
+        collection: 'media',
+        id: image.id,
+        data: { publicRelease: true },
+        user: editor,
+        overrideAccess: false,
+      })
       const shown = await payload.find({ collection: 'media', ...guest })
       expect(shown.docs.map((d) => d.id)).toContain(image.id)
       expect((shown.docs[0] as unknown as Record<string, unknown>).reviewNote).toBeUndefined()
