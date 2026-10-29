@@ -90,7 +90,7 @@ export default async function JournalPage({ params, searchParams }: { params: Lo
           </ul>
         ) : topicSlug ? (
           <div role="status" className="rounded-lg bg-surface-muted p-8">
-            <p className="text-ink">{t('products.noResults')}</p>
+            <p className="text-ink">{t('journal.noResults')}</p>
             <Link href={base} className="mt-4 inline-flex min-h-11 items-center font-medium text-navy underline underline-offset-4">
               {t('journal.allTopics')}
             </Link>

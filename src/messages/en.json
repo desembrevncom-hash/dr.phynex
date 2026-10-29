@@ -98,6 +98,7 @@
     "readMore": "Read article",
     "relatedProducts": "Products mentioned",
     "empty": "No articles yet.",
+    "noResults": "No articles in this topic.",
     "allTopics": "All topics",
     "by": "By {author}"
   },

@@ -98,6 +98,7 @@
     "readMore": "기사 읽기",
     "relatedProducts": "언급된 제품",
     "empty": "아직 게시된 글이 없습니다.",
+    "noResults": "이 주제의 글이 없습니다.",
     "allTopics": "전체 주제",
     "by": "글: {author}"
   },

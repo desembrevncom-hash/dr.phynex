@@ -16,8 +16,8 @@ Bảng này gom kết quả từ các báo cáo trước: [phase-2-report.md](ph
 | Trang dòng `/products/line/[slug]` | 200 trong preview; khách 404 khi còn nháp | Mô tả dòng là AI đề xuất | Chờ duyệt | Duyệt mô tả dòng |
 | Thành phần `/ingredients` (+ chi tiết) | Preview: 9 thành phần, chi tiết PDRN (INCI, 4 sản phẩm, nhãn chờ); khách: trạng thái trống; ảnh 3 ngôn ngữ × 3 chiều rộng | Chỉ có tên và INCI; **không có mô tả**; một số quy đổi tên → INCI chờ xác minh (§3) | Chờ duyệt (`250a5c9`) | Mô tả thành phần có nguồn; xác minh INCI |
 | Thương hiệu `/brand` | Khách: trạng thái trống; preview: nhãn chờ (ko/en/vi) | **Chưa có** hồ sơ thương hiệu; khung đề xuất ở brand-and-legal-drafts.md | Chờ duyệt | Hồ sơ thương hiệu |
-| Journal `/journal` (+ chi tiết) | **DB nghiệm thu riêng**: danh sách, lọc chủ đề, chi tiết bài dài, bài chỉ có tiếng Hàn (EN/VI 404, bị vô hiệu trong bộ chuyển), chuyển ngôn ngữ giữ `?topic`, 3 ngôn ngữ × 3 chiều rộng. CMS thật: trạng thái trống (khách) | **Chưa có** bài viết | Chờ duyệt | Bài viết thật |
-| Chính sách bảo mật / Điều khoản | **DB nghiệm thu**: văn bản dài, bản tiếng Việt chưa duyệt hiện trạng thái trống và không lộ nội dung, bộ chuyển vô hiệu VI; 3 ngôn ngữ × 3 chiều rộng. CMS thật: trạng thái trống | **Chưa có**; dữ liệu website thu thập đã liệt kê cho pháp lý | Chờ duyệt | Văn bản do pháp lý soạn hoặc duyệt |
+| Journal `/journal` (+ chi tiết) | **DB nghiệm thu riêng**: danh sách, lọc chủ đề, chi tiết bài dài, bài chỉ có tiếng Hàn (EN/VI 404, bị vô hiệu trong bộ chuyển), chuyển ngôn ngữ giữ `?topic`, 3 ngôn ngữ × 3 chiều rộng. CMS thật: trạng thái trống (khách); preview ko/en/vi: trạng thái trống + nhãn chờ (chưa có dữ liệu) | **Chưa có** bài viết | Chờ duyệt | Bài viết thật |
+| Chính sách bảo mật / Điều khoản | **DB nghiệm thu**: văn bản dài, bản tiếng Việt chưa duyệt hiện trạng thái trống và không lộ nội dung, bộ chuyển vô hiệu VI; 3 ngôn ngữ × 3 chiều rộng. CMS thật: trạng thái trống (khách); preview ko/en/vi: trạng thái trống + nhãn chờ (chưa có dữ liệu) | **Chưa có**; dữ liệu website thu thập đã liệt kê cho pháp lý | Chờ duyệt | Văn bản do pháp lý soạn hoặc duyệt |
 | Liên hệ `/contact` | Khách và preview; form (lỗi, thành công) | Chưa có thông tin liên hệ chính thức | Chờ duyệt (`812a3ed`) | Thông tin liên hệ; email thông báo (§4) |
 | Hợp tác `/partnership` | Form gửi thật (bản ghi thử đã xóa), lỗi từng trường, focus | Chưa có nội dung chương trình | Chờ duyệt | Nội dung chương trình; email thông báo |
 | Điểm bán `/stores` | Trạng thái trống; lọc quốc gia (giữ `?country` khi đổi ngôn ngữ) | Chưa có điểm bán | Chờ duyệt | Danh sách điểm bán đã xác nhận |
@@ -46,7 +46,7 @@ Bảng này gom kết quả từ các báo cáo trước: [phase-2-report.md](ph
 - `npm test` 15/15; typecheck, lint, build sạch; `npm audit` 15 mục (0 critical), không đổi.
 
 **Chưa chạy:**
-- **Preview trên CMS thật cho Journal, Chính sách bảo mật, Điều khoản (ko/en/vi):** cần bạn đăng nhập lại. Phiên trước đã hết hạn sau 2 giờ. Trên CMS thật các trang này chưa có nội dung, nên preview chỉ có thể hiện nhãn chờ. Trạng thái có dữ liệu đã được kiểm tra trên DB nghiệm thu với tư cách khách (nội dung đã duyệt hiển thị giống nhau cho khách và preview).
+- Preview trên CMS thật cho Journal và hai trang pháp lý: đã chạy ở lần chốt (xem dưới).
 - **Preview trên DB nghiệm thu:** không chạy. Cần tài khoản trong DB đó; tôi không tạo tài khoản.
 - Kiểm thử e2e tự động trên trình duyệt (Playwright): chưa có.
 - Kiểm tra bằng trình đọc màn hình thật (NVDA/VoiceOver): chưa chạy. Mới kiểm tra cấu trúc (H1 duy nhất, `aria-current`, focus).
@@ -76,8 +76,17 @@ Chỉ chạy các kiểm tra liên quan. Các kiểm tra đã đạt ở trên k
   - Còn lại `drphynex` (DB thật) và `drphynex_test`; cả hai không bị đụng tới. Server 3000 không bị đụng tới. Bản sao lưu đã phục hồi thử vẫn giữ nguyên.
 - **`npm audit`:** chạy lại, 15 mục như trước, nay được đánh giá theo đường gọi thực tế (§4).
 
+- **Preview trên CMS thật (sau khi bạn đăng nhập lại), server 3001, DB `drphynex`:** Journal, Chính sách bảo mật, Điều khoản × ko/en/vi, mỗi trang so preview với khách (khách = request không kèm cookie).
+  - Cả 9 trang trả 200, `lang` đúng, `noindex, nofollow`.
+  - Preview có thanh "xem trước" và liên kết thoát; khách thì không.
+  - Nhãn chờ đúng ngôn ngữ, chỉ hiện trong preview: `[제공 대기: 저널 글]` / `[TO BE SUPPLIED: Journal articles]` / `[CHỜ CUNG CẤP: bài viết Journal]`; với hai trang pháp lý là "văn bản chính sách đã được pháp lý duyệt".
+  - Trạng thái trống có liên kết sang Sản phẩm (Journal), sang trang pháp lý còn lại và Liên hệ (privacy/terms).
+  - Bấm thử: chuyển KO → EN trên Journal, liên kết footer sang Privacy, chuyển EN → VI, thoát preview; vẫn ở đúng trang, sau khi thoát thì nhãn chờ biến mất.
+  - Bài không tồn tại (`/ko/journal/khong-ton-tai`) và trang pháp lý không tồn tại trả 404 với trang "Không tìm thấy trang" theo ngôn ngữ.
+  - **Đây chỉ là kiểm tra trạng thái trống.** CMS thật có 0 bài viết và 0 trang pháp lý, nên preview **có dữ liệu** chưa được kiểm tra.
+- **Lỗi phát hiện và đã sửa:** lọc Journal theo chủ đề không có bài thì hiện câu của trang sản phẩm ("Không có sản phẩm phù hợp với bộ lọc"). Lần kiểm tra trên DB nghiệm thu chỉ xác nhận "có báo không có kết quả" nên đã bỏ sót nội dung câu. Nay dùng chuỗi riêng `journal.noResults` ở ko/en/vi; đã kiểm tra lại cả 3 ngôn ngữ với preview và khách. Build, typecheck, lint sạch; test 15/15.
+
 **Chưa chạy:**
-- **Preview Journal, Chính sách bảo mật, Điều khoản trên CMS thật (ko/en/vi):** lúc chốt, trình duyệt chưa có phiên đăng nhập. Ngay cả khi chạy, CMS thật đang có 0 bài viết và 0 trang pháp lý, nên kết quả chỉ ghi nhận được trạng thái trống và nhãn chờ. Đó **không** phải kiểm tra preview có dữ liệu.
 - **Preview có dữ liệu:** chưa từng chạy. DB nghiệm thu đã xóa; muốn chạy lại, phải tạo lại bằng cách sao chép DB thật vào `drphynex_acceptance`, chạy `seed-test-content.ts` và đăng nhập bằng tài khoản đã có trong bản sao.
 - E2E tự động và kiểm tra bằng trình đọc màn hình: vẫn chưa chạy.
 

@@ -98,6 +98,7 @@
     "readMore": "Đọc bài",
     "relatedProducts": "Sản phẩm được nhắc tới",
     "empty": "Chưa có bài viết.",
+    "noResults": "Chưa có bài viết thuộc chủ đề này.",
     "allTopics": "Tất cả chủ đề",
     "by": "Tác giả: {author}"
   },
