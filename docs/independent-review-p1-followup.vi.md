@@ -1,5 +1,7 @@
 # Khắc phục P1 và quy tắc restore — 29/10/2026
 
+> Đính chính tiếp sau review tại 2253430: xem [khắc phục publish full-form và locale Local API](independent-review-publish-followup.vi.md). Các số kiểm tra bên dưới là lịch sử; chưa bao phủ payload Publish đầy đủ của admin hoặc locale gốc bị publishSpecificLocale che khuất.
+
 Phạm vi bắt đầu: `fa51fd19bd350cfa38c169e9afe7f2d6ba1bffea`, nhánh `fix/independent-review`, working tree sạch. Một agent sửa tuần tự trong `C:/Users/THAI/.codex/worktrees/independent-review/website-demo`. Checkout gốc tiếp tục ở `30d896a`, các thư mục công cụ chưa tracked được giữ nguyên. Không đổi thiết kế, dependency, migration, dịch vụ hoặc nội dung thật.
 
 ## Đính chính báo cáo trước

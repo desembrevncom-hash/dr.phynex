@@ -37,9 +37,13 @@ async function upsert(collection: 'journal-topics' | 'articles' | 'legal-pages',
   const found = await payload.find({ collection, where: { slug: { equals: slug } }, overrideAccess: true, limit: 1 })
   let id = found.docs[0]?.id
   for (const [i, locale] of locales.entries()) {
-    const data = { ...(i === 0 ? { ...shared, slug } : {}), ...perLocale(locale), translationStatus: approved.includes(locale) ? 'approved' : 'in-review', _status: 'published' }
-    if (!id) id = (await payload.create({ collection, locale, data: data as never, overrideAccess: true })).id
-    else await payload.update({ collection, id, locale, data: data as never, overrideAccess: true })
+    const data = { ...(i === 0 ? { ...shared, slug } : {}), ...perLocale(locale), translationStatus: 'in-review', _status: 'draft' }
+    if (!id) id = (await payload.create({ collection, locale, draft: true, data: data as never, overrideAccess: true })).id
+    else await payload.update({ collection, id, locale, draft: true, data: data as never, overrideAccess: true })
+    if (approved.includes(locale)) {
+      await payload.update({ collection, id, locale, draft: true, data: { translationStatus: 'approved' }, overrideAccess: true })
+      await payload.update({ collection, id, locale, data: { _status: 'published' }, overrideAccess: true })
+    }
   }
   return id!
 }

@@ -333,6 +333,21 @@ async function main() {
         _status: 'published',
       },
     })
+    // The full-form tests intentionally withdrew Brand Page. Reapprove its reviewed
+    // revision so the existing restore checks start with a valid public global.
+    await payload.updateGlobal({
+      slug: 'brand-page',
+      locale: 'en',
+      draft: true,
+      data: { translationStatus: 'approved' },
+    })
+    await payload.updateGlobal({ slug: 'brand-page', locale: 'en', data: { _status: 'published' } })
+    const restorePublicGlobal = await payload.findGlobal({
+      slug: 'brand-page',
+      locale: 'en',
+      fallbackLocale: false,
+      overrideAccess: false,
+    })
     const versions = await payload.findVersions({
         collection: 'products',
         where: { parent: { equals: p.id } },
@@ -359,7 +374,7 @@ async function main() {
       )
     }
     check(
-      (await read('/en/brand')).html.includes(privateText),
+      (await read('/en/brand')).html.includes(String(restorePublicGlobal.title)),
       'rejected restore preserves current public global',
     )
     check(
