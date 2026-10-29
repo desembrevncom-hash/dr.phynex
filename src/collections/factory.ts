@@ -1,9 +1,15 @@
+import { blockContentRestore, blockGlobalRestore } from '@/hooks/blockContentRestore'
 import { publishOnlyRequestedLocale, publishOnlyRequestedGlobalLocale } from '@/hooks/publishLocale'
 import type { CollectionConfig, Field, GlobalConfig } from 'payload'
 
 import { editors, publishedAndApproved, staff } from '@/access/roles'
 import { translationStatusField } from '@/fields/translationStatus'
 import { guardGlobalPublishing, guardPublishing } from '@/hooks/guardPublishing'
+
+const restoreNotice =
+  'Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.'
+const contentDescription = (description: unknown) =>
+  typeof description === 'string' ? description + ' ' + restoreNotice : restoreNotice
 
 type ContentCollectionArgs = Omit<CollectionConfig, 'access' | 'versions' | 'fields'> & {
   fields: Field[]
@@ -14,8 +20,13 @@ type ContentCollectionArgs = Omit<CollectionConfig, 'access' | 'versions' | 'fie
  * - read: guests get published + approved-for-this-locale only (server-side Where)
  * - create/delete: editors · update: staff (translators edit drafts, cannot publish)
  */
-export const contentCollection = ({ fields, hooks, ...config }: ContentCollectionArgs): CollectionConfig => ({
+export const contentCollection = ({
+  fields,
+  hooks,
+  ...config
+}: ContentCollectionArgs): CollectionConfig => ({
   ...config,
+  admin: { ...config.admin, description: contentDescription(config.admin?.description) },
   access: {
     read: publishedAndApproved,
     readVersions: staff,
@@ -26,7 +37,11 @@ export const contentCollection = ({ fields, hooks, ...config }: ContentCollectio
   versions: { drafts: true, maxPerDoc: 50 },
   hooks: {
     ...hooks,
-    beforeOperation: [publishOnlyRequestedLocale, ...(hooks?.beforeOperation ?? [])],
+    beforeOperation: [
+      blockContentRestore,
+      publishOnlyRequestedLocale,
+      ...(hooks?.beforeOperation ?? []),
+    ],
     beforeChange: [guardPublishing, ...(hooks?.beforeChange ?? [])],
   },
   fields: [...fields, translationStatusField],
@@ -36,6 +51,7 @@ type ContentGlobalArgs = Omit<GlobalConfig, 'access' | 'versions' | 'fields'> & 
 
 export const contentGlobal = ({ fields, hooks, ...config }: ContentGlobalArgs): GlobalConfig => ({
   ...config,
+  admin: { ...config.admin, description: contentDescription(config.admin?.description) },
   access: {
     read: publishedAndApproved,
     readVersions: staff,
@@ -44,7 +60,11 @@ export const contentGlobal = ({ fields, hooks, ...config }: ContentGlobalArgs): 
   versions: { drafts: true, max: 50 },
   hooks: {
     ...hooks,
-    beforeOperation: [publishOnlyRequestedGlobalLocale, ...(hooks?.beforeOperation ?? [])],
+    beforeOperation: [
+      blockGlobalRestore,
+      publishOnlyRequestedGlobalLocale,
+      ...(hooks?.beforeOperation ?? []),
+    ],
     beforeChange: [guardGlobalPublishing, ...(hooks?.beforeChange ?? [])],
   },
   fields: [...fields, translationStatusField],
