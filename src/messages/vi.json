@@ -1,0 +1,134 @@
+{
+  "common": {
+    "siteName": "Dr.PhynEX",
+    "skipToContent": "Chuyển đến nội dung",
+    "mainNav": "Điều hướng chính",
+    "footerNav": "Điều hướng chân trang",
+    "language": "Ngôn ngữ",
+    "languageUnavailable": "Chưa có ở ngôn ngữ này",
+    "backHome": "Về trang chủ",
+    "seeAll": "Xem tất cả"
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "brand": "Thương hiệu",
+    "products": "Sản phẩm",
+    "ingredients": "Thành phần & Công nghệ",
+    "journal": "Journal",
+    "stores": "Điểm bán",
+    "contact": "Liên hệ",
+    "partnership": "Hợp tác",
+    "privacy": "Chính sách bảo mật",
+    "terms": "Điều khoản sử dụng"
+  },
+  "empty": {
+    "title": "Nội dung đang được chuẩn bị",
+    "body": "Mục này chưa được xuất bản với bản dịch đã duyệt ở đủ ba ngôn ngữ (tiếng Hàn, tiếng Anh và tiếng Việt)."
+  },
+  "notFound": {
+    "title": "Không tìm thấy trang",
+    "body": "Trang này không tồn tại hoặc chưa có ở ngôn ngữ này."
+  },
+  "home": {
+    "explore": "Khám phá",
+    "featuredProducts": "Sản phẩm nổi bật",
+    "featuredIngredients": "Thành phần chính",
+    "latestJournal": "Từ Journal"
+  },
+  "products": {
+    "title": "Sản phẩm",
+    "filters": "Bộ lọc",
+    "all": "Tất cả",
+    "byLine": "Dòng sản phẩm",
+    "byConcern": "Vấn đề da",
+    "noResults": "Không có sản phẩm phù hợp với bộ lọc.",
+    "line": "Dòng",
+    "volume": "Dung tích",
+    "claims": "Công dụng",
+    "keyIngredients": "Thành phần chính",
+    "technologies": "Công nghệ",
+    "inci": "Bảng thành phần đầy đủ (INCI)",
+    "howToUse": "Cách dùng",
+    "cautions": "Lưu ý",
+    "related": "Sản phẩm liên quan",
+    "ctaTitle": "Mua ở đâu",
+    "ctaStores": "Tìm điểm bán",
+    "ctaContact": "Liên hệ"
+  },
+  "ingredients": {
+    "title": "Thành phần & Công nghệ",
+    "ingredients": "Thành phần",
+    "technologies": "Công nghệ",
+    "inciName": "Tên INCI",
+    "productsContaining": "Sản phẩm chứa thành phần này"
+  },
+  "journal": {
+    "title": "Journal",
+    "topics": "Chủ đề",
+    "readMore": "Đọc bài",
+    "relatedProducts": "Sản phẩm được nhắc tới"
+  },
+  "stores": {
+    "title": "Điểm bán",
+    "country": "Quốc gia",
+    "allCountries": "Tất cả quốc gia",
+    "hours": "Giờ mở cửa",
+    "phone": "Điện thoại",
+    "website": "Website",
+    "type": {
+      "store": "Cửa hàng",
+      "distributor": "Nhà phân phối",
+      "other": "Khác"
+    }
+  },
+  "contact": {
+    "title": "Liên hệ",
+    "formTitle": "Gửi tin nhắn",
+    "email": "Email",
+    "phone": "Điện thoại",
+    "address": "Địa chỉ",
+    "hours": "Giờ làm việc"
+  },
+  "partnership": {
+    "title": "Hợp tác",
+    "formTitle": "Yêu cầu hợp tác"
+  },
+  "form": {
+    "name": "Họ tên",
+    "email": "Email",
+    "phone": "Số điện thoại (không bắt buộc)",
+    "topic": "Chủ đề",
+    "topics": {
+      "product": "Sản phẩm",
+      "store": "Điểm bán",
+      "other": "Khác"
+    },
+    "message": "Nội dung",
+    "company": "Công ty",
+    "contactName": "Người liên hệ",
+    "country": "Quốc gia",
+    "businessType": "Loại hình kinh doanh",
+    "businessTypes": {
+      "distributor": "Nhà phân phối",
+      "retailer": "Nhà bán lẻ",
+      "spa-clinic": "Spa / phòng khám",
+      "online": "Cửa hàng trực tuyến",
+      "other": "Khác"
+    },
+    "channels": "Kênh bán hiện tại (không bắt buộc)",
+    "consent": "Tôi đồng ý cho lưu thông tin để phản hồi yêu cầu này, theo chính sách bảo mật.",
+    "required": "Bắt buộc",
+    "submit": "Gửi",
+    "sending": "Đang gửi…",
+    "success": "Cảm ơn bạn. Chúng tôi đã nhận được tin nhắn.",
+    "errors": {
+      "summary": "Vui lòng kiểm tra các trường được đánh dấu.",
+      "required": "Trường này là bắt buộc.",
+      "email": "Nhập địa chỉ email hợp lệ.",
+      "tooLong": "Nội dung quá dài.",
+      "consent": "Vui lòng đồng ý để tiếp tục.",
+      "rateLimited": "Bạn đã thử quá nhiều lần. Vui lòng thử lại sau vài phút.",
+      "server": "Đã có lỗi xảy ra. Vui lòng thử lại sau."
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "common": {
+    "siteName": "Dr.PhynEX",
+    "skipToContent": "Skip to content",
+    "mainNav": "Main navigation",
+    "footerNav": "Footer navigation",
+    "language": "Language",
+    "languageUnavailable": "Not available in this language yet",
+    "backHome": "Back to home",
+    "seeAll": "See all"
+  },
+  "nav": {
+    "home": "Home",
+    "brand": "Brand",
+    "products": "Products",
+    "ingredients": "Ingredients & Technology",
+    "journal": "Journal",
+    "stores": "Stores",
+    "contact": "Contact",
+    "partnership": "Partnership",
+    "privacy": "Privacy policy",
+    "terms": "Terms of use"
+  },
+  "empty": {
+    "title": "Content coming soon",
+    "body": "This section has not yet been published with approved translations in all three languages (Korean, English and Vietnamese)."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "This page does not exist or is not available in this language."
+  },
+  "home": {
+    "explore": "Explore",
+    "featuredProducts": "Featured products",
+    "featuredIngredients": "Key ingredients",
+    "latestJournal": "From the Journal"
+  },
+  "products": {
+    "title": "Products",
+    "filters": "Filters",
+    "all": "All",
+    "byLine": "Product line",
+    "byConcern": "Skin concern",
+    "noResults": "No products match these filters.",
+    "line": "Line",
+    "volume": "Volume",
+    "claims": "What it does",
+    "keyIngredients": "Key ingredients",
+    "technologies": "Technologies",
+    "inci": "Full ingredient list (INCI)",
+    "howToUse": "How to use",
+    "cautions": "Cautions",
+    "related": "Related products",
+    "ctaTitle": "Where to find it",
+    "ctaStores": "Find a store",
+    "ctaContact": "Contact us"
+  },
+  "ingredients": {
+    "title": "Ingredients & Technology",
+    "ingredients": "Ingredients",
+    "technologies": "Technologies",
+    "inciName": "INCI name",
+    "productsContaining": "Products with this ingredient"
+  },
+  "journal": {
+    "title": "Journal",
+    "topics": "Topics",
+    "readMore": "Read article",
+    "relatedProducts": "Products mentioned"
+  },
+  "stores": {
+    "title": "Stores",
+    "country": "Country",
+    "allCountries": "All countries",
+    "hours": "Opening hours",
+    "phone": "Phone",
+    "website": "Website",
+    "type": {
+      "store": "Store",
+      "distributor": "Distributor",
+      "other": "Other"
+    }
+  },
+  "contact": {
+    "title": "Contact",
+    "formTitle": "Send us a message",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "hours": "Hours"
+  },
+  "partnership": {
+    "title": "Partnership",
+    "formTitle": "Partnership inquiry"
+  },
+  "form": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone (optional)",
+    "topic": "Topic",
+    "topics": {
+      "product": "Products",
+      "store": "Stores",
+      "other": "Other"
+    },
+    "message": "Message",
+    "company": "Company",
+    "contactName": "Contact person",
+    "country": "Country",
+    "businessType": "Business type",
+    "businessTypes": {
+      "distributor": "Distributor",
+      "retailer": "Retailer",
+      "spa-clinic": "Spa / clinic",
+      "online": "Online store",
+      "other": "Other"
+    },
+    "channels": "Current sales channels (optional)",
+    "consent": "I agree that my information is stored to answer this request, as described in the privacy policy.",
+    "required": "Required",
+    "submit": "Send",
+    "sending": "Sending…",
+    "success": "Thank you. Your message has been received.",
+    "errors": {
+      "summary": "Please check the highlighted fields.",
+      "required": "This field is required.",
+      "email": "Enter a valid email address.",
+      "tooLong": "This text is too long.",
+      "consent": "Please accept to continue.",
+      "rateLimited": "Too many attempts. Please try again in a few minutes.",
+      "server": "Something went wrong. Please try again later."
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "common": {
+    "siteName": "Dr.PhynEX",
+    "skipToContent": "본문으로 건너뛰기",
+    "mainNav": "주요 메뉴",
+    "footerNav": "하단 메뉴",
+    "language": "언어",
+    "languageUnavailable": "아직 이 언어로 제공되지 않습니다",
+    "backHome": "홈으로 돌아가기",
+    "seeAll": "전체 보기"
+  },
+  "nav": {
+    "home": "홈",
+    "brand": "브랜드",
+    "products": "제품",
+    "ingredients": "성분 & 기술",
+    "journal": "저널",
+    "stores": "판매처",
+    "contact": "문의",
+    "partnership": "파트너십",
+    "privacy": "개인정보 처리방침",
+    "terms": "이용약관"
+  },
+  "empty": {
+    "title": "콘텐츠 준비 중",
+    "body": "이 섹션은 아직 세 가지 언어(한국어, 영어, 베트남어)로 검수된 번역과 함께 게시되지 않았습니다."
+  },
+  "notFound": {
+    "title": "페이지를 찾을 수 없습니다",
+    "body": "존재하지 않는 페이지이거나 이 언어로 제공되지 않는 페이지입니다."
+  },
+  "home": {
+    "explore": "둘러보기",
+    "featuredProducts": "추천 제품",
+    "featuredIngredients": "핵심 성분",
+    "latestJournal": "저널"
+  },
+  "products": {
+    "title": "제품",
+    "filters": "필터",
+    "all": "전체",
+    "byLine": "제품 라인",
+    "byConcern": "피부 고민",
+    "noResults": "조건에 맞는 제품이 없습니다.",
+    "line": "라인",
+    "volume": "용량",
+    "claims": "제품 특징",
+    "keyIngredients": "핵심 성분",
+    "technologies": "기술",
+    "inci": "전성분 (INCI)",
+    "howToUse": "사용 방법",
+    "cautions": "주의 사항",
+    "related": "관련 제품",
+    "ctaTitle": "구매처 안내",
+    "ctaStores": "판매처 찾기",
+    "ctaContact": "문의하기"
+  },
+  "ingredients": {
+    "title": "성분 & 기술",
+    "ingredients": "성분",
+    "technologies": "기술",
+    "inciName": "INCI 명칭",
+    "productsContaining": "이 성분이 들어간 제품"
+  },
+  "journal": {
+    "title": "저널",
+    "topics": "주제",
+    "readMore": "기사 읽기",
+    "relatedProducts": "언급된 제품"
+  },
+  "stores": {
+    "title": "판매처",
+    "country": "국가",
+    "allCountries": "전체 국가",
+    "hours": "영업 시간",
+    "phone": "전화",
+    "website": "웹사이트",
+    "type": {
+      "store": "매장",
+      "distributor": "유통사",
+      "other": "기타"
+    }
+  },
+  "contact": {
+    "title": "문의",
+    "formTitle": "문의 보내기",
+    "email": "이메일",
+    "phone": "전화",
+    "address": "주소",
+    "hours": "운영 시간"
+  },
+  "partnership": {
+    "title": "파트너십",
+    "formTitle": "파트너십 문의"
+  },
+  "form": {
+    "name": "이름",
+    "email": "이메일",
+    "phone": "전화번호 (선택)",
+    "topic": "문의 유형",
+    "topics": {
+      "product": "제품",
+      "store": "판매처",
+      "other": "기타"
+    },
+    "message": "메시지",
+    "company": "회사명",
+    "contactName": "담당자",
+    "country": "국가",
+    "businessType": "사업 유형",
+    "businessTypes": {
+      "distributor": "유통사",
+      "retailer": "소매점",
+      "spa-clinic": "스파 / 클리닉",
+      "online": "온라인 스토어",
+      "other": "기타"
+    },
+    "channels": "현재 판매 채널 (선택)",
+    "consent": "개인정보 처리방침에 따라 문의 응대를 위해 정보가 저장되는 것에 동의합니다.",
+    "required": "필수",
+    "submit": "보내기",
+    "sending": "전송 중…",
+    "success": "감사합니다. 문의가 접수되었습니다.",
+    "errors": {
+      "summary": "표시된 항목을 확인해 주세요.",
+      "required": "필수 항목입니다.",
+      "email": "올바른 이메일 주소를 입력해 주세요.",
+      "tooLong": "입력 내용이 너무 깁니다.",
+      "consent": "동의가 필요합니다.",
+      "rateLimited": "시도 횟수가 너무 많습니다. 몇 분 후 다시 시도해 주세요.",
+      "server": "오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+    }
+  }
+}

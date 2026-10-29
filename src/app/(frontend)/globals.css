@@ -1,0 +1,94 @@
+@import 'tailwindcss';
+
+/*
+ * Neutral foundation tokens. Brand colors, fonts and imagery are NOT decided yet
+ * (waiting for logo + brand guideline); replace these via DESIGN.md once approved.
+ * Contrast on --color-surface: ink 18:1, ink-muted 7.6:1, ink-subtle 4.8:1.
+ */
+@theme {
+  --color-ink: #111827;
+  --color-ink-muted: #4b5563;
+  --color-ink-subtle: #6b7280;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f9fafb;
+  --color-line: #e5e7eb;
+  --color-line-strong: #d1d5db;
+  --color-focus: #1d4ed8;
+  --color-danger: #b91c1c;
+  --color-success: #166534;
+
+  /* System stacks cover Hangul and Vietnamese diacritics until a brand font is chosen. */
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', 'Noto Sans',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    color: var(--color-ink);
+    background: var(--color-surface);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :lang(ko) {
+    word-break: keep-all;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+@utility container-page {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+}
+
+@utility prose-basic {
+  max-width: 68ch;
+  line-height: 1.7;
+
+  & > * + * {
+    margin-top: 1em;
+  }
+  & h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 1.75em;
+  }
+  & h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.5em;
+  }
+  & ul {
+    list-style: disc;
+    padding-left: 1.25em;
+  }
+  & ol {
+    list-style: decimal;
+    padding-left: 1.25em;
+  }
+  & a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
