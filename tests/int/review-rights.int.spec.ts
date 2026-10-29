@@ -67,3 +67,14 @@ it('preserves a released binary when an editor attempts in-place replacement', a
  const replacement=await payload.create({collection:'media',locale:'en',data:{alt:'Replacement'},file:{data:png,name:'replacement.png',mimetype:'image/png',size:png.length}})
  expect(replacement.publicRelease).toBe(false)
 })
+
+it('preserves approved global EN when KO is published over a pending EN revision', async () => {
+ await payload.updateGlobal({slug:'home-page',locale:'en',data:{headline:'Approved global EN',translationStatus:'approved',_status:'published'}})
+ await payload.updateGlobal({slug:'home-page',locale:'ko',data:{headline:'Approved global KO',translationStatus:'approved',_status:'published'}})
+ await payload.updateGlobal({slug:'home-page',locale:'en',draft:true,user:translator,overrideAccess:false,data:{headline:'Unreviewed global EN'}})
+ await payload.updateGlobal({slug:'home-page',locale:'ko',user:editor,overrideAccess:false,data:{headline:'Revised KO',_status:'published'}})
+ const en=await payload.findGlobal({slug:'home-page',...guest})
+ expect(en.headline).toBe('Approved global EN')
+ const draft=await payload.findGlobal({slug:'home-page',locale:'en',draft:true})
+ expect(draft.headline).toBe('Unreviewed global EN');expect(draft.translationStatus).toBe('in-review')
+})

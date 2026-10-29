@@ -25,7 +25,7 @@ export const Media: CollectionConfig = {
   },
   hooks: {
     beforeOperation: [async ({ args, operation, req }) => {
-      if (operation === 'update' && req.file && req.user && !isEditorUser(req.user)) {
+      if (operation === 'update' && req.file && !isEditorUser(req.user)) {
         throw new APIError('Only editors may replace media binaries.', 403, null, true)
       }
       if (operation === 'update' && req.file && 'id' in args && (typeof args.id === 'string' || typeof args.id === 'number')) {
