@@ -8,8 +8,9 @@
 process.env.DATABASE_URL = process.env.DATABASE_URL!.replace(/\/([^/?]+)(\?|$)/, '/drphynex_acceptance$2')
 if (!process.env.DATABASE_URL.includes('/drphynex_acceptance')) throw new Error('Acceptance database only')
 const { getPayload } = await import('payload')
+const { withContentLocaleGuard } = await import('../../src/lib/content-mutations')
 const { default: config } = await import('../../src/payload.config')
-const payload = await getPayload({ config: await config })
+const payload = withContentLocaleGuard(await getPayload({ config: await config }))
 
 const locales = ['ko', 'en', 'vi'] as const
 type Locale = (typeof locales)[number]

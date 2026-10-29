@@ -1,3 +1,4 @@
+import { withContentLocaleGuard } from '../src/lib/content-mutations'
 /**
  * Loads the four packaged products into the CMS as unpublished drafts for the design preview.
  *
@@ -187,7 +188,7 @@ async function upsertDraft(
   return id
 }
 
-const payload = await getPayload({ config })
+const payload = withContentLocaleGuard(await getPayload({ config }))
 const lineIds: Record<string, number | string> = {}
 for (const line of lines) {
   lineIds[line.slug] = await upsertDraft(

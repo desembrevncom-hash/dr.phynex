@@ -1,3 +1,4 @@
+import { withContentLocaleGuard } from '../src/lib/content-mutations'
 /**
  * Loads product detail content transcribed from the packaging (scripts/data/product-content.ts)
  * into the CMS as unpublished drafts, and attaches the packaging PDFs as private source documents.
@@ -135,7 +136,7 @@ async function fillBySlug(
   return { id, changed }
 }
 
-const payload = await getPayload({ config })
+const payload = withContentLocaleGuard(await getPayload({ config }))
 const pick = (l: L, locale: Locale) => l[locale]
 
 const sourceIds: Record<string, number | string> = {}
