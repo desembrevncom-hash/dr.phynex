@@ -93,8 +93,28 @@ Không ghi giá trị vào Git hay tài liệu. Đặt trong Vercel → Settings
 
 ## 8. Lựa chọn cần bạn quyết định
 
+**Đã chọn (29/10/2026): theo đề xuất**, gồm Vercel Pro, Neon, Cloudflare R2 và email qua SMTP. Người dùng tự tạo tài khoản. Tên miền, vùng chạy và nhà cung cấp SMTP cụ thể còn chờ xác nhận (mục 4–5 dưới đây).
+
 1. **Gói Vercel.** Gói Hobby (miễn phí) chỉ dành cho mục đích cá nhân, không thương mại. Website thương hiệu thường cần gói **Pro**, tính phí theo thành viên mỗi tháng. Bạn xác nhận dùng Pro, hay chỉ dùng Hobby cho bản thử nội bộ?
 2. **Postgres:** Neon (đề xuất) hay Supabase. Gói miễn phí có giới hạn dung lượng và thời gian PITR ngắn; production nên dùng gói trả phí có PITR dài hơn.
 3. **Storage:** R2 (đề xuất) hay S3.
 4. **Email:** dùng dịch vụ email giao dịch (cần đăng ký) hay SMTP sẵn có của công ty; và địa chỉ nhận thông báo form.
 5. **Tên miền và vùng chạy:** tên miền chính thức; khách chủ yếu ở Việt Nam hay Hàn Quốc, để chọn vùng chạy cho DB và Vercel (ví dụ Singapore hoặc Seoul).
+
+## 9. Thông tin cần lấy để kết nối staging
+
+**Không dán secret vào chat, Git hay tài liệu.** Nhập thẳng vào Vercel → Settings → Environment Variables, môi trường **Preview**. Riêng các giá trị cần dùng trên máy Local (để chuyển dữ liệu lên staging), ghi vào file `.env.staging.local` trong thư mục dự án; Git đã bỏ qua mọi file `.env*.local`.
+
+| Dịch vụ | Việc cần làm | Lấy ra | Đặt vào |
+|---|---|---|---|
+| **Vercel** (gói Pro) | Tạo team; import repo **khi bạn đồng ý push**; Build Command `npm run build:vercel`; bật Deployment Protection → Vercel Authentication (Standard) | Tên team và project (không phải secret) | Báo tôi |
+| **Neon** | Tạo project ở vùng đã chọn; tạo database hoặc branch `staging` riêng (production tạo sau) | Chuỗi kết nối **pooled** (host có `-pooler`) và chuỗi **direct** của staging | Pooled → `DATABASE_URL` (Preview). Direct → `.env.staging.local` để tôi restore dữ liệu Local |
+| **Cloudflare R2** | Tạo bucket `drphynex-staging`, **không** bật public access hay `r2.dev`; tạo API token "Object Read & Write" chỉ cho bucket này | Account ID (để ghép endpoint), Access Key ID, Secret Access Key | `S3_BUCKET`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (Preview), và bản sao trong `.env.staging.local` để tôi chép file lên |
+| **Email SMTP** | Chọn nhà cung cấp; xác thực tên miền gửi (SPF, DKIM) | Host, port, user, password; địa chỉ gửi | `SMTP_*`, `EMAIL_FROM_ADDRESS` (Preview) |
+| **Bạn tự quyết** | — | Hộp thư nhận thông báo staging; tên miền staging | `FORM_NOTIFY_TO`, `NEXT_PUBLIC_SERVER_URL` (Preview) |
+| **Tự tạo** | Chuỗi ngẫu nhiên mới: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | — | `PAYLOAD_SECRET` (Preview), khác với Local |
+
+Khi xong, chỉ cần báo "đã đặt biến staging". Sau đó tôi sẽ:
+1. Đọc `.env.staging.local`, kiểm tra tên database và bucket là của staging (chỉ in tên, không in secret).
+2. Tạo bản sao lưu Local mới, rồi restore vào DB staging; chép `media/` và `source-documents/` lên bucket staging.
+3. Chờ bạn đồng ý push nhánh `staging`, rồi kiểm tra lại các mục ở cột cuối §1.
