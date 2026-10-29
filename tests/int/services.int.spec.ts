@@ -8,7 +8,6 @@ vi.mock('server-only', () => ({}))
 import { migrations } from '@/migrations'
 import config from '@/payload.config'
 import { clientIp, rateLimitKey, sharedRateLimited } from '@/lib/rate-limit'
-import { PUBLIC_CONTENT_TAG } from '@/lib/revalidate'
 
 // Deployment-related wiring that can be checked without external services. Runs against the
 // *_test database (see vitest.setup.ts); SMTP and S3 are not contacted.
@@ -63,18 +62,6 @@ describe('shared form rate limit', () => {
 describe('configuration', () => {
   it('disables GraphQL', () => {
     expect(payload.config.graphQL.disable).toBe(true)
-  })
-
-  it('clears the public cache only for collections shown on the site', () => {
-    const hooks = (slug: string) => payload.collections[slug as 'products'].config.hooks
-    for (const slug of ['products', 'ingredients', 'articles', 'legal-pages', 'media', 'stores']) {
-      expect(hooks(slug).afterChange.some((h) => h.name === 'revalidateAfterChange'), slug).toBe(true)
-      expect(hooks(slug).afterDelete.some((h) => h.name === 'revalidateAfterDelete'), slug).toBe(true)
-    }
-    for (const slug of ['contact-submissions', 'partner-inquiries', 'users', 'source-documents']) {
-      expect(hooks(slug).afterChange.some((h) => h.name === 'revalidateAfterChange'), slug).toBe(false)
-    }
-    expect(PUBLIC_CONTENT_TAG).toBe('cms-public')
   })
 
   it('keeps uploads on local disk when no bucket is configured', () => {

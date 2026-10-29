@@ -11,6 +11,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 const nextConfig: NextConfig = {
   images: {
+    // Media release can be revoked; serve originals through Payload on every request.
+    unoptimized: true,
     localPatterns: [
       {
         pathname: '/api/media/file/**',

@@ -1,3 +1,4 @@
+import { privateUploadHeaders } from '@/lib/uploadHeaders'
 import { APIError, type Access, type CollectionConfig } from 'payload'
 
 import { editors, editorsField, isStaffUser, isEditorUser, staff } from '@/access/roles'
@@ -67,6 +68,7 @@ export const Media: CollectionConfig = {
     },
   ],
   upload: {
+    modifyResponseHeaders: privateUploadHeaders,
     staticDir: 'media',
     mimeTypes: ['image/*'],
   },

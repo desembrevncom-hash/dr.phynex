@@ -1,3 +1,4 @@
+import { privateUploadHeaders } from '@/lib/uploadHeaders'
 import type { CollectionConfig } from 'payload'
 
 import { admins, editors, staff } from '@/access/roles'
@@ -21,6 +22,7 @@ export const SourceDocuments: CollectionConfig = {
     { name: 'note', type: 'textarea' },
   ],
   upload: {
+    modifyResponseHeaders: privateUploadHeaders,
     staticDir: 'private-uploads/source-documents',
     mimeTypes: ['application/pdf', 'image/*'],
   },

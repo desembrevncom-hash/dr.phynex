@@ -1,6 +1,5 @@
 import 'server-only'
 
-import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 import type { CollectionSlug, GlobalSlug, Where } from 'payload'
 
@@ -9,7 +8,6 @@ import type { Config, User } from '@/payload-types'
 
 import { getPayloadClient } from './content-client'
 import { getPreviewUser } from './preview'
-import { PUBLIC_CONTENT_TAG } from './revalidate'
 
 export { getPayloadClient }
 
@@ -27,16 +25,8 @@ const readArgs = (locale: Locale, user: User | null) =>
     ? ({ locale, fallbackLocale: false, overrideAccess: false, draft: true, user } as const)
     : ({ locale, fallbackLocale: false, overrideAccess: false, draft: false } as const)
 
-/**
- * Guest reads are identical for every visitor (published + approved only), so they are shared
- * through the Next data cache, tagged and cleared by Payload hooks on any content change
- * (lib/revalidate.ts). Staff preview never goes through here, and Next itself neither reads
- * nor writes the data cache in draft mode, so drafts cannot enter the public cache.
- */
-export const GUEST_CACHE_SECONDS = 3600
-const guestCache = <A extends unknown[], R>(name: string, fn: (...args: A) => Promise<R>) =>
-  unstable_cache(fn, ['cms', name], { tags: [PUBLIC_CONTENT_TAG], revalidate: GUEST_CACHE_SECONDS })
-
+/** Public reads deliberately bypass persistent caches. React cache deduplicates only
+ * within one render. Revocation is checked against committed CMS state on each request. */
 type FindOptions = { where?: Where; limit?: number; page?: number; sort?: string | string[]; depth?: number }
 type FindResult<S extends CollectionSlug> = { docs: Collections[S][]; totalDocs: number; totalPages: number; page?: number }
 
@@ -44,9 +34,8 @@ const find = async (collection: CollectionSlug, locale: Locale, user: User | nul
   const payload = await getPayloadClient()
   return payload.find({ collection, ...readArgs(locale, user), depth: 1, limit: 24, ...options })
 }
-const guestFind = guestCache('find', (collection: CollectionSlug, locale: Locale, options: FindOptions) =>
-  find(collection, locale, null, options),
-)
+const guestFind = (collection: CollectionSlug, locale: Locale, options: FindOptions) =>
+  find(collection, locale, null, options)
 
 export async function findPublic<S extends CollectionSlug>(
   collection: S,
@@ -65,7 +54,7 @@ export const findPublicBySlug = cache(
 )
 
 /** Locales in which this document is published and approved (drives hreflang + switcher). */
-const guestApprovedLocales = guestCache('approvedLocales', async (collection: CollectionSlug, slug: string) => {
+const guestApprovedLocales = async (collection: CollectionSlug, slug: string) => {
   const payload = await getPayloadClient()
   const results = await Promise.all(
     locales.map(async (locale) => {
@@ -79,7 +68,7 @@ const guestApprovedLocales = guestCache('approvedLocales', async (collection: Co
     }),
   )
   return results.filter((l): l is Locale => l !== null)
-})
+}
 
 export const approvedLocalesFor = cache(async (collection: CollectionSlug, slug: string) => {
   if (await getPreviewUser()) return [...locales]
@@ -95,7 +84,7 @@ const findGlobal = async (slug: GlobalSlug, locale: Locale, user: User | null) =
   if (!doc) return null
   return user || doc.translationStatus === 'approved' ? doc : null
 }
-const guestGlobal = guestCache('global', (slug: GlobalSlug, locale: Locale) => findGlobal(slug, locale, null))
+const guestGlobal = (slug: GlobalSlug, locale: Locale) => findGlobal(slug, locale, null)
 
 export const findPublicGlobal = cache(async <S extends GlobalSlug>(slug: S, locale: Locale) => {
   const user = await getPreviewUser()
