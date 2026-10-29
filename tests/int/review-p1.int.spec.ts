@@ -619,55 +619,180 @@ it('allows deliberate approval withdrawal after publishing a previously pending 
 
 // Full form submissions retain translationStatus even when Publish is the only action.
 for (const kind of ['product', 'global'] as const) {
- it('keeps published content and draft when full admin '+kind+' Publish is unapproved', async()=>{
-  const field=kind==='product'?'name':'title'
-  let id=0
-  if(kind==='product'){
-   const p=await payload.create({collection:'products',locale:'en',data:{name:'Form old EN',slug:'full-form-regression',accent:'navy',seo:{title:'Form old metadata EN'},translationStatus:'approved',_status:'published'}});id=p.id
-   await payload.update({collection:'products',id,locale:'ko',data:{name:'Form old KO',seo:{title:'Form old metadata KO'},translationStatus:'approved',_status:'published'}})
-  }else{
-   for(const locale of ['en','ko'] as const){
-    await payload.updateGlobal({slug:'brand-page',locale,draft:true,data:{title:'Form old '+locale.toUpperCase(),seo:{title:'Form old metadata '+locale.toUpperCase()}}})
-    await payload.updateGlobal({slug:'brand-page',locale,draft:true,data:{translationStatus:'approved'}})
-    await payload.updateGlobal({slug:'brand-page',locale,data:{_status:'published'}})
-   }
-  }
-  const path=kind==='product'?'products/'+id:'globals/brand-page'
-  const method=kind==='product'?'PATCH':'POST'
-  const read=async(locale:'en'|'ko',draft=false)=>kind==='product'
-   ?payload.findByID({collection:'products',id,locale,draft,fallbackLocale:false,depth:0,overrideAccess:true})
-   :payload.findGlobal({slug:'brand-page',locale,draft,fallbackLocale:false,depth:0,overrideAccess:true})
-  if(kind==='product')await payload.update({collection:'products',id,locale:'en',draft:true,user:editor,overrideAccess:false,data:{name:'Form private EN',seo:{title:'Form private metadata EN'}}})
-  else await payload.updateGlobal({slug:'brand-page',locale:'en',draft:true,user:editor,overrideAccess:false,data:{title:'Form private EN',seo:{title:'Form private metadata EN'}}})
-  const old=await read('en'),other=await read('ko'),draft=await read('en',true)
-  const full=JSON.parse(JSON.stringify(draft))
-  full._status='published'
-  expect(full.translationStatus).toBe('in-review')
-  expect((await rest(path+'?locale=en',full,'editor',method)).status).toBe(409)
-  expect(await read('en')).toEqual(old)
-  expect(await read('ko')).toEqual(other)
-  expect(await read('en',true)).toEqual(draft)
-  expect((await rest(path+'?locale=en&draft=true',{translationStatus:'approved'},'editor',method)).status).toBe(200)
-  const approved=JSON.parse(JSON.stringify(await read('en',true)));approved._status='published'
-  expect((await rest(path+'?locale=en',approved,'editor',method)).status).toBe(200)
-  const published=await read('en') as unknown as Record<string,unknown>
-  expect(published[field]).toBe('Form private EN')
-  expect(published.seo).toMatchObject({title:'Form private metadata EN'})
-  expect(await read('ko')).toEqual(other)
-  const withdraw=JSON.parse(JSON.stringify(await read('en',true)))
-  withdraw.translationStatus='in-review';withdraw._status='published'
-  expect((await rest(path+'?locale=en',withdraw,'translator',method)).status).toBe(403)
-  expect((await rest(path+'?locale=en',withdraw,'editor',method)).status).toBe(200)
-  if(kind==='product')await expect(payload.findByID({collection:'products',id,...guest})).rejects.toThrow()
-  else expect((await payload.findGlobal({slug:'brand-page',...guest})).title).not.toBe('Form private EN')
-  expect(await read('ko')).toEqual(other)
- })
+  it(
+    'keeps published content and draft when full admin ' + kind + ' Publish is unapproved',
+    async () => {
+      const field = kind === 'product' ? 'name' : 'title'
+      let id = 0
+      if (kind === 'product') {
+        const p = await payload.create({
+          collection: 'products',
+          locale: 'en',
+          data: {
+            name: 'Form old EN',
+            slug: 'full-form-regression',
+            accent: 'navy',
+            seo: { title: 'Form old metadata EN' },
+            translationStatus: 'approved',
+            _status: 'published',
+          },
+        })
+        id = p.id
+        await payload.update({
+          collection: 'products',
+          id,
+          locale: 'ko',
+          data: {
+            name: 'Form old KO',
+            seo: { title: 'Form old metadata KO' },
+            translationStatus: 'approved',
+            _status: 'published',
+          },
+        })
+      } else {
+        for (const locale of ['en', 'ko'] as const) {
+          await payload.updateGlobal({
+            slug: 'brand-page',
+            locale,
+            draft: true,
+            data: {
+              title: 'Form old ' + locale.toUpperCase(),
+              seo: { title: 'Form old metadata ' + locale.toUpperCase() },
+            },
+          })
+          await payload.updateGlobal({
+            slug: 'brand-page',
+            locale,
+            draft: true,
+            data: { translationStatus: 'approved' },
+          })
+          await payload.updateGlobal({ slug: 'brand-page', locale, data: { _status: 'published' } })
+        }
+      }
+      const path = kind === 'product' ? 'products/' + id : 'globals/brand-page'
+      const method = kind === 'product' ? 'PATCH' : 'POST'
+      const read = async (locale: 'en' | 'ko', draft = false) =>
+        kind === 'product'
+          ? payload.findByID({
+              collection: 'products',
+              id,
+              locale,
+              draft,
+              fallbackLocale: false,
+              depth: 0,
+              overrideAccess: true,
+            })
+          : payload.findGlobal({
+              slug: 'brand-page',
+              locale,
+              draft,
+              fallbackLocale: false,
+              depth: 0,
+              overrideAccess: true,
+            })
+      if (kind === 'product')
+        await payload.update({
+          collection: 'products',
+          id,
+          locale: 'en',
+          draft: true,
+          user: editor,
+          overrideAccess: false,
+          data: { name: 'Form private EN', seo: { title: 'Form private metadata EN' } },
+        })
+      else
+        await payload.updateGlobal({
+          slug: 'brand-page',
+          locale: 'en',
+          draft: true,
+          user: editor,
+          overrideAccess: false,
+          data: { title: 'Form private EN', seo: { title: 'Form private metadata EN' } },
+        })
+      const old = await read('en'),
+        other = await read('ko'),
+        draft = await read('en', true)
+      const full = JSON.parse(JSON.stringify(draft))
+      full._status = 'published'
+      expect(full.translationStatus).toBe('in-review')
+      expect((await rest(path + '?locale=en', full, 'editor', method)).status).toBe(409)
+      expect(await read('en')).toEqual(old)
+      expect(await read('ko')).toEqual({ ...other, updatedAt: expect.any(String) })
+      expect(await read('en', true)).toEqual(draft)
+      expect(
+        (
+          await rest(
+            path + '?locale=en&draft=true',
+            { translationStatus: 'approved' },
+            'editor',
+            method,
+          )
+        ).status,
+      ).toBe(200)
+      const approved = JSON.parse(JSON.stringify(await read('en', true)))
+      approved._status = 'published'
+      expect((await rest(path + '?locale=en', approved, 'editor', method)).status).toBe(200)
+      const published = (await read('en')) as unknown as Record<string, unknown>
+      expect(published[field]).toBe('Form private EN')
+      expect(published.seo).toMatchObject({ title: 'Form private metadata EN' })
+      expect(await read('ko')).toEqual({ ...other, updatedAt: expect.any(String) })
+      const withdraw = JSON.parse(JSON.stringify(await read('en', true)))
+      withdraw.translationStatus = 'in-review'
+      withdraw._status = 'published'
+      expect((await rest(path + '?locale=en', withdraw, 'translator', method)).status).toBe(403)
+      expect((await rest(path + '?locale=en', withdraw, 'editor', method)).status).toBe(200)
+      if (kind === 'product')
+        await expect(payload.findByID({ collection: 'products', id, ...guest })).rejects.toThrow()
+      else
+        expect((await payload.findGlobal({ slug: 'brand-page', ...guest })).title).not.toBe(
+          'Form private EN',
+        )
+      expect(await read('ko')).toEqual({ ...other, updatedAt: expect.any(String) })
+    },
+  )
 }
-it('validates original Local mutation locale before publishSpecificLocale can replace it', async()=>{
- const {getPayloadClient}=await import('@/lib/content-client')
- const guarded=await getPayloadClient()
- for(const locale of ['all','*','invalid','en'] as const){
-  const publishSpecificLocale=locale==='en'?'ko':'en'
-  await expect(guarded.updateGlobal({slug:'brand-page',locale:locale as 'en',publishSpecificLocale,user:editor,overrideAccess:false,data:{_status:'published',translationStatus:'approved'}})).rejects.toThrow(/locale/i)
- }
+it('validates original Local mutation locale before publishSpecificLocale can replace it', async () => {
+  const { getPayloadClient } = await import('@/lib/content-client')
+  const guarded = await getPayloadClient()
+  const p = await guarded.create({
+    collection: 'products',
+    locale: 'en',
+    draft: true,
+    data: { name: 'Local locale guard', slug: 'local-locale-guard', accent: 'navy' },
+  })
+  for (const locale of ['all', '*', 'invalid', 'en'] as const) {
+    const publishSpecificLocale = locale === 'en' ? 'ko' : 'en'
+    await expect(
+      guarded.updateGlobal({
+        slug: 'brand-page',
+        locale: locale as 'en',
+        publishSpecificLocale,
+        user: editor,
+        overrideAccess: false,
+        data: { _status: 'published', translationStatus: 'approved' },
+      }),
+    ).rejects.toThrow(/locale/i)
+    await expect(
+      guarded.update({
+        collection: 'products',
+        id: p.id,
+        locale: locale as 'en',
+        publishSpecificLocale,
+        data: { _status: 'published' },
+      }),
+    ).rejects.toThrow(/locale/i)
+    await expect(
+      guarded.create({
+        collection: 'products',
+        locale: locale as 'en',
+        data: {
+          name: 'Rejected locale',
+          slug: 'rejected-local-locale',
+          accent: 'navy',
+          _status: 'published',
+        },
+        ...{ publishSpecificLocale },
+      } as Parameters<typeof guarded.create>[0]),
+    ).rejects.toThrow(/locale/i)
+  }
 })

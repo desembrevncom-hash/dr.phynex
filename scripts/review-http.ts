@@ -1,3 +1,4 @@
+import { withContentLocaleGuard } from '../src/lib/content-mutations'
 import { config as loadEnv } from 'dotenv'
 loadEnv({ path: '.env.local', override: true })
 import { randomUUID } from 'crypto'
@@ -7,7 +8,7 @@ import { assertDisposableDatabase } from '../tests/helpers/database'
 
 async function main() {
   const { default: config } = await import('../src/payload.config')
-  const payload = await getPayload({ config })
+  const payload = withContentLocaleGuard(await getPayload({ config }))
   await assertDisposableDatabase(payload)
   const suffix = randomUUID().slice(0, 8)
   const origin = 'http://localhost:3015'

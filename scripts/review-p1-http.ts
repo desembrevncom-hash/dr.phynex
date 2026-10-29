@@ -1,3 +1,4 @@
+import { withContentLocaleGuard } from '../src/lib/content-mutations'
 import { config as loadEnv } from 'dotenv'
 import { randomBytes, randomUUID, createHash } from 'node:crypto'
 import assert from 'node:assert/strict'
@@ -7,7 +8,7 @@ import { assertDisposableDatabase } from '../tests/helpers/database'
 loadEnv({ path: '.env.local', override: true })
 async function main() {
   const { default: config } = await import('../src/payload.config')
-  const payload = await getPayload({ config })
+  const payload = withContentLocaleGuard(await getPayload({ config }))
   await assertDisposableDatabase(payload)
   const origin = 'http://localhost:3015',
     suffix = randomUUID().slice(0, 8)
@@ -121,6 +122,145 @@ async function main() {
       (await read('/en/brand')).html.includes(privateText),
       'new EN appears only after deliberate approval and publish',
     )
+    // Use the complete fetched form, including its unchanged In review value.
+    for (const kind of ['product', 'global'] as const) {
+      const oldTitle = 'Form old ' + kind + ' ' + suffix,
+        newTitle = 'Form new ' + kind + ' ' + suffix
+      const oldMeta = 'Form old metadata ' + kind + ' ' + suffix,
+        newMeta = 'Form new metadata ' + kind + ' ' + suffix
+      let id = 0
+      const slug = 'form-product-' + suffix
+      if (kind === 'product') {
+        const doc = await payload.create({
+          collection: 'products',
+          locale: 'en',
+          data: {
+            name: oldTitle,
+            slug,
+            accent: 'navy',
+            seo: { title: oldMeta },
+            translationStatus: 'approved',
+            _status: 'published',
+          },
+        })
+        id = doc.id
+        await payload.update({
+          collection: 'products',
+          id,
+          locale: 'ko',
+          data: {
+            name: 'Form KO ' + suffix,
+            seo: { title: 'Form KO metadata ' + suffix },
+            translationStatus: 'approved',
+            _status: 'published',
+          },
+        })
+      } else {
+        await payload.updateGlobal({
+          slug: 'brand-page',
+          locale: 'en',
+          draft: true,
+          data: { title: oldTitle, seo: { title: oldMeta } },
+        })
+        await payload.updateGlobal({
+          slug: 'brand-page',
+          locale: 'en',
+          draft: true,
+          data: { translationStatus: 'approved' },
+        })
+        await payload.updateGlobal({
+          slug: 'brand-page',
+          locale: 'en',
+          data: { _status: 'published' },
+        })
+      }
+      const api = kind === 'product' ? 'products/' + id : 'globals/brand-page'
+      const path = kind === 'product' ? '/products/' + slug : '/brand'
+      const method = kind === 'product' ? 'PATCH' : 'POST'
+      const draft = async () =>
+        kind === 'product'
+          ? payload.findByID({ collection: 'products', id, locale: 'en', draft: true, depth: 0 })
+          : payload.findGlobal({ slug: 'brand-page', locale: 'en', draft: true, depth: 0 })
+      const koBefore = await read('/ko' + path)
+      if (kind === 'product')
+        await payload.update({
+          collection: 'products',
+          id,
+          locale: 'en',
+          draft: true,
+          data: { name: newTitle, seo: { title: newMeta } },
+        })
+      else
+        await payload.updateGlobal({
+          slug: 'brand-page',
+          locale: 'en',
+          draft: true,
+          data: { title: newTitle, seo: { title: newMeta } },
+        })
+      const pending = await draft(),
+        full = JSON.parse(JSON.stringify(pending))
+      full._status = 'published'
+      check(
+        (await request(api + '?locale=en', full, 'editor', method)).status === 409,
+        kind + ' full admin unreviewed Publish rejected',
+      )
+      const unchanged = await read('/en' + path)
+      check(
+        unchanged.status === 200 &&
+          unchanged.html.includes(oldTitle) &&
+          unchanged.html.includes(oldMeta) &&
+          !unchanged.html.includes(newTitle) &&
+          !unchanged.html.includes(newMeta),
+        kind + ' previous HTML and metadata remain public after rejected Publish',
+      )
+      check(
+        JSON.stringify(await draft()) === JSON.stringify(pending),
+        kind + ' rejected Publish preserves complete pending draft',
+      )
+      check(
+        (
+          await request(
+            api + '?locale=en&draft=true',
+            { translationStatus: 'approved' },
+            'editor',
+            method,
+          )
+        ).status === 200,
+        kind + ' separate approval accepted',
+      )
+      const approved = JSON.parse(JSON.stringify(await draft()))
+      approved._status = 'published'
+      check(
+        (await request(api + '?locale=en', approved, 'editor', method)).status === 200,
+        kind + ' full approved form publishes',
+      )
+      const current = await read('/en' + path)
+      check(
+        current.status === 200 && current.html.includes(newTitle) && current.html.includes(newMeta),
+        kind + ' approved HTML and metadata now public',
+      )
+      const withdrawal = JSON.parse(JSON.stringify(await draft()))
+      withdrawal._status = 'published'
+      withdrawal.translationStatus = 'in-review'
+      check(
+        (await request(api + '?locale=en', withdrawal, 'translator', method)).status === 403,
+        kind + ' translator cannot withdraw publication',
+      )
+      check(
+        (await request(api + '?locale=en', withdrawal, 'editor', method)).status === 200,
+        kind + ' actual Approved to In review withdrawal succeeds',
+      )
+      check(
+        !(await read('/en' + path)).html.includes(newTitle),
+        kind + ' intentional withdrawal removes public revision',
+      )
+      const koAfter = await read('/ko' + path)
+      const titleTag = (html: string) => html.match(/<title>[^<]*<\/title>/)?.[0]
+      check(
+        koAfter.status === koBefore.status && titleTag(koAfter.html) === titleTag(koBefore.html),
+        kind + ' KO remains available with unchanged metadata',
+      )
+    }
     const png = await sharp({
       create: { width: 40, height: 40, channels: 3, background: '#123456' },
     })
