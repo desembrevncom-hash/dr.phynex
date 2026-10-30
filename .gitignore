@@ -28,8 +28,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# Environment files: only the template is versioned. Every real environment
+# (.env, .env.local, .env.staging, .env.production, .env.preview, *.local …) stays local.
+.env*
+!.env.example
 
 # vercel
 .vercel
@@ -37,8 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-.env
 
 /media
 
@@ -56,3 +56,8 @@ node_modules/
 # Brand source files, internal documents, mockups and review screenshots (not committed).
 # Web-ready public assets that the build needs live in public/brand/ and ARE committed.
 /brand-assets
+
+# Machine-specific AI/agent tooling and local settings (no file here is versioned).
+/.claude/
+/.agents/
+/.codex/
