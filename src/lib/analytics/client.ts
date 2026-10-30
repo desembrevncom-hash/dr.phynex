@@ -1,7 +1,7 @@
 'use client'
 
 import type { TrackingConfig } from './config'
-import { parseConsent, serializeConsent, vendorCookiePatterns, type Consent } from './consent'
+import { cookieDeletionDomains, parseConsent, serializeConsent, vendorCookiesToClear, type Consent } from './consent'
 import { pageInfo, sanitizedPath, type PageContext, type TrackEvent } from './events'
 import { createTracker, type Tracker } from './tracker'
 import type { BrowserEnv } from './adapters/types'
@@ -9,6 +9,10 @@ import type { BrowserEnv } from './adapters/types'
 /** One tracker per tab, created on first use and reused across client navigations. */
 let tracker: Tracker | null = null
 let initialized = false
+/** Title of the last page view, so the next navigation can wait for the new <title>. */
+let lastTitle: string | null = null
+
+export const lastPageTitle = () => lastTitle
 
 /** Admin, API and preview routes never carry tracking, whatever renders there. */
 export const isExcludedPath = (pathname: string) => /^\/(admin|api|preview)(\/|$)/.test(pathname)
@@ -39,15 +43,11 @@ export function subscribeConsent(onChange: () => void) {
 
 export function saveConsent(consent: Consent) {
   document.cookie = serializeConsent(consent, window.location.protocol === 'https:')
-  for (const [category, patterns] of Object.entries(vendorCookiePatterns)) {
-    if (consent[category as keyof Consent]) continue
-    for (const name of document.cookie.split(';').map((c) => c.split('=')[0].trim())) {
-      if (patterns.some((p) => p.test(name))) {
-        // Vendor cookies may be set on the registrable domain; clear both forms.
-        const host = window.location.hostname
-        document.cookie = `${name}=; Path=/; Max-Age=0`
-        document.cookie = `${name}=; Path=/; Max-Age=0; Domain=.${host.split('.').slice(-2).join('.')}`
-      }
+  // Only cookies this page can read (not HttpOnly, same site) can be expired from here.
+  const domains = cookieDeletionDomains(window.location.hostname)
+  for (const name of vendorCookiesToClear(document.cookie, consent)) {
+    for (const domain of domains) {
+      document.cookie = `${name}=; Path=/; Max-Age=0${domain ? `; Domain=${domain}` : ''}`
     }
   }
   tracker?.setConsent(consent)
@@ -60,6 +60,7 @@ export function pageContext(pathname: string, search: string, title: string): Pa
 }
 
 export function trackPage(page: PageContext) {
+  lastTitle = page.title
   tracker?.page(page)
 }
 
@@ -72,4 +73,5 @@ export function trackEvent(event: TrackEvent) {
 export function resetTrackingForTests() {
   tracker = null
   initialized = false
+  lastTitle = null
 }

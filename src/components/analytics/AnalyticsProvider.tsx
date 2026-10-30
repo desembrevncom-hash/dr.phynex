@@ -7,6 +7,7 @@ import type { Locale } from '@/i18n/locales'
 import {
   initTracking,
   isExcludedPath,
+  lastPageTitle,
   pageContext,
   saveConsent,
   storedConsent,
@@ -16,6 +17,7 @@ import {
 } from '@/lib/analytics/client'
 import type { TrackingConfig } from '@/lib/analytics/config'
 import { eventForLink } from '@/lib/analytics/events'
+import { browserTitleEnv, whenTitleReady } from '@/lib/analytics/title'
 
 import { ConsentBanner } from './ConsentBanner'
 
@@ -36,14 +38,21 @@ export function AnalyticsProvider({ config, locale, privacyHref }: { config: Tra
   useEffect(() => {
     if (isExcludedPath(pathname)) return
     if (!initTracking(config)) return
-    trackPage(pageContext(pathname, search ? `?${search}` : '', document.title))
-    const marker = document.querySelector<HTMLElement>('[data-track-view]')
-    const id = marker?.dataset.contentId
-    if (id && marker?.dataset.trackView === 'view_product') {
-      trackEvent({ name: 'view_product', contentId: id, contentName: marker.dataset.contentName })
-    } else if (id && marker?.dataset.trackView === 'view_article') {
-      trackEvent({ name: 'view_article', contentId: id })
-    }
+    // Wait for Next.js to apply this page's <title> before sending (see lib/analytics/title.ts).
+    return whenTitleReady(
+      (title) => {
+        trackPage(pageContext(pathname, search ? `?${search}` : '', title))
+        const marker = document.querySelector<HTMLElement>('[data-track-view]')
+        const id = marker?.dataset.contentId
+        if (id && marker?.dataset.trackView === 'view_product') {
+          trackEvent({ name: 'view_product', contentId: id, contentName: marker.dataset.contentName })
+        } else if (id && marker?.dataset.trackView === 'view_article') {
+          trackEvent({ name: 'view_article', contentId: id })
+        }
+      },
+      lastPageTitle(),
+      browserTitleEnv(),
+    )
   }, [config, pathname, search])
 
   useEffect(() => {

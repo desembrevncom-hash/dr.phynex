@@ -19,8 +19,9 @@ const methods = [
 /**
  * TikTok Pixel, loaded only after marketing consent, using the same queue as TikTok's base
  * code. `identify` is never called (no advanced matching from this code); keep "Automatic
- * Advanced Matching" off in TikTok Events Manager. Lead uses the current standard event name
- * ("Lead" replaces "SubmitForm") with event_id = the server-issued lead id for Events API dedup.
+ * Advanced Matching" off in TikTok Events Manager. Sent: page views (ttq.page), ViewContent on
+ * product pages and Lead ("Lead" replaces "SubmitForm") with event_id = the server-issued lead
+ * id for Events API dedup. Clicks, article views and language changes stay in GA4 only.
  */
 export function tiktokAdapter(env: BrowserEnv, pixelId: string): Adapter {
   let loaded = false
@@ -82,26 +83,17 @@ export function tiktokAdapter(env: BrowserEnv, pixelId: string): Adapter {
     event(event: TrackEvent) {
       switch (event.name) {
         case 'view_product':
+          // content_type is top-level; each item in `contents` carries content_id / content_name.
           call('track', 'ViewContent', {
-            contents: [{ content_id: event.contentId, content_type: 'product', content_name: safeText(event.contentName) }],
+            content_type: 'product',
+            contents: [{ content_id: event.contentId, content_name: safeText(event.contentName) }],
           })
           break
         case 'generate_lead':
           call('track', 'Lead', { content_name: event.form }, { event_id: event.leadId })
           break
-        case 'view_article':
-          call('track', 'ViewArticle', { contents: [{ content_id: event.contentId, content_type: 'article' }] })
-          break
-        case 'click_contact':
-          call('track', 'ClickContact', { link_location: event.location })
-          break
-        case 'click_consultation':
-          call('track', 'ClickConsultation', { link_location: event.location })
-          break
-        case 'click_social':
-          call('track', 'ClickSocial', { social_network: event.network })
-          break
-        case 'language_change':
+        default:
+          // view_article, click_*, language_change: analytics only, no advertising goal.
           break
       }
     },

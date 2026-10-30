@@ -36,14 +36,16 @@ ID sai định dạng thì nền tảng đó tự tắt. Biến `NEXT_PUBLIC_*` 
 
 | Sự kiện nội bộ | Khi nào | GA4 | Meta | TikTok | Tham số | Consent | Chống trùng |
 |---|---|---|---|---|---|---|---|
-| page_view | Đổi trang (pathname + query bộ lọc) | `page_view` (gửi tay) | `PageView` | `ttq.page()` | locale, page_type, content_id | analytics / marketing | 1 lần mỗi lượt xem trang, mỗi nền tảng |
-| view_product | Trang chi tiết sản phẩm | `view_item` | `ViewContent` | `ViewContent` | slug, tên sản phẩm | như trên | 1 lần mỗi lượt xem |
-| view_article | Trang bài viết | `view_article` (tùy chỉnh) | `ViewArticle` (tùy chỉnh) | `ViewArticle` (tùy chỉnh) | slug | như trên | 1 lần mỗi lượt xem |
-| click_contact | Bấm link tới /contact | `click_contact` | `ClickContact` (tùy chỉnh) | `ClickContact` (tùy chỉnh) | vị trí link | như trên | Mỗi lần bấm thật |
-| click_consultation | Bấm link tới /partnership | `click_consultation` | `ClickConsultation` | `ClickConsultation` | vị trí link | như trên | Mỗi lần bấm thật |
-| click_social | Bấm link mạng xã hội | `click_social` | `ClickSocial` | `ClickSocial` | mạng xã hội | như trên | Hiện site chưa có link mạng xã hội |
-| generate_lead | **Sau khi server đã lưu** form liên hệ/hợp tác | `generate_lead` | `Lead` + `eventID` | `Lead` + `event_id` | tên form | như trên | Theo `leadId` do server cấp |
+| page_view | Đổi trang (pathname + query bộ lọc), gửi sau khi `<title>` mới đã áp dụng | `page_view` (gửi tay) | `PageView` | `ttq.page()` | page_language, page_type, content_id, page_title | analytics / marketing | 1 lần mỗi lượt xem trang, mỗi nền tảng |
+| view_product | Trang chi tiết sản phẩm | `view_item` | `ViewContent` | `ViewContent` (`content_type` ở cấp trên, `contents[].content_id/content_name`) | slug, tên sản phẩm | như trên | 1 lần mỗi lượt xem |
+| view_article | Trang bài viết | `view_article` (tùy chỉnh) | — | — | slug | analytics | 1 lần mỗi lượt xem |
+| click_contact | Bấm link tới /contact | `click_contact` | — | — | vị trí link | analytics | Mỗi lần bấm thật |
+| click_consultation | Bấm link tới /partnership | `click_consultation` | — | — | vị trí link | analytics | Mỗi lần bấm thật |
+| click_social | Bấm link mạng xã hội | `click_social` | — | — | mạng xã hội | analytics | Hiện site chưa có link mạng xã hội |
+| generate_lead | **Sau khi server đã lưu** form liên hệ/hợp tác | `generate_lead` | `Lead` + `eventID` | `Lead` + `event_id` | tên form | analytics / marketing | Theo `leadId` do server cấp |
 | language_change | Bấm bộ chuyển ngôn ngữ | `language_change` | — | — | from, to | analytics | — |
+
+Meta và TikTok chỉ nhận sự kiện chuẩn gắn với mục tiêu quảng cáo (PageView, ViewContent, Lead). Lượt bấm, xem bài viết và đổi ngôn ngữ chỉ gửi cho GA4. GA4 dùng `page_language` cho locale của site; tham số `language` tự động của GA4 (ngôn ngữ trình duyệt) được giữ nguyên.
 
 Không có Purchase, AddToCart hay Checkout. Bấm nút không bao giờ được tính là lead. Bot bị honeypot chặn vẫn thấy "thành công" nhưng không nhận `leadId`, nên không được tính lead.
 
@@ -59,7 +61,8 @@ Không có Purchase, AddToCart hay Checkout. Bấm nút không bao giờ đượ
 - **Rút consent** (nút "Cài đặt cookie" ở footer):
   - Gọi `fbq('consent','revoke')`, `ttq.revokeConsent()` và đặt GA về *denied*.
   - Ngừng gửi sự kiện.
-  - Xóa các cookie `_ga*`, `_fbp`, `_fbc`, `_ttp`, `_gcl_*` ở mức có thể.
+  - Xóa các cookie `_ga*`, `_fbp`, `_fbc`, `_ttp`, `_gcl_*` mà trang đọc được: dạng host-only và trên từng tên miền cha cho tới tên miền đăng ký (ví dụ `.drphynex.com.vn`), không bao giờ trên hậu tố công cộng (`.com.vn`, `.co.kr`, `.vercel.app`). Danh sách hậu tố nằm trong `src/lib/analytics/consent.ts`; dùng tên miền mới thì kiểm tra lại.
+  - Không xóa được: cookie HttpOnly và cookie bên thứ ba trên tên miền của nhà cung cấp (facebook.com, tiktok.com, google.com…). Các cookie này chỉ khách hoặc nhà cung cấp xóa được.
   - **Giới hạn:** script đã tải không gỡ được cho tới khi tải lại trang, và **dữ liệu đã gửi trước đó không được thu hồi**. Muốn xóa dữ liệu đó phải làm trong từng tài khoản (GA4 data deletion, yêu cầu tới Meta/TikTok).
 - Không đo trên `/admin`, `/api`, `/preview`, và khi nhân viên đang xem preview.
 - Không gửi email, số điện thoại, tên hay nội dung form. URL gửi đi chỉ giữ các tham số bộ lọc (`line`, `concern`, `topic`, `country`, `page`). Chữ có dạng email hoặc số điện thoại bị loại bỏ.

@@ -62,13 +62,14 @@ export function googleAdapter(env: BrowserEnv, measurementId: string, marketingG
       gtag('event', 'page_view', {
         page_location: page.location,
         page_title: safeText(page.title, 150),
-        language: page.locale ?? undefined,
+        // Site locale. GA4's own `language` parameter is the browser language and is left alone.
+        page_language: page.locale ?? undefined,
         page_type: page.pageType,
         content_id: page.contentId ?? undefined,
       })
     },
     event(event: TrackEvent, page: PageContext | null) {
-      const common = { page_type: page?.pageType, language: page?.locale ?? undefined }
+      const common = { page_type: page?.pageType, page_language: page?.locale ?? undefined }
       switch (event.name) {
         case 'view_product':
           gtag('event', 'view_item', {

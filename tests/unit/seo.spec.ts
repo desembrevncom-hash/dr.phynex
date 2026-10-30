@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { internalHref, RichText } from '@/components/ui/RichText'
 import { alternatesFor, publicImage, siteURL, withSocial } from '@/lib/seo'
 import { buildSitemap, type LocaleContent } from '@/lib/sitemap'
-import { articleLd, breadcrumbLd, productLd, serializeJsonLd } from '@/lib/structured-data'
+import { articleLd, breadcrumbLd, organizationLd, productLd, serializeJsonLd, websiteLd } from '@/lib/structured-data'
 
 const empty: LocaleContent = {
   products: [],
@@ -30,6 +30,13 @@ describe('JSON-LD', () => {
     const ld = productLd({ locale: 'vi', path: '/vi/products/x', name: 'X', description: 'Desc' })
     for (const key of ['offers', 'aggregateRating', 'review', 'manufacturer', 'countryOfOrigin', 'award']) expect(ld).not.toHaveProperty(key)
     expect(ld).toMatchObject({ '@type': 'Product', name: 'X', url: `${siteURL}/vi/products/x`, brand: { '@type': 'Brand' } })
+  })
+
+  it('uses inLanguage only on types schema.org allows (CreativeWork family), not on Product', () => {
+    expect(productLd({ locale: 'vi', path: '/vi/products/x', name: 'X' })).not.toHaveProperty('inLanguage')
+    expect(articleLd({ locale: 'ko', path: '/ko/journal/a', headline: 'A' })).toMatchObject({ inLanguage: 'ko' })
+    expect(websiteLd('en')).toMatchObject({ '@type': 'WebSite', inLanguage: 'en' })
+    expect(organizationLd()).toMatchObject({ '@type': 'Organization', name: 'Dr.PhynEX' })
   })
 
   it('article markup omits fields the CMS does not have', () => {

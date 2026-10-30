@@ -77,7 +77,8 @@ export function articleLd(args: {
 }
 
 export function productLd(args: {
-  locale: Locale
+  /** Accepted for call-site symmetry; not emitted (schema.org `inLanguage` is not a Product property). */
+  locale?: Locale
   path: string
   name: string
   description?: string | null
@@ -90,7 +91,6 @@ export function productLd(args: {
     name: args.name,
     ...(args.description ? { description: args.description } : {}),
     url: absolute(args.path),
-    inLanguage: args.locale,
     ...(args.sku ? { sku: args.sku } : {}),
     ...(args.image ? { image: [args.image.url] } : {}),
     // Brand only: the packaging names a different company as manufacturer, so none is claimed here.

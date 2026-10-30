@@ -126,7 +126,9 @@ describe('consent gating', () => {
     expect(named(calls(win).ttq, 'revokeConsent')).toHaveLength(1)
     expect(named(calls(win).gtag, 'consent', 'update').at(-1)?.[2]).toMatchObject({ analytics_storage: 'denied' })
     tracker.track({ name: 'click_contact', location: 'main' })
-    expect(named(calls(win).fbq, 'trackCustom', 'ClickContact')).toHaveLength(0)
+    tracker.track({ name: 'generate_lead', form: 'contact', leadId: 'after-withdrawal' })
+    expect(named(calls(win).fbq, 'track', 'Lead')).toHaveLength(0)
+    expect(named(calls(win).gtag, 'event', 'click_contact')).toHaveLength(0)
     tracker.setConsent({ analytics: true, marketing: true })
     expect(named(calls(win).fbq, 'track', 'PageView')).toHaveLength(1)
     expect(named(calls(win).ttq, 'page')).toHaveLength(1)
@@ -155,7 +157,21 @@ describe('page views and route changes', () => {
     expect(named(c.gtag, 'event', 'page_view')).toHaveLength(3)
     expect(named(c.fbq, 'track', 'PageView')).toHaveLength(3)
     expect(named(c.ttq, 'page')).toHaveLength(3)
-    expect(named(c.gtag, 'event', 'page_view')[0][2]).toMatchObject({ page_type: 'product_list', language: 'en' })
+    expect(named(c.gtag, 'event', 'page_view')[0][2]).toMatchObject({ page_type: 'product_list', page_language: 'en' })
+  })
+
+  it("never overrides GA4's automatic `language` (browser language); the site locale is page_language", () => {
+    const { tracker, win } = setup()
+    tracker.setConsent({ analytics: true, marketing: true })
+    tracker.page(page('/vi/products'))
+    tracker.track({ name: 'view_product', contentId: 'x' })
+    tracker.track({ name: 'language_change', from: 'vi', to: 'ko' })
+    const events = named(calls(win).gtag, 'event')
+    expect(events.length).toBeGreaterThanOrEqual(3)
+    for (const e of events) {
+      expect(e[2]).not.toHaveProperty('language')
+      expect(e[2]).toMatchObject({ page_language: 'vi' })
+    }
   })
 
   it('view_product once per visit, again on a later visit; maps to view_item / ViewContent', () => {
@@ -173,6 +189,46 @@ describe('page views and route changes', () => {
     expect(named(c.gtag, 'event', 'view_item')[0][2]).toMatchObject({ items: [{ item_id: 'rx-matrix-balm' }] })
     expect(named(c.fbq, 'track', 'ViewContent')).toHaveLength(2)
     expect(named(c.ttq, 'track', 'ViewContent')).toHaveLength(2)
+  })
+
+  it('TikTok ViewContent: content_type at the top level, content_id / content_name inside contents', () => {
+    const { tracker, win } = setup()
+    tracker.setConsent({ analytics: false, marketing: true })
+    tracker.page(page('/en/products/rx-matrix-balm'))
+    tracker.track({ name: 'view_product', contentId: 'rx-matrix-balm', contentName: 'RX Matrix Balm' })
+    const [, , params] = named(calls(win).ttq, 'track', 'ViewContent')[0] as [string, string, Record<string, unknown>]
+    expect(params).toEqual({
+      content_type: 'product',
+      contents: [{ content_id: 'rx-matrix-balm', content_name: 'RX Matrix Balm' }],
+    })
+    expect((params.contents as Record<string, unknown>[])[0]).not.toHaveProperty('content_type')
+  })
+})
+
+describe('advertising platforms receive only goal events', () => {
+  it('Meta and TikTok get PageView, ViewContent and Lead only; GA4 gets every internal event', () => {
+    const { tracker, win } = setup()
+    tracker.setConsent({ analytics: true, marketing: true })
+    tracker.page(page('/en/journal/a'))
+    tracker.track({ name: 'view_article', contentId: 'a' })
+    tracker.track({ name: 'click_contact', location: 'main' })
+    tracker.track({ name: 'click_consultation', location: 'main' })
+    tracker.track({ name: 'click_social', network: 'instagram', location: 'footer' })
+    tracker.track({ name: 'language_change', from: 'en', to: 'vi' })
+    tracker.page(page('/en/products/x'))
+    tracker.track({ name: 'view_product', contentId: 'x' })
+    tracker.track({ name: 'generate_lead', form: 'contact', leadId: 'l-9' })
+    const c = calls(win)
+    const metaNames = c.fbq.filter((a) => a[0] === 'track' || a[0] === 'trackCustom').map((a) => a[1])
+    expect(new Set(metaNames)).toEqual(new Set(['PageView', 'ViewContent', 'Lead']))
+    expect(named(c.fbq, 'trackCustom')).toHaveLength(0)
+    const ttqNames = c.ttq.filter((a) => a[0] === 'track').map((a) => a[1])
+    expect(new Set(ttqNames)).toEqual(new Set(['ViewContent', 'Lead']))
+    expect(named(c.ttq, 'page')).toHaveLength(2)
+    const gaNames = named(c.gtag, 'event').map((a) => a[1])
+    for (const name of ['page_view', 'view_item', 'view_article', 'click_contact', 'click_consultation', 'click_social', 'generate_lead', 'language_change']) {
+      expect(gaNames).toContain(name)
+    }
   })
 })
 

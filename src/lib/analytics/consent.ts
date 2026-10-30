@@ -35,3 +35,52 @@ export const vendorCookiePatterns: Record<ConsentCategory, RegExp[]> = {
   analytics: [/^_ga$/, /^_ga_/, /^_gid$/],
   marketing: [/^_fbp$/, /^_fbc$/, /^_ttp$/, /^_tt_enable_cookie$/, /^ttcsid/, /^_gcl_/],
 }
+
+/** Names of readable vendor cookies whose category is not (or no longer) consented. */
+export function vendorCookiesToClear(cookieHeader: string, consent: Consent): string[] {
+  const names = cookieHeader
+    .split(';')
+    .map((c) => c.split('=')[0].trim())
+    .filter(Boolean)
+  return names.filter((name) =>
+    (Object.keys(vendorCookiePatterns) as ConsentCategory[]).some(
+      (category) => !consent[category] && vendorCookiePatterns[category].some((p) => p.test(name)),
+    ),
+  )
+}
+
+/**
+ * Public suffixes under which this site may run (registries + hosting platforms). Cookies can
+ * never be set on these, so no deletion is attempted there. Extend when a new domain is used.
+ * Source: Public Suffix List (publicsuffix.org), entries relevant to KR / VN / hosting.
+ */
+const multiLabelPublicSuffixes = new Set([
+  'co.kr', 'or.kr', 'ne.kr', 'go.kr', 'ac.kr', 're.kr', 'pe.kr', 'kr',
+  'com.vn', 'net.vn', 'org.vn', 'edu.vn', 'gov.vn', 'biz.vn', 'info.vn', 'name.vn', 'pro.vn', 'vn',
+  'co.uk', 'org.uk', 'com.au', 'co.jp', 'com.sg', 'com.cn',
+  'vercel.app', 'netlify.app', 'pages.dev', 'workers.dev', 'github.io',
+])
+
+const isIpAddress = (host: string) => /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':')
+
+/**
+ * Cookie scopes to expire on consent withdrawal: `null` = host-only cookie, then every parent
+ * domain down to (but excluding) the public suffix. Vendor cookies such as _ga and _fbp are set
+ * on the registrable domain (e.g. ".drphynex.com.vn"), which a two-label guess would miss.
+ * localhost and IP addresses only have host-only cookies.
+ */
+export function cookieDeletionDomains(hostname: string): (string | null)[] {
+  const host = hostname.toLowerCase().replace(/\.$/, '')
+  if (!host.includes('.') || isIpAddress(host) || multiLabelPublicSuffixes.has(host)) return [null]
+  const labels = host.split('.')
+  const domains: (string | null)[] = [null]
+  for (let i = 0; i < labels.length - 1; i++) {
+    const candidate = labels.slice(i).join('.')
+    const parent = labels.slice(i + 1).join('.')
+    // Stop before reaching a public suffix: `candidate` is the registrable domain when its
+    // parent is a public suffix (or a single-label TLD).
+    domains.push(`.${candidate}`)
+    if (multiLabelPublicSuffixes.has(parent) || !parent.includes('.')) break
+  }
+  return domains
+}

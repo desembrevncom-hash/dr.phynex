@@ -12,8 +12,10 @@ type Fbq = ((...args: unknown[]) => void) & {
 
 /**
  * Meta Pixel, loaded only after marketing consent. Automatic event detection (autoConfig) is
- * switched off and no advanced matching data is passed to init, so only the events below are
- * sent. Lead carries eventID = the server-issued lead id, ready for Conversions API dedup.
+ * switched off and no advanced matching data is passed to init. Only standard events tied to an
+ * advertising goal are sent: PageView, ViewContent (product pages) and Lead. Lead carries
+ * eventID = the server-issued lead id, ready for Conversions API dedup. Clicks, article views
+ * and language changes stay in GA4 only.
  */
 export function metaAdapter(env: BrowserEnv, pixelId: string): Adapter {
   let loaded = false
@@ -68,23 +70,11 @@ export function metaAdapter(env: BrowserEnv, pixelId: string): Adapter {
             content_name: safeText(event.contentName),
           })
           break
-        case 'view_article':
-          fbq('trackCustom', 'ViewArticle', { content_ids: [event.contentId] })
-          break
         case 'generate_lead':
           fbq('track', 'Lead', { content_name: event.form }, { eventID: event.leadId })
           break
-        case 'click_contact':
-          fbq('trackCustom', 'ClickContact', { link_location: event.location })
-          break
-        case 'click_consultation':
-          fbq('trackCustom', 'ClickConsultation', { link_location: event.location })
-          break
-        case 'click_social':
-          fbq('trackCustom', 'ClickSocial', { social_network: event.network })
-          break
-        case 'language_change':
-          // Analytics only; not an advertising signal.
+        default:
+          // view_article, click_*, language_change: analytics only, no advertising goal.
           break
       }
     },
