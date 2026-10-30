@@ -8,10 +8,12 @@ import type { Locale } from '@/i18n/locales'
 import { initialFormState } from '@/lib/formState'
 
 import { ConsentField, FormStatus, Honeypot, SelectField, SubmitButton, TextAreaField, TextField } from './FormParts'
+import { useLeadEvent } from './useLeadEvent'
 
 export function ContactForm({ locale, privacyHref }: { locale: Locale; privacyHref: string }) {
   const t = useTranslations('form')
   const [state, action] = useActionState(submitContact, initialFormState)
+  useLeadEvent('contact', state)
 
   if (state.status === 'success') return <FormStatus state={state} />
 

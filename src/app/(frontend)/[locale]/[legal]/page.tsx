@@ -10,7 +10,7 @@ import { Pending } from '@/components/ui/Pending'
 import { RichText } from '@/components/ui/RichText'
 import { approvedLocalesFor, findPublicBySlug } from '@/lib/content'
 import { pageLocale } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 import { hasRichText } from '@/lib/text'
 
 type Params = Promise<{ locale: string; legal: string }>
@@ -22,7 +22,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { legal } = await params
   if (!isLegalSlug(legal)) return {}
   const [t, page] = await Promise.all([getTranslations({ locale, namespace: 'nav' }), findPublicBySlug('legal-pages', legal, locale)])
-  return { title: page?.title || t(legal), alternates: alternatesFor(locale, `/${legal}`, await approvedLocalesFor('legal-pages', legal)) }
+  return withSocial(
+    { title: page?.title || t(legal), alternates: alternatesFor(locale, `/${legal}`, await approvedLocalesFor('legal-pages', legal)) },
+    locale,
+  )
 }
 
 export default async function LegalPage({ params }: { params: Params }) {
@@ -45,7 +48,7 @@ export default async function LegalPage({ params }: { params: Params }) {
       <div className="container-page py-10 lg:py-14">
         {page && hasRichText(page.body) ? (
           <div className="max-w-3xl">
-            <RichText data={page.body} className="text-ink" />
+            <RichText data={page.body} locale={locale} className="text-ink" />
           </div>
         ) : (
           <>

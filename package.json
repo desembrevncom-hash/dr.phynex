@@ -19,7 +19,8 @@
     "migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",
     "db:up": "docker compose up -d --wait postgres",
     "db:down": "docker compose stop postgres",
-    "test": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
+    "test": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
+    "test:unit": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.unit.config.mts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.92.1",

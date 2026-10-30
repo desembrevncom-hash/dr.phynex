@@ -8,7 +8,7 @@ import { Pending } from '@/components/ui/Pending'
 import { RichText } from '@/components/ui/RichText'
 import { findPublicGlobal } from '@/lib/content'
 import { pageLocale, type LocaleParams } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 
 export async function generateMetadata({ params }: { params: LocaleParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
@@ -16,11 +16,14 @@ export async function generateMetadata({ params }: { params: LocaleParams }): Pr
     getTranslations({ locale, namespace: 'partnership' }),
     findPublicGlobal('partnership-page', locale),
   ])
-  return {
-    title: page?.seo?.title || page?.title || t('title'),
-    description: page?.seo?.description || undefined,
-    alternates: alternatesFor(locale, '/partnership'),
-  }
+  return withSocial(
+    {
+      title: page?.seo?.title || page?.title || t('title'),
+      description: page?.seo?.description || undefined,
+      alternates: alternatesFor(locale, '/partnership'),
+    },
+    locale,
+  )
 }
 
 const hasText = (value: unknown) => /"text":"[^"\s]/.test(JSON.stringify(value ?? ''))
@@ -48,7 +51,7 @@ export default async function PartnershipPage({ params }: { params: LocaleParams
 
         <div className="md:col-span-4 md:row-start-1">
           {page && hasText(page.body) ? (
-            <RichText data={page.body} className="text-ink" />
+            <RichText data={page.body} locale={locale} className="text-ink" />
           ) : (
             <Pending label="partnershipBody" className="text-ink-muted" />
           )}

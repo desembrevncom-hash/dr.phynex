@@ -13,7 +13,7 @@ import { findPublic, findPublicGlobal, populatedList } from '@/lib/content'
 import { pageLocale, type LocaleParams } from '@/lib/locale'
 import { getPreviewUser } from '@/lib/preview'
 import { keepBrandTogether } from '@/lib/text'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 import type { Product, ProductLine } from '@/payload-types'
 
 export async function generateMetadata({ params }: { params: LocaleParams }): Promise<Metadata> {
@@ -22,11 +22,14 @@ export async function generateMetadata({ params }: { params: LocaleParams }): Pr
     getTranslations({ locale, namespace: 'common' }),
     findPublicGlobal('home-page', locale),
   ])
-  return {
-    title: home?.seo?.title || { absolute: t('siteName') },
-    description: home?.seo?.description || undefined,
-    alternates: alternatesFor(locale, ''),
-  }
+  return withSocial(
+    {
+      title: home?.seo?.title || { absolute: t('siteName') },
+      description: home?.seo?.description || undefined,
+      alternates: alternatesFor(locale, ''),
+    },
+    locale,
+  )
 }
 
 async function LineSection({

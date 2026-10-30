@@ -8,17 +8,20 @@ import { Pending } from '@/components/ui/Pending'
 import { RichText } from '@/components/ui/RichText'
 import { findPublicGlobal } from '@/lib/content'
 import { pageLocale, type LocaleParams } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 import { hasRichText } from '@/lib/text'
 
 export async function generateMetadata({ params }: { params: LocaleParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
   const [t, page] = await Promise.all([getTranslations({ locale, namespace: 'nav' }), findPublicGlobal('brand-page', locale)])
-  return {
-    title: page?.seo?.title || page?.title || t('brand'),
-    description: page?.seo?.description || undefined,
-    alternates: alternatesFor(locale, '/brand'),
-  }
+  return withSocial(
+    {
+      title: page?.seo?.title || page?.title || t('brand'),
+      description: page?.seo?.description || undefined,
+      alternates: alternatesFor(locale, '/brand'),
+    },
+    locale,
+  )
 }
 
 export default async function BrandPage({ params }: { params: LocaleParams }) {
@@ -33,7 +36,7 @@ export default async function BrandPage({ params }: { params: LocaleParams }) {
       <div className="container-page py-10 lg:py-14">
         {filled ? (
           <div className="max-w-3xl">
-            {hasRichText(page?.body) ? <RichText data={page?.body} className="text-ink" /> : null}
+            {hasRichText(page?.body) ? <RichText data={page?.body} locale={locale} className="text-ink" /> : null}
           </div>
         ) : (
           <>

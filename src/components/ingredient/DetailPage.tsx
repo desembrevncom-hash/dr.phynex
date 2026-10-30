@@ -11,7 +11,7 @@ import { RichText } from '@/components/ui/RichText'
 import type { Locale } from '@/i18n/locales'
 import { approvedLocalesFor, findPublic, findPublicBySlug } from '@/lib/content'
 import { pageLocale, type SlugParams } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, publicImage, withSocial } from '@/lib/seo'
 import { hasRichText } from '@/lib/text'
 
 type Kind = 'ingredients' | 'technologies'
@@ -25,11 +25,15 @@ export async function detailMetadata(kind: Kind, params: SlugParams): Promise<Me
   const { slug } = await params
   const found = await resolve(kind, slug, locale)
   if (!found) return {}
-  return {
-    title: found.doc.seo?.title || found.doc.name,
-    description: found.doc.seo?.description || found.doc.summary || undefined,
-    alternates: alternatesFor(locale, `/${kind}/${slug}`, await approvedLocalesFor(found.kind, slug)),
-  }
+  return withSocial(
+    {
+      title: found.doc.seo?.title || found.doc.name,
+      description: found.doc.seo?.description || found.doc.summary || undefined,
+      alternates: alternatesFor(locale, `/${kind}/${slug}`, await approvedLocalesFor(found.kind, slug)),
+    },
+    locale,
+    { image: publicImage(found.doc.image) },
+  )
 }
 
 export async function IngredientDetail({ kind, params }: { kind: Kind; params: SlugParams }) {
@@ -66,7 +70,7 @@ export async function IngredientDetail({ kind, params }: { kind: Kind; params: S
 
         <div className="mt-8 grid gap-8 md:grid-cols-12">
           <div className="md:col-span-7">
-            {hasRichText(doc.body) ? <RichText data={doc.body} className="text-ink" /> : null}
+            {hasRichText(doc.body) ? <RichText data={doc.body} locale={locale} className="text-ink" /> : null}
             {/* No description is generated: only an editor-supplied, sourced text may appear here. */}
             {described ? null : <Pending label="ingredientDescription" className="text-ink-muted" />}
           </div>

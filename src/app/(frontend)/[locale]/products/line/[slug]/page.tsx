@@ -7,18 +7,21 @@ import { PageShell } from '@/components/layout/PageShell'
 import { LineGroup } from '@/components/product/LineGroup'
 import { approvedLocalesFor, findPublic, findPublicBySlug } from '@/lib/content'
 import { pageLocale, type SlugParams } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 
 export async function generateMetadata({ params }: { params: SlugParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
   const { slug } = await params
   const line = await findPublicBySlug('product-lines', slug, locale)
   if (!line) return {}
-  return {
-    title: line.name,
-    description: line.description || undefined,
-    alternates: alternatesFor(locale, `/products/line/${slug}`, await approvedLocalesFor('product-lines', slug)),
-  }
+  return withSocial(
+    {
+      title: line.name,
+      description: line.description || undefined,
+      alternates: alternatesFor(locale, `/products/line/${slug}`, await approvedLocalesFor('product-lines', slug)),
+    },
+    locale,
+  )
 }
 
 export default async function ProductLinePage({ params }: { params: SlugParams }) {

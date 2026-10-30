@@ -8,12 +8,14 @@ import type { Locale } from '@/i18n/locales'
 import { initialFormState } from '@/lib/formState'
 
 import { ConsentField, FormStatus, Honeypot, SelectField, SubmitButton, TextAreaField, TextField } from './FormParts'
+import { useLeadEvent } from './useLeadEvent'
 
 const businessTypes = ['distributor', 'retailer', 'spa-clinic', 'online', 'other'] as const
 
 export function PartnershipForm({ locale, privacyHref }: { locale: Locale; privacyHref: string }) {
   const t = useTranslations('form')
   const [state, action] = useActionState(submitPartnership, initialFormState)
+  useLeadEvent('partnership', state)
 
   if (state.status === 'success') return <FormStatus state={state} />
 

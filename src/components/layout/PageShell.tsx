@@ -1,9 +1,12 @@
 /* eslint-disable @next/next/no-img-element -- the logo is the brand's SVG artwork, shown unmodified */
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 
+import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
+import { ConsentSettingsButton } from '@/components/analytics/ConsentSettingsButton'
 import { locales, type Locale } from '@/i18n/locales'
+import { trackingConfig } from '@/lib/analytics/config'
 import { getPreviewUser } from '@/lib/preview'
 import { localizedPath } from '@/lib/seo'
 
@@ -46,6 +49,9 @@ function Logo({ className }: { className: string }) {
 export async function PageShell({ locale, path, available = locales, bleed = false, search = '', children }: Props) {
   const [t, preview] = await Promise.all([getTranslations(), getPreviewUser()])
   const href = (p: string) => localizedPath(locale, p)
+  // Off by default (env flag + IDs); never in staff preview. The admin has no PageShell.
+  const tracking = trackingConfig()
+  const trackingOn = tracking.enabled && !preview
   const items = mainNav.map(([key, p]) => ({
     key,
     label: t(`nav.${key}`),
@@ -136,10 +142,21 @@ export async function PageShell({ locale, path, available = locales, bleed = fal
                   </Link>
                 </li>
               ))}
+              {trackingOn ? (
+                <li>
+                  <ConsentSettingsButton label={t('consent.settings')} />
+                </li>
+              ) : null}
             </ul>
           </nav>
         </div>
       </footer>
+
+      {trackingOn ? (
+        <Suspense fallback={null}>
+          <AnalyticsProvider config={tracking} locale={locale} privacyHref={href('/privacy')} />
+        </Suspense>
+      ) : null}
     </>
   )
 }

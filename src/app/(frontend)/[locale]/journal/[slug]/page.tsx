@@ -7,9 +7,12 @@ import { ProductTile } from '@/components/product/ProductTile'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { MediaImage } from '@/components/ui/MediaImage'
 import { RichText } from '@/components/ui/RichText'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { TrackContent } from '@/components/analytics/TrackContent'
 import { approvedLocalesFor, findPublicBySlug, populated, populatedList } from '@/lib/content'
 import { pageLocale, type SlugParams } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, publicImage, withSocial } from '@/lib/seo'
+import { articleLd } from '@/lib/structured-data'
 import type { JournalTopic, Product } from '@/payload-types'
 
 export async function generateMetadata({ params }: { params: SlugParams }): Promise<Metadata> {
@@ -17,11 +20,20 @@ export async function generateMetadata({ params }: { params: SlugParams }): Prom
   const { slug } = await params
   const article = await findPublicBySlug('articles', slug, locale)
   if (!article) return {}
-  return {
-    title: article.seo?.title || article.title,
-    description: article.seo?.description || article.excerpt || undefined,
-    alternates: alternatesFor(locale, `/journal/${slug}`, await approvedLocalesFor('articles', slug)),
-  }
+  return withSocial(
+    {
+      title: article.seo?.title || article.title,
+      description: article.seo?.description || article.excerpt || undefined,
+      alternates: alternatesFor(locale, `/journal/${slug}`, await approvedLocalesFor('articles', slug)),
+    },
+    locale,
+    {
+      type: 'article',
+      image: publicImage(article.cover),
+      publishedTime: article.publishedAt,
+      modifiedTime: article.updatedAt,
+    },
+  )
 }
 
 export default async function ArticlePage({ params }: { params: SlugParams }) {
@@ -38,6 +50,19 @@ export default async function ArticlePage({ params }: { params: SlugParams }) {
 
   return (
     <PageShell locale={locale} path={`/journal/${slug}`} available={available} bleed>
+      <JsonLd
+        data={articleLd({
+          locale,
+          path: localizedPath(locale, `/journal/${slug}`),
+          headline: article.title,
+          description: article.excerpt,
+          author: article.author,
+          datePublished: article.publishedAt,
+          dateModified: article.updatedAt,
+          image: publicImage(article.cover),
+        })}
+      />
+      <TrackContent event="view_article" contentId={slug} />
       <Breadcrumb
         items={[
           { href: journal, label: t('journal.title') },
@@ -62,7 +87,7 @@ export default async function ArticlePage({ params }: { params: SlugParams }) {
           </div>
         ) : null}
         <div className="mt-8 max-w-3xl">
-          <RichText data={article.body} className="text-ink" />
+          <RichText data={article.body} locale={locale} className="text-ink" />
         </div>
       </article>
       {related.length > 0 ? (

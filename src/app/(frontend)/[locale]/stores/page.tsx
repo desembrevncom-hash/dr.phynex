@@ -9,12 +9,12 @@ import { PageIntro } from '@/components/ui/PageIntro'
 import { Pending } from '@/components/ui/Pending'
 import { findPublic } from '@/lib/content'
 import { firstParam, pageLocale, type LocaleParams, type SearchParams } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 
 export async function generateMetadata({ params }: { params: LocaleParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
   const t = await getTranslations({ locale, namespace: 'stores' })
-  return { title: t('title'), alternates: alternatesFor(locale, '/stores') }
+  return withSocial({ title: t('title'), alternates: alternatesFor(locale, '/stores') }, locale)
 }
 
 const safeHttpUrl = (value?: string | null) => {

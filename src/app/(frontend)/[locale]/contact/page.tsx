@@ -10,12 +10,12 @@ import { Pending } from '@/components/ui/Pending'
 import { findPublicGlobal } from '@/lib/content'
 import { getPreviewUser } from '@/lib/preview'
 import { pageLocale, type LocaleParams } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 
 export async function generateMetadata({ params }: { params: LocaleParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
   const t = await getTranslations({ locale, namespace: 'contact' })
-  return { title: t('title'), alternates: alternatesFor(locale, '/contact') }
+  return withSocial({ title: t('title'), alternates: alternatesFor(locale, '/contact') }, locale)
 }
 
 export default async function ContactPage({ params }: { params: LocaleParams }) {

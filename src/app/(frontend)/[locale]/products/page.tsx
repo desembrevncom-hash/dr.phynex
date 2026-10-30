@@ -11,12 +11,12 @@ import { FilterTabs } from '@/components/ui/FilterTabs'
 import { PageIntro } from '@/components/ui/PageIntro'
 import { findPublic } from '@/lib/content'
 import { firstParam, pageLocale, type LocaleParams, type SearchParams } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 
 export async function generateMetadata({ params }: { params: LocaleParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
   const t = await getTranslations({ locale, namespace: 'products' })
-  return { title: t('title'), alternates: alternatesFor(locale, '/products') }
+  return withSocial({ title: t('title'), alternates: alternatesFor(locale, '/products') }, locale)
 }
 
 export default async function ProductsPage({ params, searchParams }: { params: LocaleParams; searchParams: SearchParams }) {

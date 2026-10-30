@@ -1,5 +1,6 @@
 'use server'
 
+import { randomUUID } from 'crypto'
 import { headers } from 'next/headers'
 
 import { isLocale } from '@/i18n/locales'
@@ -49,7 +50,8 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
         status: 'new',
       },
     })
-    return { status: 'success' }
+    // Bots caught by the honeypot also see "success" but never get a leadId (no lead counted).
+    return { status: 'success', leadId: randomUUID() }
   } catch (error) {
     console.error('[contact] failed to store submission', error instanceof Error ? error.name : 'UnknownError')
     return { status: 'error', code: 'server', values }
@@ -90,7 +92,7 @@ export async function submitPartnership(_prev: FormState, formData: FormData): P
         status: 'new',
       },
     })
-    return { status: 'success' }
+    return { status: 'success', leadId: randomUUID() }
   } catch (error) {
     console.error('[partnership] failed to store inquiry', error instanceof Error ? error.name : 'UnknownError')
     return { status: 'error', code: 'server', values }

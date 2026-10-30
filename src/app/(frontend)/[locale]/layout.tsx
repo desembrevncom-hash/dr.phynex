@@ -5,8 +5,10 @@ import { hasLocale, NextIntlClientProvider } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
+import { JsonLd } from '@/components/seo/JsonLd'
 import { routing } from '@/i18n/routing'
 import { siteURL } from '@/lib/seo'
+import { organizationLd, websiteLd } from '@/lib/structured-data'
 
 import '../globals.css'
 
@@ -48,6 +50,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   return (
     <html lang={locale} className={`${heading.variable} ${text.variable}`}>
       <body className="flex min-h-dvh flex-col font-sans antialiased">
+        <JsonLd data={[organizationLd(), websiteLd(locale)]} />
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>

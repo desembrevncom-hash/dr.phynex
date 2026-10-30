@@ -13,6 +13,19 @@
     "viewProducts": "제품 보기",
     "productsBody": "RX 라인과 MX 라인."
   },
+  "consent": {
+    "title": "쿠키 및 측정",
+    "body": "동의하시는 경우에만 사이트 이용 현황을 파악하기 위한 분석 쿠키와 캠페인 측정을 위한 광고 쿠키(Google, Meta, TikTok)를 사용합니다. 선택하기 전에는 아무것도 로드되지 않습니다. 쿠키 설정에서 언제든지 변경할 수 있습니다.",
+    "accept": "모두 허용",
+    "reject": "모두 거부",
+    "customize": "선택하기",
+    "save": "선택 저장",
+    "necessary": "필수 (항상 사용: 언어 및 이 선택)",
+    "analytics": "분석 (Google Analytics)",
+    "marketing": "광고 (Meta, TikTok, Google)",
+    "privacy": "개인정보 처리방침",
+    "settings": "쿠키 설정"
+  },
   "nav": {
     "home": "홈",
     "brand": "브랜드",

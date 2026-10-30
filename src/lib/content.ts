@@ -86,6 +86,10 @@ const findGlobal = async (slug: GlobalSlug, locale: Locale, user: User | null) =
 }
 const guestGlobal = (slug: GlobalSlug, locale: Locale) => findGlobal(slug, locale, null)
 
+/** Guest view of a global regardless of any preview session (sitemap, feeds). */
+export const findGuestGlobal = <S extends GlobalSlug>(slug: S, locale: Locale) =>
+  guestGlobal(slug, locale) as Promise<Globals[S] | null>
+
 export const findPublicGlobal = cache(async <S extends GlobalSlug>(slug: S, locale: Locale) => {
   const user = await getPreviewUser()
   return (await (user ? findGlobal(slug, locale, user) : guestGlobal(slug, locale))) as Globals[S] | null

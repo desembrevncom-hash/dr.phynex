@@ -14,20 +14,31 @@ import { RichText } from '@/components/ui/RichText'
 import { approvedLocalesFor, findPublic, findPublicBySlug, populated, populatedList } from '@/lib/content'
 import { pageLocale, type SlugParams } from '@/lib/locale'
 import { getPreviewUser } from '@/lib/preview'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, publicImage, withSocial } from '@/lib/seo'
+import { breadcrumbLd, productLd } from '@/lib/structured-data'
 import { keepBrandTogether } from '@/lib/text'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { TrackContent } from '@/components/analytics/TrackContent'
 import type { Ingredient, Media, Product, ProductLine, Technology } from '@/payload-types'
+
+/** First product image cleared for publication (share cards and structured data only). */
+const firstPublicImage = (product: Product) =>
+  populatedList<Media>(product.images).map(publicImage).find((image) => image !== null) ?? null
 
 export async function generateMetadata({ params }: { params: SlugParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
   const { slug } = await params
   const product = await findPublicBySlug('products', slug, locale)
   if (!product) return {}
-  return {
-    title: product.seo?.title || product.name,
-    description: product.seo?.description || product.shortDescription || undefined,
-    alternates: alternatesFor(locale, `/products/${slug}`, await approvedLocalesFor('products', slug)),
-  }
+  return withSocial(
+    {
+      title: product.seo?.title || product.name,
+      description: product.seo?.description || product.shortDescription || undefined,
+      alternates: alternatesFor(locale, `/products/${slug}`, await approvedLocalesFor('products', slug)),
+    },
+    locale,
+    { image: firstPublicImage(product) },
+  )
 }
 
 /** Rich text from the CMS is "empty" when the editor has no text nodes in it. */
@@ -99,6 +110,24 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
 
   return (
     <PageShell locale={locale} path={`/products/${slug}`} available={available} bleed>
+      <JsonLd
+        data={[
+          productLd({
+            locale,
+            path: href(`/products/${slug}`),
+            name: product.name,
+            description: product.shortDescription,
+            sku: product.sku,
+            image: firstPublicImage(product),
+          }),
+          breadcrumbLd([
+            { name: t('nav.products'), path: href('/products') },
+            ...(line ? [{ name: line.name, path: href(`/products/line/${line.slug}`) }] : []),
+            { name: product.name },
+          ]),
+        ]}
+      />
+      <TrackContent event="view_product" contentId={slug} contentName={product.name} />
       <nav aria-label={t('products.breadcrumb')} className="container-page pt-6 lg:pt-10">
         <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted">
           <li>
@@ -171,7 +200,7 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
             </div>
             <div className="mt-4">
               {hasRichText(product.description) ? (
-                <RichText data={product.description} className="prose-basic text-ink" />
+                <RichText data={product.description} locale={locale} className="prose-basic text-ink" />
               ) : (
                 <Pending label="description" className="text-ink-muted" />
               )}
@@ -237,11 +266,11 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
           </InfoSection>
 
           <InfoSection title={t('products.howToUse')} pending="howToUse" preview={!!preview}>
-            {hasRichText(product.howToUse) ? <RichText data={product.howToUse} className="prose-basic" /> : undefined}
+            {hasRichText(product.howToUse) ? <RichText data={product.howToUse} locale={locale} className="prose-basic" /> : undefined}
           </InfoSection>
 
           <InfoSection title={t('products.cautions')} pending="cautions" preview={!!preview}>
-            {hasRichText(product.cautions) ? <RichText data={product.cautions} className="prose-basic" /> : undefined}
+            {hasRichText(product.cautions) ? <RichText data={product.cautions} locale={locale} className="prose-basic" /> : undefined}
           </InfoSection>
 
           <InfoSection title={t('products.inci')} pending="inci" preview={!!preview}>

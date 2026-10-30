@@ -13,14 +13,14 @@ import { PageIntro } from '@/components/ui/PageIntro'
 import { Pending } from '@/components/ui/Pending'
 import { findPublic, populated } from '@/lib/content'
 import { firstParam, pageLocale, type LocaleParams, type SearchParams } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 import type { JournalTopic } from '@/payload-types'
 
 export async function generateMetadata({ params, searchParams }: { params: LocaleParams; searchParams: SearchParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
   const t = await getTranslations({ locale, namespace: 'journal' })
   const query = await searchParams
-  return { title: t('title'), alternates: alternatesFor(locale, '/journal' + journalSearch(firstParam(query.topic), pageNumber(firstParam(query.page)))) }
+  return withSocial({ title: t('title'), alternates: alternatesFor(locale, '/journal' + journalSearch(firstParam(query.topic), pageNumber(firstParam(query.page)))) }, locale)
 }
 
 export default async function JournalPage({ params, searchParams }: { params: LocaleParams; searchParams: SearchParams }) {

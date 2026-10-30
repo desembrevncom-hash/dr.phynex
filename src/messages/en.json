@@ -13,6 +13,19 @@
     "viewProducts": "View products",
     "productsBody": "RX and MX product lines."
   },
+  "consent": {
+    "title": "Cookies and measurement",
+    "body": "With your permission we use analytics cookies to understand how the site is used, and advertising cookies (Google, Meta, TikTok) to measure our campaigns. Nothing is loaded until you choose. You can change your choice at any time under Cookie settings.",
+    "accept": "Accept all",
+    "reject": "Reject all",
+    "customize": "Choose",
+    "save": "Save choices",
+    "necessary": "Necessary (always on: language and this choice)",
+    "analytics": "Analytics (Google Analytics)",
+    "marketing": "Advertising (Meta, TikTok, Google)",
+    "privacy": "Privacy policy",
+    "settings": "Cookie settings"
+  },
   "nav": {
     "home": "Home",
     "brand": "Brand",

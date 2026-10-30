@@ -9,12 +9,12 @@ import { PageIntro } from '@/components/ui/PageIntro'
 import type { Locale } from '@/i18n/locales'
 import { findPublic } from '@/lib/content'
 import { pageLocale, type LocaleParams } from '@/lib/locale'
-import { alternatesFor, localizedPath } from '@/lib/seo'
+import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 
 export async function generateMetadata({ params }: { params: LocaleParams }): Promise<Metadata> {
   const locale = await pageLocale(params)
   const t = await getTranslations({ locale, namespace: 'ingredients' })
-  return { title: t('title'), alternates: alternatesFor(locale, '/ingredients') }
+  return withSocial({ title: t('title'), alternates: alternatesFor(locale, '/ingredients') }, locale)
 }
 
 type Entry = { id: number; slug: string; name: string; summary?: string | null; inciName?: string | null }

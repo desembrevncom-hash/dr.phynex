@@ -1,5 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { en } from '@payloadcms/translations/languages/en'
 import { ko } from '@payloadcms/translations/languages/ko'
 import { vi } from '@payloadcms/translations/languages/vi'
@@ -67,7 +67,13 @@ export default buildConfig({
     Users,
   ],
   globals: [HomePage, BrandPage, PartnershipPage, SiteSettings],
-  editor: lexicalEditor(),
+  // Every page renders its own h1 (title/name); CMS text starts at h2.
+  editor: lexicalEditor({
+    features: ({ defaultFeatures }) => [
+      ...defaultFeatures.filter((feature) => feature.key !== 'heading'),
+      HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4'] }),
+    ],
+  }),
   secret,
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   // The site and the admin use the REST/Local API only. Disabled routes answer 404.

@@ -1,11 +1,15 @@
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 
-/** Trail of parent pages; the last item is the current page (aria-current). */
+import { JsonLd } from '@/components/seo/JsonLd'
+import { breadcrumbLd } from '@/lib/structured-data'
+
+/** Trail of parent pages; the last item is the current page (aria-current). Also emits BreadcrumbList. */
 export async function Breadcrumb({ items }: { items: { href?: string; label: string }[] }) {
   const t = await getTranslations('common')
   return (
     <nav aria-label={t('breadcrumb')} className="container-page pt-6 lg:pt-10">
+      <JsonLd data={breadcrumbLd(items.map((item) => ({ name: item.label, path: item.href })))} />
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted">
         {items.map((item, i) => (
           <li key={`${item.label}-${i}`} className="flex min-w-0 max-w-full items-center gap-2">

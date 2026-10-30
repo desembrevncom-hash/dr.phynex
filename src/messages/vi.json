@@ -13,6 +13,19 @@
     "viewProducts": "Xem sản phẩm",
     "productsBody": "Dòng sản phẩm RX và MX."
   },
+  "consent": {
+    "title": "Cookie và đo lường",
+    "body": "Chỉ khi bạn đồng ý, chúng tôi mới dùng cookie phân tích để hiểu cách trang web được sử dụng và cookie quảng cáo (Google, Meta, TikTok) để đo lường chiến dịch. Không có gì được tải trước khi bạn chọn. Bạn có thể đổi lựa chọn bất cứ lúc nào tại Cài đặt cookie.",
+    "accept": "Chấp nhận tất cả",
+    "reject": "Từ chối tất cả",
+    "customize": "Tùy chọn",
+    "save": "Lưu lựa chọn",
+    "necessary": "Cần thiết (luôn bật: ngôn ngữ và lựa chọn này)",
+    "analytics": "Phân tích (Google Analytics)",
+    "marketing": "Quảng cáo (Meta, TikTok, Google)",
+    "privacy": "Chính sách bảo mật",
+    "settings": "Cài đặt cookie"
+  },
   "nav": {
     "home": "Trang chủ",
     "brand": "Thương hiệu",
