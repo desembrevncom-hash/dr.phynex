@@ -1,6 +1,7 @@
 import type { CollectionConfig, FieldHook } from 'payload'
 
 import { admins, adminsField, isAdminUser, isStaffUser, roles } from '@/access/roles'
+import { authCookies, SESSION_SECONDS } from '@/config/auth'
 
 /** The very first account (created via /admin create-first-user) is always an admin. */
 const firstUserIsAdmin: FieldHook = async ({ operation, req, value }) => {
@@ -15,6 +16,9 @@ export const Users: CollectionConfig = {
   auth: {
     maxLoginAttempts: 5,
     lockTime: 10 * 60 * 1000,
+    tokenExpiration: SESSION_SECONDS,
+    // Secure over HTTPS (staging/production), plain on http://localhost; see src/config/auth.ts.
+    cookies: authCookies({ serverURL: process.env.NEXT_PUBLIC_SERVER_URL, vercel: process.env.VERCEL }),
   },
   access: {
     admin: ({ req }) => isStaffUser(req.user),
