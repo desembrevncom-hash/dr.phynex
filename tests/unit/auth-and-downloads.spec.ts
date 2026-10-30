@@ -2,7 +2,7 @@ import { generatePayloadCookie } from 'payload'
 import { describe, expect, it, vi } from 'vitest'
 
 import { authCookies, isHttpsOrigin, SESSION_SECONDS } from '@/config/auth'
-import { noStoreRedirectHeaders, objectKey, s3Signer, signedDownloadHandler, type Signer } from '@/config/signed-download'
+import { noStoreRedirectHeaders, resolveObjectKey, s3Signer, signedDownloadHandler, type Signer } from '@/config/signed-download'
 
 const cookieFor = (env: { serverURL?: string; vercel?: string }) =>
   generatePayloadCookie({
@@ -41,14 +41,38 @@ describe('B1: session cookie flags', () => {
   })
 })
 
-describe('B2: object key from the authorized record', () => {
-  it('uses the stored prefix/filename and rejects traversal', () => {
-    expect(objectKey({ filename: 'a.pdf', prefix: 'source-documents' }, 'x')).toBe('source-documents/a.pdf')
-    expect(objectKey({ filename: 'a.pdf', prefix: null }, 'source-documents')).toBe('source-documents/a.pdf')
-    expect(objectKey({ filename: '../a.pdf' }, 'source-documents')).toBeNull()
-    expect(objectKey({ filename: 'a.pdf', prefix: '../media' }, 'source-documents')).toBeNull()
-    expect(objectKey({ filename: '/etc/passwd' }, 'source-documents')).toBeNull()
-    expect(objectKey({}, 'source-documents')).toBeNull()
+// Minimal collection config the storage plugin's resolver reads (a persisted `prefix` field).
+const collection = { slug: 'source-documents', fields: [{ name: 'prefix', type: 'text' }] } as never
+const UUID = '3f2b8c1e-9d4a-4b7e-8f61-2a5c7d9e0b13'
+
+describe('F1: object key from the storage plugin resolver', () => {
+  const key = (doc: Record<string, unknown>) =>
+    resolveObjectKey({ collection, collectionPrefix: 'source-documents', doc, req: {} as never })
+
+  it('legacy files without _objectKey (null or ""): prefix/filename', async () => {
+    expect(await key({ filename: 'a.pdf', prefix: 'source-documents', _objectKey: null })).toBe('source-documents/a.pdf')
+    expect(await key({ filename: 'a.pdf', prefix: 'source-documents', _objectKey: '' })).toBe('source-documents/a.pdf')
+    expect(await key({ filename: 'a.pdf', prefix: null })).toBe('source-documents/a.pdf')
+  })
+
+  it('client uploads with a UUID _objectKey: prefix/_objectKey/filename', async () => {
+    expect(await key({ filename: 'a.pdf', prefix: 'source-documents', _objectKey: UUID })).toBe(`source-documents/${UUID}/a.pdf`)
+  })
+
+  it('nested prefixes are kept, with and without _objectKey', async () => {
+    expect(await key({ filename: 'a.pdf', prefix: 'source-documents/2026/10', _objectKey: UUID })).toBe(`source-documents/2026/10/${UUID}/a.pdf`)
+    expect(await key({ filename: 'a.pdf', prefix: 'source-documents/2026/10' })).toBe('source-documents/2026/10/a.pdf')
+  })
+
+  it('refuses traversal and keys outside the collection prefix', async () => {
+    for (const filename of ['../a.pdf', 'x/../a.pdf', 'a/b.pdf', '..', 'a\\b.pdf', '', 'a\u0000.pdf']) {
+      expect(await key({ filename, prefix: 'source-documents' })).toBeNull()
+    }
+    // "../media" sanitizes to "media": outside source-documents/ → refused.
+    expect(await key({ filename: 'a.pdf', prefix: '../media' })).toBeNull()
+    expect(await key({ filename: 'a.pdf', prefix: 'media', _objectKey: UUID })).toBeNull()
+    // Traversal segments inside _objectKey are dropped by the plugin, never followed.
+    expect(await key({ filename: 'a.pdf', prefix: 'source-documents', _objectKey: '../../media' })).toBe('source-documents/media/a.pdf')
   })
 })
 
@@ -60,14 +84,44 @@ describe('B2: redirect handler', () => {
   }
   const handler = signedDownloadHandler({ bucket: 'b', prefix: 'source-documents', sign })
   // Payload passes `doc` only when read access is a query; with plain `true` the handler looks
-  // the record up itself through req.payload.find (faked here).
-  const stored: Record<string, unknown>[] = [{ filename: 'stored.pdf', prefix: 'source-documents', mimeType: 'application/pdf' }]
-  const find = vi.fn(async ({ where }: { where: { filename: { equals: string } } }) => ({
-    docs: stored.filter((d) => d.filename === where.filename.equals),
-  }))
-  const req = { payload: { find } } as never
+  // the record up itself through req.payload.find (faked here, honouring filename/prefix filters).
+  const stored: Record<string, unknown>[] = [
+    { filename: 'stored.pdf', prefix: 'source-documents', _objectKey: null, mimeType: 'application/pdf' },
+    { filename: 'uploaded.pdf', prefix: 'source-documents', _objectKey: UUID, mimeType: 'application/pdf' },
+    { filename: 'twice.pdf', prefix: 'source-documents', _objectKey: null },
+    { filename: 'twice.pdf', prefix: 'source-documents', _objectKey: UUID },
+  ]
+  type Where = { and: ({ filename?: { equals: string } } & { prefix?: { equals: string } })[] }
+  const find = vi.fn(async ({ where, limit }: { where: Where; limit: number }) => {
+    const filename = where.and.find((c) => c.filename)?.filename?.equals
+    const prefix = where.and.find((c) => c.prefix)?.prefix?.equals
+    return { docs: stored.filter((d) => d.filename === filename && (prefix === undefined || d.prefix === prefix)).slice(0, limit) }
+  })
+  const req = { payload: { find, collections: { 'source-documents': { config: collection } } } } as never
   const call = (doc: unknown, filename: string, clientUploadContext?: unknown) =>
     handler(req, { doc, params: { collection: 'source-documents', filename, clientUploadContext } })
+
+  it('client-uploaded record: signs prefix/_objectKey/filename, not prefix/filename', async () => {
+    recorded.length = 0
+    expect((await call(undefined, 'uploaded.pdf'))!.status).toBe(302)
+    expect(recorded.map((r) => r.key)).toEqual([`source-documents/${UUID}/uploaded.pdf`])
+  })
+
+  it('two records share a filename (legacy + client upload): 409, nothing signed', async () => {
+    recorded.length = 0
+    expect((await call(undefined, 'twice.pdf'))!.status).toBe(409)
+    expect(recorded).toHaveLength(0)
+  })
+
+  it('path tricks in the requested name: 404 before any lookup or signature', async () => {
+    recorded.length = 0
+    find.mockClear()
+    for (const name of ['../stored.pdf', 'source-documents/stored.pdf', '..\\stored.pdf']) {
+      expect((await call(undefined, name))!.status).toBe(404)
+    }
+    expect(find).not.toHaveBeenCalled()
+    expect(recorded).toHaveLength(0)
+  })
 
   it('no doc from Payload: looks up the record with the caller access; unknown → 404, nothing signed', async () => {
     recorded.length = 0

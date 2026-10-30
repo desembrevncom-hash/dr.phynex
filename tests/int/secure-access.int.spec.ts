@@ -1,5 +1,10 @@
 import { randomBytes } from 'node:crypto'
-import { getPayload, handleEndpoints, type Migration, type Payload } from 'payload'
+import {
+  buildUploadStoragePathData,
+  getStorageFilePath,
+  resolveSignedURLKey,
+} from '@payloadcms/plugin-cloud-storage/utilities'
+import { createLocalReq, getPayload, handleEndpoints, type Migration, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 import config from '@/payload.config'
@@ -147,6 +152,98 @@ describe('B2: Source documents download', () => {
     await open.body?.cancel()
     await payload.update({ collection: 'media', id: media.id, locale: 'en', data: { publicRelease: false } })
     expect((await get(`/api/media/file/${media.filename}`)).status).toBe(403)
+  })
+})
+
+describe('F1: signed key equals the key the storage plugin wrote', () => {
+  const COLLECTION_PREFIX = 'source-documents'
+  // Stored metadata is set directly in the isolated test DB to reproduce what the S3 adapter
+  // persists (prefix / _objectKey); file bytes stay in the temp upload dir.
+  const setStorageFields = (id: number | string, data: Record<string, unknown>) =>
+    payload.db.updateOne({ collection: 'source-documents', id, data } as never)
+  const upload = async (name: string) =>
+    (await payload.create({
+      collection: 'source-documents',
+      data: { title: name },
+      file: { data: pdf(2048), mimetype: 'application/pdf', name, size: 2048 },
+    })) as unknown as { id: number; filename: string }
+  const signedKeyFor = async (path: string) => {
+    signed.length = 0
+    const res = await get(path, tokens.editor)
+    return { status: res.status, keys: signed.map((s) => s.key) }
+  }
+
+  it('client upload: the presigned GET key is exactly the PUT key from resolveSignedURLKey (UUID _objectKey)', async () => {
+    const req = await createLocalReq({}, payload)
+    const write = await resolveSignedURLKey({
+      collectionPrefix: COLLECTION_PREFIX,
+      collectionSlug: 'source-documents',
+      docPrefix: undefined,
+      filename: 'client-upload.pdf',
+      req,
+    })
+    expect(write.fileKey).toMatch(new RegExp(`^${COLLECTION_PREFIX}/[0-9a-f-]{36}/client-upload\\.pdf$`))
+    const doc = await upload(write.sanitizedFilename)
+    await setStorageFields(doc.id, { _objectKey: write._objectKey, prefix: write.sanitizedDocPrefix })
+    const { status, keys } = await signedKeyFor(`/api/source-documents/file/${doc.filename}`)
+    expect(status).toBe(302)
+    expect(keys).toEqual([write.fileKey])
+  })
+
+  it('server upload / legacy (_objectKey null or ""): key equals buildUploadStoragePathData and the plugin read path', async () => {
+    for (const objectKey of [null, '']) {
+      const doc = await upload(`legacy-${objectKey === null ? 'null' : 'empty'}.pdf`)
+      await setStorageFields(doc.id, { _objectKey: objectKey, prefix: COLLECTION_PREFIX })
+      const written = buildUploadStoragePathData({ collectionPrefix: COLLECTION_PREFIX, docPrefix: COLLECTION_PREFIX, filename: doc.filename }).storageFilePath
+      // The plugin's own read lookup (no doc given) runs with the caller's access: use a staff user.
+      const { docs: editors } = await payload.find({ collection: 'users', where: { email: { equals: 'sec-editor@test.local' } }, overrideAccess: true })
+      const pluginRead = await getStorageFilePath({
+        collection: payload.collections['source-documents'].config as never,
+        collectionPrefix: COLLECTION_PREFIX,
+        filename: doc.filename,
+        req: await createLocalReq({ user: { ...editors[0], collection: 'users' } as never }, payload),
+      } as never)
+      const { status, keys } = await signedKeyFor(`/api/source-documents/file/${doc.filename}`)
+      expect(status).toBe(302)
+      expect(keys).toEqual([written])
+      expect(keys).toEqual([`${COLLECTION_PREFIX}/${doc.filename}`])
+      expect(pluginRead).toBe(written)
+    }
+  })
+
+  it('nested prefix with UUID _objectKey, served with ?prefix= as the plugin URL does', async () => {
+    const uuid = '0b7e4c2a-6f13-4d8e-9a51-7c2d3e4f5a6b'
+    const doc = await upload('nested.pdf')
+    await setStorageFields(doc.id, { _objectKey: uuid, prefix: `${COLLECTION_PREFIX}/2026/10` })
+    const { status, keys } = await signedKeyFor(`/api/source-documents/file/${doc.filename}?prefix=${encodeURIComponent(`${COLLECTION_PREFIX}/2026/10`)}`)
+    expect(status).toBe(302)
+    expect(keys).toEqual([`${COLLECTION_PREFIX}/2026/10/${uuid}/nested.pdf`])
+  })
+
+  it('a legacy object and a client upload cannot share a filename, so the wrong one is never signed', async () => {
+    const legacy = await upload('shared-name.pdf')
+    // A second upload with the same name is renamed by Payload (getSafeFileName)…
+    const second = await upload('shared-name.pdf')
+    expect(second.filename).not.toBe(legacy.filename)
+    // …and the database itself rejects a duplicate filename (unique index).
+    await expect(
+      setStorageFields(second.id, { filename: legacy.filename, _objectKey: '5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f' }),
+    ).rejects.toThrow()
+    await setStorageFields(second.id, { _objectKey: '5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f', prefix: COLLECTION_PREFIX })
+    expect((await signedKeyFor(`/api/source-documents/file/${legacy.filename}`)).keys).toEqual([`${COLLECTION_PREFIX}/${legacy.filename}`])
+    expect((await signedKeyFor(`/api/source-documents/file/${second.filename}`)).keys).toEqual([
+      `${COLLECTION_PREFIX}/5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f/${second.filename}`,
+    ])
+    // If two records ever matched (e.g. data imported around the index), the handler answers 409
+    // without signing; covered in tests/unit/auth-and-downloads.spec.ts.
+  })
+
+  it('anonymous and unknown file: still refused, nothing signed', async () => {
+    signed.length = 0
+    const anonymous = await get(`/api/source-documents/file/${docA.filename}`)
+    expect([401, 403]).toContain(anonymous.status)
+    expect((await get('/api/source-documents/file/not-stored.pdf', tokens.editor)).status).toBe(404)
+    expect(signed).toEqual([])
   })
 })
 
