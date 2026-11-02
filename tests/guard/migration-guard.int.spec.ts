@@ -21,6 +21,7 @@ import { fixtureEnvironment } from './test-environment.mjs'
 import { openCommitWireProxy } from './commit-wire-proxy'
 import { assertI9Evidence, type I9Phase } from './i9-assertions'
 import { readResourcePolicy } from './resource-policy'
+import { StepRecorder, typedRows } from './case-evidence'
 import {
   assertDisposable,
   TEST_DB,
@@ -531,51 +532,86 @@ describe.skipIf(!url || !container)(
       }
     })
     it('I10 refuses malformed actual history before BEGIN', async () => {
-      for (const row of [
-        { id: 1, name: 'm2', batch: '1' },
-        { id: -1, name: 'm1', batch: '1' },
-        { id: 1, name: 'm1', batch: null },
-        { id: 1, name: 'm1', batch: 'NaN' },
-        { id: 1, name: 'm1', batch: '1.5' },
-      ]) {
-        await resetFixture()
-        await admin.query(BOOTSTRAP)
-        await admin.query('INSERT INTO public.payload_migrations(id,name,batch) VALUES($1,$2,$3)', [
-          row.id,
-          row.name,
-          row.batch,
-        ])
-        const original = (
+      // Fixed subcase and assertion IDs; i10-evidence.json names the exact step that failed.
+      const rec = new StepRecorder('I10', (v) => saveEvidence('i10-evidence.json', v))
+      const exitName = (code: number) =>
+        Object.entries(EXIT).find(([, v]) => v === code)?.[0] ?? 'unknown'
+      const readHistory = async () =>
+        (
           await admin.query(
             'SELECT id,name,batch::text AS batch FROM public.payload_migrations ORDER BY id',
           )
         ).rows
-        const s = deps([bootstrap, FAILURE_DDL, blockedSql[2]]),
-          connect = s.d.connect
-        let began = false
-        s.d.connect = async (cfg) => {
-          const c = await connect(cfg),
-            q = c.query
-          c.query = async (sql, p) => {
-            if (sql === 'BEGIN') began = true
-            return q(sql, p)
+      let failure: unknown
+      try {
+        for (const [index, row] of [
+          { id: 1, name: 'm2', batch: '1' },
+          { id: -1, name: 'm1', batch: '1' },
+          { id: 1, name: 'm1', batch: null },
+          { id: 1, name: 'm1', batch: 'NaN' },
+          { id: 1, name: 'm1', batch: '1.5' },
+        ].entries()) {
+          const sub = 'I10.r' + (index + 1)
+          rec.observe(sub + '.inserted', typedRows([row])[0])
+          await rec.step(sub + '.reset', resetFixture)
+          await rec.step(sub + '.bootstrap', () => admin.query(BOOTSTRAP))
+          await rec.step(sub + '.insert', () =>
+            admin.query('INSERT INTO public.payload_migrations(id,name,batch) VALUES($1,$2,$3)', [
+              row.id,
+              row.name,
+              row.batch,
+            ]),
+          )
+          const original = await rec.step(sub + '.history-before', readHistory)
+          rec.observe(sub + '.historyBefore', typedRows(original))
+          const s = deps([bootstrap, FAILURE_DDL, blockedSql[2]]),
+            connect = s.d.connect
+          let began = false
+          s.d.connect = async (cfg) => {
+            const c = await connect(cfg),
+              q = c.query
+            c.query = async (sql, p) => {
+              if (sql === 'BEGIN') began = true
+              return q(sql, p)
+            }
+            return c
           }
-          return c
+          const observe = (key: string, exit: number) =>
+            rec.observe(sub + '.' + key, {
+              exit,
+              exitName: exitName(exit),
+              began,
+              state: s.state !== null,
+              actorQueries: s.queries.length,
+            })
+          const first = await rec.step(sub + '.run1', () => runGuardedMigration(s.d))
+          observe('run1', first)
+          await rec.step(sub + '.A1-run1-status-mismatch', () =>
+            expect(first).toBe(EXIT.STATUS_MISMATCH),
+          )
+          await rec.step(sub + '.A2-run1-no-begin', () => expect(began).toBe(false))
+          await rec.step(sub + '.A3-no-state', () => expect(s.state).toBeNull())
+          const second = await rec.step(sub + '.run2', () => runGuardedMigration(s.d))
+          observe('run2', second)
+          await rec.step(sub + '.A4-run2-status-mismatch', () =>
+            expect(second).toBe(EXIT.STATUS_MISMATCH),
+          )
+          await rec.step(sub + '.A5-run2-no-begin', () => expect(began).toBe(false))
+          const after = await rec.step(sub + '.history-after', readHistory)
+          rec.observe(sub + '.historyAfter', typedRows(after))
+          await rec.step(sub + '.A6-history-unchanged', () => expect(after).toEqual(original))
+          await rec.step(sub + '.A7-no-next', () => noNext(s))
         }
-        expect(await runGuardedMigration(s.d)).toBe(EXIT.STATUS_MISMATCH)
-        expect(began).toBe(false)
-        expect(s.state).toBeNull()
-        expect(await runGuardedMigration(s.d)).toBe(EXIT.STATUS_MISMATCH)
-        expect(began).toBe(false)
-        expect(
-          (
-            await admin.query(
-              'SELECT id,name,batch::text AS batch FROM public.payload_migrations ORDER BY id',
-            )
-          ).rows,
-        ).toEqual(original)
-        await noNext(s)
+        rec.record.complete = true
+      } catch (e) {
+        failure = e
       }
+      rec.flush()
+      const unsaved = Error('I10 evidence could not be saved')
+      if (failure && rec.saveFailed)
+        throw new AggregateError([failure, unsaved], 'I10 failed; evidence not saved')
+      if (failure) throw failure
+      if (rec.saveFailed) throw unsaved
     })
     it('I11 bad backup integrity or unreadable archive prevents executor connection', async () => {
       for (const failure of ['checksum', 'archive']) {

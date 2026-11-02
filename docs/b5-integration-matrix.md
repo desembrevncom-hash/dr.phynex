@@ -70,7 +70,12 @@ A missing or malformed results file is an **evidence error** (exit 2), never PAS
 failure. `node tests/guard/reporter-smoke.mjs` checks this through real Vitest processes (pass,
 deliberate fail, no results, corrupt file) with no database, Docker or env file.
 
-I1 saves its plan (digest, files, step names and hashes) as i1-plan.json. I12 saves
+I1 saves its plan (digest, files, step names and hashes) as i1-plan.json. I10 saves
+i10-evidence.json after every step: fixed IDs per row and assertion (`I10.r4.A1-run1-status-mismatch`),
+executor exit code and name, BEGIN/state flags, actor query count, and history before/after with each
+value's type and explicit text (NaN stays "NaN", not null). Failures are classified only (assertion,
+resource-policy code, fixed harness message, SQLSTATE or error class name); raw text is never written.
+The run at `b84153df` failed I10 on row 4 (`batch 'NaN'`) without saying which step; that is unresolved. I12 saves
 i12-evidence.json before the proxy closes: transport proof, persisted state, an independent
 connection's xid status, history and effects, and the restart observation. A failed assertion still
 saves what was recorded; a failed save is reported as its own error. Polling the state file is not
