@@ -19,6 +19,7 @@ import {
 import { connectPg } from '../../scripts/lib/pg-client'
 import { fixtureEnvironment } from './test-environment.mjs'
 import { openCommitWireProxy } from './commit-wire-proxy'
+import { assertI9Evidence, type I9Phase } from './i9-assertions'
 import { readResourcePolicy } from './resource-policy'
 import {
   assertDisposable,
@@ -461,34 +462,52 @@ describe.skipIf(!url || !container)(
       await refusesRestart(s)
     })
     it('I9 injects state-write failures before and after actual COMMIT, with verified DB outcomes', async () => {
-      for (const phase of ['commit-preparing', 'commit-sent', 'committed', 'COMPLETE']) {
-        await resetFixture() // Each subscenario is fresh, never a retry of a failed expectation.
-        const s = deps([bootstrap, blockedSql[2]]),
-          write = s.d.writeState
+      for (const phase of ['commit-preparing', 'commit-sent', 'committed', 'COMPLETE'] as I9Phase[]) {
+        await resetFixture() // Fresh subscenario; never retry a failed expectation.
+        const s = deps([bootstrap, blockedSql[2]]), write = s.d.writeState
+        let failedAttempt: RunState | undefined
+        const transactions: { step: string; xid: string }[] = []
+        const connect = s.d.connect
+        s.d.connect = async cfg => {
+          const c = await connect(cfg), q = c.query
+          c.query = async (sql, params) => {
+            const result = await q(sql, params)
+            if (sql === 'SELECT pg_current_xact_id()::text AS xid')
+              transactions.push({ step: 'm' + (transactions.length + 1), xid: String(result.rows[0]?.xid) })
+            return result
+          }
+          return c
+        }
         s.d.writeState = async (t, v) => {
-          if (
-            (phase === 'COMPLETE' && v.outcome === 'COMPLETE') ||
-            (v.outcome === 'RUNNING' && v.phase === phase)
-          )
+          if ((phase === 'COMPLETE' && v.outcome === 'COMPLETE') ||
+              (v.outcome === 'RUNNING' && v.phase === phase)) {
+            failedAttempt = structuredClone(v)
             throw Error('synthetic state I/O')
+          }
           return write(t, v)
         }
         const applied = phase === 'committed' || phase === 'COMPLETE'
-        expect(await runGuardedMigration(s.d)).toBe(
-          applied ? EXIT.STATE_FAILED : EXIT.MIGRATION_FAILED,
-        )
-        expect(
-          (await admin.query('SELECT pg_xact_status($1::xid8) status', [s.state?.xid])).rows[0]
-            .status,
-        ).toBe(applied ? 'committed' : 'aborted')
-        expect(
-          (
-            await admin.query(
-              "SELECT to_regclass('public.payload_migrations') IS NOT NULL AS present",
-            )
-          ).rows[0].present,
-        ).toBe(applied)
-        expect(await runGuardedMigration(s.d)).toBe(EXIT.REFUSED)
+        expect(await runGuardedMigration(s.d)).toBe(applied ? EXIT.STATE_FAILED : EXIT.MIGRATION_FAILED)
+        if (!failedAttempt) throw Error('I9 injection point never reached')
+        await assertI9Evidence({
+          phase, identity: stateIdentity(target), plan: s.plan.digest,
+          statements: [bootstrap, blockedSql[2]], failedAttempt, refusedCode: EXIT.REFUSED,
+          restart: () => runGuardedMigration(s.d),
+          read: async () => {
+            // Read persisted bytes, not the state value whose write was rejected.
+            const state = parseRunState(readFileSync(path.join(dir, 'last-state.json'), 'utf8'), target)
+            expect(state).toEqual(s.state)
+            const effects = (await admin.query(
+              "SELECT to_regclass('public.b5_before') IS NOT NULL AS first, to_regclass('public.b5_should_not_exist') IS NOT NULL AS next",
+            )).rows[0]
+            const tx = []
+            for (const { step, xid } of transactions) {
+              const status = (await admin.query('SELECT pg_xact_status($1::xid8) status', [xid])).rows[0].status
+              tx.push({ step, xid, status })
+            }
+            return { state, history: await history(), effects, transactions: tx, queries: [...s.queries] }
+          },
+        })
       }
     })
     it('I10 refuses malformed actual history before BEGIN', async () => {

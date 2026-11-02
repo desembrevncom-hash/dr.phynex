@@ -92,7 +92,7 @@ and state. Preflight failures remain refusals without starting a transaction, no
 | I6 | Kill registered child | Correct bounded/idempotent cleanup, advisory lock eventually released, m1 history and real RUNNING/committed marker retained, no next effect, restart refuses unchanged state/history. |
 | I7 | Deferred FK at COMMIT | Server rejection, aborted xid on independent controller, no history or next SQL/effect, FAILED/commit-sent, restart refused. |
 | I8 | Adapter throws after q(COMMIT) resolves | Explicit **after-ack adapter simulation**, not transport loss; independent committed xid/m1 history, UNCERTAIN/commit-sent, no next SQL/effect, restart refused. |
-| I9 | Inject state write errors | Preparing/send-intent/committed/COMPLETE subscenarios: independent xid result, exact history/state/phase, no next SQL except legitimately completed final run, restart refused. Not a disk-power-loss test. |
+| I9 | Inject state write errors | Shared live/memory assertion: exact ordered history/batch; persisted file marker identity/plan/step/outcome/phase/xid; independently queried xid outcomes and committed table effects; SQL/COMMIT counts; refused restart with identical marker/history/effects/xids and no actor queries. COMPLETE failure requires both committed steps. Not a disk-power-loss test. |
 | I10 | Malformed actual history | Reject before BEGIN; preserve full original id/name/batch rows, no state or SQL effect, deliberate second call still rejects. |
 | I11 | Bad backup and failure/invalid-state preflight | Zero actor connections, unchanged marker/history, no next effect; second invocation still refuses without side effects. |
 | I12 | **Transport cuts COMMIT response** | Proxy sees frontend Q COMMIT and backend C COMMIT; withholds all response frames (including ReadyForQuery), closes client, actor UNCERTAIN; independent direct connection verifies exact xid committed and m1 history; no next SQL/effect, restart refused. |
@@ -130,3 +130,29 @@ and operational restrictions on raw Payload migration tools. No down migration i
 
 This revision executed typecheck/lint/unit/diff only. No Docker command, socket listener, PostgreSQL,
 integration, migration, build, push, deploy or cloud operation was run. Self-check is not independent review.
+
+## I9 persisted evidence correction
+
+Only I9 assertions and their memory sensitivity tests changed after checkpoint 39d36a1.
+The failing write value is captured separately; assertions read last-state.json after executor error
+handling and compare it with the fixture state. A failed write is never treated as persisted.
+
+| Injected write | Last persisted marker after catch | History / SQL effect | Independent xid |
+| --- | --- | --- | --- |
+| RUNNING/commit-preparing, m1 | FAILED/commit-preparing, m1 | Empty history; first and next tables absent | m1 aborted |
+| RUNNING/commit-sent, m1 | FAILED/commit-preparing, m1 | Empty history; first and next tables absent; no COMMIT sent | m1 aborted |
+| RUNNING/committed, m1 | STATE_FAILED/committed, m1 | m1 batch=1; first table present, next absent | m1 committed |
+| COMPLETE/committed, m2 | STATE_FAILED/committed, m2 | m1 then m2, batch=1; both tables present | Both distinct xids committed |
+
+The catch writes above are not targeted by the injection. For send-intent failure the executor has
+not advanced its in-memory phase, hence the final marker is commit-preparing. All branches require
+version=2, correct identity/plan/step/xid and zero additional actor queries or changed evidence on
+refused restart. Non-COMPLETE branches reject any execution of the next SQL, including one rolled
+back with no table effect. Shared-helper memory tests mutate identity/plan/step/outcome/phase/xid,
+history names/order/batch, effects, query trace and restart evidence; they do not prove PostgreSQL
+behavior. Docker/PostgreSQL/integration remain NOT EXECUTED. Atomic state and volume anchor remain
+real-migration blockers, unchanged by this assertion-only checkpoint.
+
+Verification of this assertion-only revision: TypeScript noEmit/incremental=false PASS; ESLint
+max-warnings=0 PASS; 450/450 pure-memory unit tests across 13 files PASS (88 new I9 sensitivity
+cases), serial one worker, heap 2048 MiB, config:false/envDir:false. No integration was run.
