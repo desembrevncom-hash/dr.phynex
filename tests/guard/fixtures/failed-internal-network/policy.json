@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "containerId": "092ed85687f8fee8e3e7335b1e950a3b1cdd31e88c764677221ad197223e82c2",
+  "ports": [
+    {
+      "containerPort": "5432/tcp",
+      "hostIp": "127.0.0.1",
+      "hostPort": 55499
+    }
+  ],
+  "volumes": [
+    {
+      "name": "drphynex-b5-test-data-c6efaf5b",
+      "destination": "/var/lib/postgresql/data",
+      "readOnly": false
+    }
+  ],
+  "networks": [
+    {
+      "name": "drphynex-b5-test-net-c6efaf5b",
+      "id": "190fbe1b5e9b059c0897d5dfeb888c543c1a2f4b12cd61401765337d727186ec"
+    }
+  ]
+}

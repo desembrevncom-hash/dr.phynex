@@ -10,8 +10,10 @@ manifest remain unchanged. Atomic state and volume anchor remain real-migration 
 Use an owner-approved JSON file outside Git, shaped like
 [resources.example.json](../tests/guard/resources.example.json). Example IDs are deliberately
 invalid placeholders. The declaration lists the exact container ID, every loopback port mapping,
-every named-volume mount (name, destination, read-only flag), and every network attachment
-(name and full ID). No resource is created, labelled, repaired or removed by the harness.
+every named-volume mount (name, destination, read-only flag), and exactly one network attachment
+(name and full ID). No resource is created, labelled, repaired or removed by the harness. The
+separate operator tool `tests/guard/setup-disposable.ps1` provisions new resources only when a run
+is approved; the harness never calls it and it removes nothing.
 
 Before connecting and before destructive operations, enforce:
 
@@ -22,8 +24,9 @@ Before connecting and before destructive operations, enforce:
 - No bind mounts. Every volume mount must equal the declaration. Volumes require local driver,
   local scope, no driver options, disposable label and no other container user (including stopped
   containers). Owner must still verify the provenance/content of every approved resource.
-- Every network name/ID must equal the declaration; host/container network modes fail. Network
-  inspect must show internal bridge, disposable label and no other attached container.
+- The single network name/ID must equal the declaration; host, default, none and container network
+  modes fail, as do the default bridge and any shared network. Network inspect must show a local,
+  **non-internal** bridge with the disposable label and exactly the approved container attached.
 - Live SQL identity must match the approved container's psql identity: database OID/name/marker,
   role, server port and postmaster start time. Normalize only host /32 or /128 masks; reject subnets
   or mismatched server addresses. Missing tool/auth/permission/identity always fails closed.
@@ -156,3 +159,31 @@ real-migration blockers, unchanged by this assertion-only checkpoint.
 Verification of this assertion-only revision: TypeScript noEmit/incremental=false PASS; ESLint
 max-warnings=0 PASS; 450/450 pure-memory unit tests across 13 files PASS (88 new I9 sensitivity
 cases), serial one worker, heap 2048 MiB, config:false/envDir:false. No integration was run.
+
+## Network correction after the refused run of 2026-11-02
+
+The first provisioning attempt stopped before any role, database or marker existed; I1–I12 were
+**not executed**. Docker 29.6.1 keeps `HostConfig.PortBindings` on an internal network but publishes
+nothing (`NetworkSettings.Ports` was `{"5432/tcp":[]}`, TCP refused). The old guard required both an
+internal network and a published loopback port, which no resource could satisfy. Redacted inspect
+output is kept in `tests/guard/fixtures/failed-internal-network/`, and must stay refused for
+`port-bindings` (container) and `network-internal` (network).
+
+| Property | State with this configuration |
+| --- | --- |
+| Inbound from other machines | Restricted: the only published binding is 127.0.0.1 |
+| Inbound from this machine | **Open** to any local process on the port; protected by SCRAM only |
+| Other containers on the bridge | None allowed; attachment is checked before each destructive step |
+| Outbound from the container | **Allowed.** Docker NAT stays on; this harness does not block egress |
+
+Loopback publishing is an inbound restriction, not network isolation. Nothing here may be described
+as egress blocking. Exclusive attachment reads `Containers` in network inspect, which lists running
+endpoints; a stopped container attached to the bridge is not detected by this check.
+
+The accepted-bridge regression is hand-written synthetic metadata. No inspect output of a
+non-internal run exists yet, so real publishing, connection and identity checks remain unproven.
+
+`setup-disposable.ps1` passes Docker arguments as one array through a plain function, so `-d` cannot
+bind to PowerShell `-Debug`; labels are read as JSON, never quoted into a Go template. It pins the
+image digest with `--pull never`, sends the password by environment name and stdin, writes the URL
+under DPAPI outside the repository, and refuses an output directory inside it.

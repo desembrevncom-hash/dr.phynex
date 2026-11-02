@@ -1,0 +1,54 @@
+[
+  {
+    "Name": "drphynex-b5-test-net-c6efaf5b",
+    "Id": "190fbe1b5e9b059c0897d5dfeb888c543c1a2f4b12cd61401765337d727186ec",
+    "Created": "2026-11-02T04:53:40.251135268Z",
+    "Scope": "local",
+    "Driver": "bridge",
+    "EnableIPv4": true,
+    "EnableIPv6": false,
+    "IPAM": {
+      "Driver": "default",
+      "Options": {},
+      "Config": [
+        {
+          "Subnet": "172.20.0.0/16",
+          "Gateway": "172.20.0.1"
+        }
+      ]
+    },
+    "Internal": true,
+    "Attachable": false,
+    "Ingress": false,
+    "ConfigFrom": {
+      "Network": ""
+    },
+    "ConfigOnly": false,
+    "Options": {
+      "com.docker.network.enable_ipv4": "true",
+      "com.docker.network.enable_ipv6": "false"
+    },
+    "Labels": {
+      "com.drphynex.migration-guard-test": "disposable-v1"
+    },
+    "Containers": {
+      "092ed85687f8fee8e3e7335b1e950a3b1cdd31e88c764677221ad197223e82c2": {
+        "Name": "drphynex-b5-test-pg-c6efaf5b",
+        "EndpointID": "223bda22e9481a4945d6b0424497f9a2b7ba26fd1e343c89cbad5d8b23c12b95",
+        "MacAddress": "76:66:c1:c3:09:bb",
+        "IPv4Address": "172.20.0.2/16",
+        "IPv6Address": ""
+      }
+    },
+    "Status": {
+      "IPAM": {
+        "Subnets": {
+          "172.20.0.0/16": {
+            "IPsInUse": 4,
+            "DynamicIPsAvailable": 65532
+          }
+        }
+      }
+    }
+  }
+]

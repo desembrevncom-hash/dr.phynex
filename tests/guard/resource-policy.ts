@@ -11,11 +11,12 @@ export type ResourcePolicy = {
 const id = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{64}$/.test(v)
 const name = (v: unknown): v is string =>
   typeof v === 'string' && /^drphynex-b5-test-[a-z0-9_-]+$/.test(v)
-const fail = (): never => {
-  throw Error('Disposable resource policy mismatch')
+/** The reason is a constant code from this file; no inspected value enters the message. */
+const fail = (reason: string): never => {
+  throw Error('Disposable resource policy mismatch: ' + reason)
 }
 export function validateResourcePolicy(raw: unknown): ResourcePolicy {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return fail()
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return fail('policy')
   const p = raw as ResourcePolicy
   if (
     p.version !== 1 ||
@@ -24,9 +25,9 @@ export function validateResourcePolicy(raw: unknown): ResourcePolicy {
     !p.ports.length ||
     !Array.isArray(p.volumes) ||
     !Array.isArray(p.networks) ||
-    !p.networks.length
+    p.networks.length !== 1
   )
-    return fail()
+    return fail('policy')
   if (
     p.ports.some(
       (v) =>
@@ -38,7 +39,7 @@ export function validateResourcePolicy(raw: unknown): ResourcePolicy {
         v.hostPort > 65535,
     )
   )
-    return fail()
+    return fail('policy')
   if (
     p.volumes.some(
       (v) =>
@@ -50,8 +51,8 @@ export function validateResourcePolicy(raw: unknown): ResourcePolicy {
         typeof v.readOnly !== 'boolean',
     )
   )
-    return fail()
-  if (p.networks.some((v) => !v || !name(v.name) || !id(v.id))) return fail()
+    return fail('policy')
+  if (p.networks.some((v) => !v || !name(v.name) || !id(v.id))) return fail('policy')
   for (const a of [
     p.ports.map((v) => JSON.stringify(v)),
     p.volumes.map((v) => v.name),
@@ -59,11 +60,11 @@ export function validateResourcePolicy(raw: unknown): ResourcePolicy {
     p.networks.map((v) => v.id),
     p.networks.map((v) => v.name),
   ])
-    if (new Set(a).size !== a.length) return fail()
+    if (new Set(a).size !== a.length) return fail('policy')
   return p
 }
 export function readResourcePolicy(file: string | undefined) {
-  if (!file || !path.isAbsolute(file)) return fail()
+  if (!file || !path.isAbsolute(file)) return fail('policy')
   return validateResourcePolicy(JSON.parse(readFileSync(file, 'utf8')))
 }
 const same = (a: string[], b: string[]) => JSON.stringify(a.sort()) === JSON.stringify(b.sort())
@@ -95,23 +96,24 @@ export function inspectApprovedContainer(
     c.State?.Running !== true ||
     c.Config?.Labels?.['com.drphynex.migration-guard-test'] !== 'disposable-v1'
   )
-    return fail()
+    return fail('container-identity')
   if (
     !['localhost', '127.0.0.1', '::1'].includes(target.host) ||
     !p.ports.some((v) => v.hostPort === target.port)
   )
-    return fail()
+    return fail('endpoint')
   if (
     !c.NetworkSettings?.Ports ||
     !c.NetworkSettings.Networks ||
     !c.HostConfig ||
     !Array.isArray(c.Mounts)
   )
-    return fail()
+    return fail('container-shape')
   const actualPorts: string[] = []
   for (const [port, bindings] of Object.entries(c.NetworkSettings.Ports))
     for (const b of bindings ?? []) {
-      if (!['127.0.0.1', '::1'].includes(b.HostIp) || !/^\d+$/.test(b.HostPort)) return fail()
+      if (!['127.0.0.1', '::1'].includes(b.HostIp) || !/^\d+$/.test(b.HostPort))
+        return fail('port-public')
       actualPorts.push(JSON.stringify([port, b.HostIp, Number(b.HostPort)]))
     }
   if (
@@ -120,31 +122,32 @@ export function inspectApprovedContainer(
       p.ports.map((v) => JSON.stringify([v.containerPort, v.hostIp, v.hostPort])),
     )
   )
-    return fail()
+    return fail('port-bindings')
   if (
     !same(
       c.Mounts.map((v) => {
-        if (v.Type !== 'volume') return fail()
+        if (v.Type !== 'volume') return fail('mounts')
         if (
           typeof v.RW !== 'boolean' ||
           typeof v.Name !== 'string' ||
           typeof v.Destination !== 'string'
         )
-          return fail()
+          return fail('mounts')
         return JSON.stringify([v.Name, v.Destination, !v.RW])
       }),
       p.volumes.map((v) => JSON.stringify([v.name, v.destination, v.readOnly])),
     )
   )
-    return fail()
+    return fail('mounts')
   if (
     !same(
       Object.entries(c.NetworkSettings.Networks).map(([n, v]) => JSON.stringify([n, v.NetworkID])),
       p.networks.map((v) => JSON.stringify([v.name, v.id])),
     )
   )
-    return fail()
-  if (!p.networks.some((v) => [v.name, v.id].includes(c.HostConfig.NetworkMode))) return fail()
+    return fail('network-attachment')
+  if (!p.networks.some((v) => [v.name, v.id].includes(c.HostConfig.NetworkMode)))
+    return fail('network-mode')
   return {
     id: c.Id,
     addresses: Object.values(c.NetworkSettings.Networks)
@@ -153,7 +156,12 @@ export function inspectApprovedContainer(
       .map(normalize),
   }
 }
-export function inspectApprovedAttachments(volumes: unknown, networks: unknown, p: ResourcePolicy) {
+export function inspectApprovedAttachments(
+  volumes: unknown,
+  networks: unknown,
+  approval: ResourcePolicy,
+) {
+  const p = validateResourcePolicy(approval)
   const vs = volumes as {
     Name: string
     Driver: string
@@ -164,8 +172,12 @@ export function inspectApprovedAttachments(volumes: unknown, networks: unknown, 
   const ns = networks as {
     Id: string
     Name: string
+    Scope: string
     Driver: string
     Internal: boolean
+    Ingress: boolean
+    ConfigOnly: boolean
+    Options: Record<string, string> | null
     Labels: Record<string, string>
     Containers: Record<string, unknown>
   }[]
@@ -181,7 +193,7 @@ export function inspectApprovedAttachments(volumes: unknown, networks: unknown, 
       p.networks.map((v) => v.id),
     )
   )
-    return fail()
+    return fail('attachment-set')
   if (
     vs.some(
       (v) =>
@@ -191,19 +203,19 @@ export function inspectApprovedAttachments(volumes: unknown, networks: unknown, 
         (v.Options && Object.keys(v.Options).length),
     )
   )
-    return fail()
-  if (
-    ns.some(
-      (n) =>
-        !p.networks.some((a) => a.id === n.Id && a.name === n.Name) ||
-        n.Driver !== 'bridge' ||
-        n.Internal !== true ||
-        n.Labels?.['com.drphynex.migration-guard-test'] !== 'disposable-v1' ||
-        Object.keys(n.Containers ?? {}).some((v) => v !== p.containerId),
-    )
-  )
-    return fail()
+    return fail('volume')
+  // Published ports require a non-internal bridge, so outbound access is accepted here. Exclusivity
+  // comes from the exact identity, the label and the single approved attachment, not from Internal.
+  for (const n of ns) {
+    if (!p.networks.some((a) => a.id === n.Id && a.name === n.Name)) fail('network-identity')
+    if (n.Driver !== 'bridge') fail('network-driver')
+    if (n.Scope !== 'local' || n.Ingress !== false || n.ConfigOnly !== false) fail('network-scope')
+    if (n.Options?.['com.docker.network.bridge.default_bridge'] === 'true') fail('network-default')
+    if (n.Internal !== false) fail('network-internal')
+    if (n.Labels?.['com.drphynex.migration-guard-test'] !== 'disposable-v1') fail('network-label')
+    if (!same(Object.keys(n.Containers ?? {}), [p.containerId])) fail('network-exclusive')
+  }
 }
 export function inspectVolumeUsers(ids: string[], p: ResourcePolicy) {
-  if (ids.length !== 1 || ids[0] !== p.containerId) return fail()
+  if (ids.length !== 1 || ids[0] !== p.containerId) return fail('volume-exclusive')
 }

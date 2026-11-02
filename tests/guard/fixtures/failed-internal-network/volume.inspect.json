@@ -1,0 +1,13 @@
+[
+  {
+    "CreatedAt": "2026-11-02T04:53:40Z",
+    "Driver": "local",
+    "Labels": {
+      "com.drphynex.migration-guard-test": "disposable-v1"
+    },
+    "Mountpoint": "/var/lib/docker/volumes/drphynex-b5-test-data-c6efaf5b/_data",
+    "Name": "drphynex-b5-test-data-c6efaf5b",
+    "Options": null,
+    "Scope": "local"
+  }
+]

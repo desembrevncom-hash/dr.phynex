@@ -11,6 +11,7 @@ import {
   type ResourcePolicy,
   inspectApprovedAttachments,
   inspectVolumeUsers,
+  validateResourcePolicy,
 } from '../guard/resource-policy'
 import { integrationEnvironment, fixtureEnvironment } from '../guard/test-environment.mjs'
 import { safeResults, allCasesPassed } from '../guard/safe-reporter.mjs'
@@ -37,6 +38,186 @@ const good = {
     Networks: { 'drphynex-b5-test-net': { NetworkID: 'b'.repeat(64), IPAddress: '172.31.0.2' } },
   },
 }
+// Synthetic, written by hand: no inspect output exists yet for this configuration.
+const syntheticBridge = {
+  Id: policy.networks[0].id,
+  Name: policy.networks[0].name,
+  Scope: 'local',
+  Driver: 'bridge',
+  Internal: false,
+  Ingress: false,
+  ConfigOnly: false,
+  Options: {},
+  Labels: { 'com.drphynex.migration-guard-test': 'disposable-v1' },
+  Containers: { [policy.containerId]: {} },
+}
+const mismatch = (reason: string) => 'Disposable resource policy mismatch: ' + reason
+const failedRun = (file: string) =>
+  JSON.parse(
+    readFileSync(
+      new URL('../guard/fixtures/failed-internal-network/' + file, import.meta.url),
+      'utf8',
+    ),
+  )
+describe('real inspect output from the refused internal-network run', () => {
+  const container = failedRun('container.inspect.json'),
+    network = failedRun('network.inspect.json'),
+    volume = failedRun('volume.inspect.json'),
+    approved = validateResourcePolicy(failedRun('policy.json'))
+  it('carries no environment value', () => {
+    expect(container[0].Config.Env.length).toBeGreaterThan(0)
+    for (const entry of container[0].Config.Env) expect(entry).toMatch(/^[A-Z0-9_]+=<removed>$/)
+  })
+  it('records the Docker behaviour: declared binding, nothing published', () => {
+    expect(container[0].HostConfig.PortBindings['5432/tcp']).toEqual([
+      { HostIp: '127.0.0.1', HostPort: '55499' },
+    ])
+    expect(container[0].NetworkSettings.Ports['5432/tcp']).toEqual([])
+    expect(network[0].Internal).toBe(true)
+  })
+  it('refuses the container because the declared port was never published', () =>
+    expect(() =>
+      verifyContainerInspection(container, { host: '127.0.0.1', port: 55499 }, approved),
+    ).toThrow(mismatch('port-bindings')))
+  it('refuses the network because it is internal', () =>
+    expect(() => inspectApprovedAttachments(volume, network, approved)).toThrow(
+      mismatch('network-internal'),
+    ))
+})
+describe('dedicated bridge network regressions (synthetic metadata)', () => {
+  it('accepts one dedicated non-internal bridge with only the approved container', () =>
+    expect(() => inspectApprovedAttachments([], [syntheticBridge], policy)).not.toThrow())
+  it.each([
+    ['internal', { Internal: true }, 'network-internal'],
+    ['Internal field missing', { Internal: undefined }, 'network-internal'],
+    ['non-bridge driver', { Driver: 'overlay' }, 'network-driver'],
+    ['host driver', { Driver: 'host' }, 'network-driver'],
+    ['swarm scope', { Scope: 'swarm' }, 'network-scope'],
+    ['ingress', { Ingress: true }, 'network-scope'],
+    ['config-only', { ConfigOnly: true }, 'network-scope'],
+    [
+      'Docker default bridge',
+      { Options: { 'com.docker.network.bridge.default_bridge': 'true' } },
+      'network-default',
+    ],
+    ['missing label', { Labels: {} }, 'network-label'],
+    [
+      'second container',
+      { Containers: { [policy.containerId]: {}, ['c'.repeat(64)]: {} } },
+      'network-exclusive',
+    ],
+    ['approved container absent', { Containers: {} }, 'network-exclusive'],
+    ['Containers missing', { Containers: undefined }, 'network-exclusive'],
+    ['renamed network', { Name: 'drphynex-b5-test-other' }, 'network-identity'],
+  ])('refuses %s', (_name, change, reason) =>
+    expect(() =>
+      inspectApprovedAttachments([], [{ ...syntheticBridge, ...change }], policy),
+    ).toThrow(mismatch(reason)),
+  )
+  it.each(['host', 'bridge', 'default', 'none', 'container:' + 'c'.repeat(64)])(
+    'refuses container network mode %s',
+    (NetworkMode) =>
+      expect(() =>
+        verifyContainerInspection([{ ...good, HostConfig: { NetworkMode } }], target, policy),
+      ).toThrow(mismatch('network-mode')),
+  )
+  it.each(['bridge', 'host', 'business'])('refuses extra attachment to %s', (name) =>
+    expect(() =>
+      verifyContainerInspection(
+        [
+          {
+            ...good,
+            NetworkSettings: {
+              ...good.NetworkSettings,
+              Networks: {
+                ...good.NetworkSettings.Networks,
+                [name]: { NetworkID: 'c'.repeat(64), IPAddress: '172.30.0.2' },
+              },
+            },
+          },
+        ],
+        target,
+        policy,
+      ),
+    ).toThrow(mismatch('network-attachment')),
+  )
+  it.each(['0.0.0.0', '::', '192.168.1.10'])('refuses a binding on %s', (HostIp) =>
+    expect(() =>
+      verifyContainerInspection(
+        [
+          {
+            ...good,
+            NetworkSettings: {
+              ...good.NetworkSettings,
+              Ports: { '5432/tcp': [{ HostIp, HostPort: '55499' }] },
+            },
+          },
+        ],
+        target,
+        policy,
+      ),
+    ).toThrow(mismatch('port-public')),
+  )
+  it('refuses a bind mount of host data', () =>
+    expect(() =>
+      verifyContainerInspection(
+        [
+          {
+            ...good,
+            Mounts: [
+              {
+                Type: 'bind',
+                Source: 'C:\\business-data',
+                Destination: '/var/lib/postgresql/data',
+                RW: true,
+              },
+            ],
+          },
+        ],
+        target,
+        policy,
+      ),
+    ).toThrow(mismatch('mounts')))
+  it.each(['bridge', 'host', 'none', 'drphynex_default'])(
+    'refuses a policy naming the shared network %s',
+    (name) =>
+      expect(() =>
+        validateResourcePolicy({ ...policy, networks: [{ name, id: 'b'.repeat(64) }] }),
+      ).toThrow(mismatch('policy')),
+  )
+  it('refuses a policy declaring more than one network', () =>
+    expect(() =>
+      validateResourcePolicy({
+        ...policy,
+        networks: [...policy.networks, { name: 'drphynex-b5-test-two', id: 'c'.repeat(64) }],
+      }),
+    ).toThrow(mismatch('policy')))
+})
+describe('disposable setup script (source only; never executed here)', () => {
+  const source = readFileSync(
+    new URL('../guard/setup-disposable.ps1', import.meta.url),
+    'utf8',
+  )
+  it('creates a non-internal bridge and never a fallback resource', () => {
+    expect(source).not.toMatch(/--internal/)
+    expect(source).toMatch(/'network', 'create', '--driver', 'bridge'/)
+    expect(source).not.toMatch(/\bprune\b/)
+  })
+  it('passes Docker arguments as an array through a plain function', () => {
+    expect(source).toMatch(/function Invoke-Docker\(\[string\[\]\]\$DockerArgs\)/)
+    expect(source).toMatch(/'run', '-d'/)
+    expect(source).not.toMatch(/ValueFromRemainingArguments/)
+  })
+  it('reads labels as JSON instead of quoting them into a Go template', () => {
+    expect(source).not.toMatch(/\{\{index/)
+    expect(source).toMatch(/\{\{json \.Labels\}\}/)
+  })
+  it('never downloads an image or puts the password on a command line', () => {
+    expect(source).toMatch(/'--pull', 'never'/)
+    expect(source).toMatch(/'--env', 'POSTGRES_PASSWORD'/)
+    expect(source).not.toMatch(/POSTGRES_PASSWORD=/)
+  })
+})
 describe('resource isolation regressions (metadata only)', () => {
   it('rejects a volume also used by any other container, including a stopped one', () => {
     expect(() => inspectVolumeUsers([policy.containerId], policy)).not.toThrow()
@@ -44,36 +225,7 @@ describe('resource isolation regressions (metadata only)', () => {
   })
   it('accepts an exactly declared dedicated container/network', () => {
     expect(verifyContainerInspection([good], target, policy).id).toBe(policy.containerId)
-    expect(() =>
-      inspectApprovedAttachments(
-        [],
-        [
-          {
-            Id: policy.networks[0].id,
-            Name: policy.networks[0].name,
-            Driver: 'bridge',
-            Internal: true,
-            Labels: { 'com.drphynex.migration-guard-test': 'disposable-v1' },
-            Containers: { [policy.containerId]: {} },
-          },
-        ],
-        policy,
-      ),
-    ).not.toThrow()
-  })
-  it('refuses a shared or externally routed network despite the right label', () => {
-    const n = {
-      Id: policy.networks[0].id,
-      Name: policy.networks[0].name,
-      Driver: 'bridge',
-      Internal: true,
-      Labels: { 'com.drphynex.migration-guard-test': 'disposable-v1' },
-      Containers: { [policy.containerId]: {}, ['c'.repeat(64)]: {} },
-    }
-    expect(() => inspectApprovedAttachments([], [n], policy)).toThrow()
-    expect(() =>
-      inspectApprovedAttachments([], [{ ...n, Containers: {}, Internal: false }], policy),
-    ).toThrow()
+    expect(() => inspectApprovedAttachments([], [syntheticBridge], policy)).not.toThrow()
   })
   it.each([
     {
