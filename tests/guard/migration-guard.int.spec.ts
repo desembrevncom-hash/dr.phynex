@@ -1,7 +1,6 @@
 /** NOT EXECUTED without explicit existing non-superuser disposable credentials. Never provisions roles/DBs. */
 import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { spawnSync, fork } from 'node:child_process'
 import pg from 'pg'
@@ -15,9 +14,12 @@ import {
   type RunState,
   EXIT,
   LOCK_KEY,
+  type DbClient,
 } from '../../scripts/lib/migration-guard'
 import { connectPg } from '../../scripts/lib/pg-client'
-import { archiveToolEnvironment } from '../../scripts/lib/archive-tool'
+import { fixtureEnvironment } from './test-environment.mjs'
+import { openCommitWireProxy } from './commit-wire-proxy'
+import { readResourcePolicy } from './resource-policy'
 import {
   assertDisposable,
   TEST_DB,
@@ -27,7 +29,9 @@ import {
   blockedSql,
   fixturePlan,
   waitForBlockedExecutor,
-  waitForFixtureExit,
+  registerOwnedFixture,
+  stopOwnedFixture,
+  testSystemEnvironment,
   testOnlyPlan,
   DEFERRED_SQL,
 } from './fixture-support'
@@ -44,6 +48,15 @@ const bootstrap = BOOTSTRAP
 const fixture = fixturePlan
 function deps(sqls: string[], signal?: AbortSignal, executorPlan?: MigrationPlan) {
   let state: RunState | null = null
+  const queries: string[] = []
+  const track = (c: DbClient) => {
+    const q = c.query
+    c.query = async (sql, p) => {
+      queries.push(sql)
+      return q(sql, p)
+    }
+    return c
+  }
   const plan = executorPlan ?? fixture(sqls),
     sha = createHash('sha256').update(dump).digest('hex'),
     now = new Date().toISOString()
@@ -78,10 +91,10 @@ function deps(sqls: string[], signal?: AbortSignal, executorPlan?: MigrationPlan
       spawnSync('docker', ['exec', '-i', container!, 'pg_restore', '--list'], {
         input: dump,
         stdio: ['pipe', 'ignore', 'ignore'],
-        env: archiveToolEnvironment(process.env),
+        env: testSystemEnvironment(),
         timeout: 15000,
       }).status === 0,
-    connect: connectPg,
+    connect: async (cfg) => track(await connectPg(cfg)),
     readConfirmation: async (p) => p,
     loadPlan: async () => plan,
     readState: async () => state,
@@ -92,16 +105,91 @@ function deps(sqls: string[], signal?: AbortSignal, executorPlan?: MigrationPlan
   }
   return {
     d,
+    queries,
+    track,
+    plan,
     get state() {
       return state
     },
   }
 }
 
+type Scenario = ReturnType<typeof deps>
+async function history() {
+  const present = (
+    await admin.query("SELECT to_regclass('public.payload_migrations') IS NOT NULL AS present")
+  ).rows[0].present
+  return present
+    ? (
+        await admin.query(
+          'SELECT name,batch::text AS batch FROM public.payload_migrations ORDER BY id',
+        )
+      ).rows
+    : []
+}
+const expectedHistory = (names: string[]) => names.map((name) => ({ name, batch: '1' }))
+async function stateIs(
+  s: Scenario,
+  outcome: RunState['outcome'],
+  step: string,
+  phase: RunState['phase'],
+) {
+  expect(await s.d.readState(target)).toMatchObject({
+    version: 2,
+    identity: stateIdentity(target),
+    outcome,
+    step,
+    phase,
+    plan: (await s.d.loadPlan()).digest,
+  })
+}
+async function noNext(s?: Scenario) {
+  expect(
+    (await admin.query("SELECT to_regclass('public.b5_should_not_exist') missing")).rows[0].missing,
+  ).toBeNull()
+  expect(
+    (
+      await admin.query(
+        "SELECT EXISTS(SELECT 1 FROM pg_attribute WHERE attrelid='public.b5_gate'::regclass AND attname='marker' AND NOT attisdropped) present",
+      )
+    ).rows[0].present,
+  ).toBe(false)
+  if (s) {
+    expect(s.queries).not.toContain(blockedSql[2])
+    for (const sql of (await s.d.loadPlan()).steps.flatMap((step) => [...step.statements]))
+      expect(s.queries.filter((q) => q === sql).length).toBeLessThanOrEqual(1)
+  }
+}
+async function refusesRestart(s: Scenario) {
+  const before = await s.d.readState(target),
+    queries = s.queries.length,
+    h = await history()
+  expect(await runGuardedMigration(s.d)).toBe(EXIT.REFUSED)
+  expect(s.queries).toHaveLength(queries)
+  expect(await s.d.readState(target)).toEqual(before)
+  expect(await history()).toEqual(h)
+}
+async function successfulNoop(s: Scenario) {
+  const before = await s.d.readState(target),
+    writes = s.queries.filter((q) => q === 'BEGIN' || q === 'COMMIT').length,
+    h = await history()
+  expect(await runGuardedMigration(s.d)).toBe(EXIT.OK)
+  expect(s.queries.filter((q) => q === 'BEGIN' || q === 'COMMIT')).toHaveLength(writes)
+  expect(await s.d.readState(target)).toEqual(before)
+  expect(await history()).toEqual(h)
+}
 describe.skipIf(!url || !container)(
   'B5 single-session integration; isolated non-superuser DB only',
   () => {
     beforeAll(async () => {
+      const approval = readResourcePolicy(process.env.B5_TEST_RESOURCES_FILE)
+      if (approval.containerId !== container) throw Error('Use the exact approved container ID')
+      if (
+        !process.env.B5_TEST_RUN_DIR ||
+        !path.isAbsolute(process.env.B5_TEST_RUN_DIR) ||
+        process.env.B5_TEST_DOCKER_CONFIG !== path.join(process.env.B5_TEST_RUN_DIR, 'docker')
+      )
+        throw Error('Use the isolated integration launcher')
       const u = new URL(url!)
       if (u.pathname !== '/' + DB || !['127.0.0.1', 'localhost', '[::1]'].includes(u.hostname))
         throw Error('Explicit isolated Local test URL required')
@@ -125,7 +213,7 @@ describe.skipIf(!url || !container)(
       })
       await admin.connect()
       await identity()
-      dir = mkdtempSync(path.join(tmpdir(), 'drphynex-b5-correction-'))
+      dir = mkdtempSync(path.join(process.env.B5_TEST_RUN_DIR!, 'case-'))
     })
     async function resetFixture() {
       await identity()
@@ -134,7 +222,7 @@ describe.skipIf(!url || !container)(
       const r = spawnSync('docker', ['exec', container!, 'pg_dump', '-U', target.role, '-Fc', DB], {
         encoding: 'buffer',
         maxBuffer: 64 * 1024 * 1024,
-        env: archiveToolEnvironment(process.env),
+        env: testSystemEnvironment(),
         timeout: 15000,
       })
       if (r.status !== 0) throw Error('Test-only dump failed')
@@ -162,15 +250,34 @@ describe.skipIf(!url || !container)(
       expect(
         (await admin.query('SELECT count(*)::int n FROM public.payload_migrations')).rows[0].n,
       ).toBe(plan.steps.length)
+      expect(await history()).toEqual(expectedHistory(plan.steps.map((s) => s.name)))
+      await stateIs(s, 'COMPLETE', plan.steps.at(-1)!.name, 'committed')
+      expect(
+        (
+          await admin.query(
+            "SELECT to_regclass('public.products') products,to_regclass('public.media') media,to_regclass('public.form_rate_limits') limits",
+          )
+        ).rows[0],
+      ).toMatchObject({ products: 'products', media: 'media', limits: 'form_rate_limits' })
+      expect(
+        (
+          await admin.query(
+            "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='media' AND column_name IN ('prefix','_objectkey') ORDER BY column_name",
+          )
+        ).rows.map((r) => r.column_name),
+      ).toEqual(['_objectkey', 'prefix'])
+      await successfulNoop(s)
     })
     it('I2 keeps earlier commit when later migration fails and blocks retry', async () => {
-      const s = deps([bootstrap, FAILURE_DDL])
+      const s = deps([bootstrap, FAILURE_DDL, blockedSql[2]])
       expect(await runGuardedMigration(s.d)).toBe(EXIT.MIGRATION_FAILED)
       expect(
         (await admin.query('SELECT name FROM public.payload_migrations')).rows.map((r) => r.name),
       ).toEqual(['m1'])
-      expect(s.state?.outcome).toBe('FAILED')
-      expect(await runGuardedMigration(s.d)).toBe(EXIT.REFUSED)
+      await stateIs(s, 'FAILED', 'm1', 'committed')
+      expect(s.queries).toContain(FAILURE_DDL)
+      await noNext(s)
+      await refusesRestart(s)
     })
 
     async function block(signal?: AbortSignal) {
@@ -189,7 +296,7 @@ describe.skipIf(!url || !container)(
       }
     }
     it('I3 competitor cannot get the lock while approved DDL is blocked', async () => {
-      const { running } = await block()
+      const { s, running } = await block()
       try {
         expect(
           (await admin.query('SELECT pg_try_advisory_lock($1,$2) ok', [...LOCK_KEY])).rows[0].ok,
@@ -200,6 +307,20 @@ describe.skipIf(!url || !container)(
         await admin.query('ROLLBACK')
         await running
       }
+      expect(await history()).toEqual(expectedHistory(['m1', 'm2', 'm3']))
+      await stateIs(s, 'COMPLETE', 'm3', 'committed')
+      expect(
+        (await admin.query("SELECT to_regclass('public.b5_should_not_exist') present")).rows[0]
+          .present,
+      ).not.toBeNull()
+      expect(
+        (
+          await admin.query(
+            "SELECT EXISTS(SELECT 1 FROM pg_attribute WHERE attrelid='public.b5_gate'::regclass AND attname='marker' AND NOT attisdropped) present",
+          )
+        ).rows[0].present,
+      ).toBe(true)
+      await successfulNoop(s)
     })
     it('I4 session termination stops the blocked DDL and the next migration', async () => {
       const { s, running, pid } = await block()
@@ -209,7 +330,7 @@ describe.skipIf(!url || !container)(
         expect(await waitForBlockedExecutor(admin, target)).toBe(pid)
         await admin.query('SELECT pg_terminate_backend($1)', [pid])
         expect(await running).toBe(EXIT.UNCERTAIN)
-        expect(await runGuardedMigration(s.d)).toBe(EXIT.REFUSED)
+        await refusesRestart(s)
       } finally {
         await admin.query('ROLLBACK')
         await running
@@ -218,10 +339,14 @@ describe.skipIf(!url || !container)(
         (await admin.query("SELECT to_regclass('public.b5_should_not_exist') missing")).rows[0]
           .missing,
       ).toBeNull()
+      expect(await history()).toEqual(expectedHistory(['m1']))
+      await stateIs(s, 'UNCERTAIN', 'm1', 'committed')
+      await noNext(s)
+      await refusesRestart(s)
     })
     it('I5 signal cancellation closes a session executing approved blocked DDL', async () => {
       const a = new AbortController(),
-        { running } = await block(a.signal)
+        { s, running } = await block(a.signal)
       try {
         a.abort()
         expect(await running).toBe(EXIT.UNCERTAIN)
@@ -233,28 +358,27 @@ describe.skipIf(!url || !container)(
         (await admin.query("SELECT to_regclass('public.b5_should_not_exist') missing")).rows[0]
           .missing,
       ).toBeNull()
+      expect(await history()).toEqual(expectedHistory(['m1']))
+      await stateIs(s, 'UNCERTAIN', 'm1', 'committed')
+      await noNext(s)
+      await refusesRestart(s)
     })
     it('I6 abrupt executor death leaves a latch and cannot start the next migration', async () => {
       const stateFile = path.join(dir, 'process-death-state.json')
       await identity()
       await admin.query('BEGIN')
       await admin.query('LOCK TABLE public.b5_gate IN ACCESS EXCLUSIVE MODE')
-      const child = fork(path.resolve('tests/guard/process-death.fixture.ts'), [], {
-        execArgv: ['--import', 'tsx'],
-        env: {
-          ...archiveToolEnvironment(process.env),
-          B5_TEST_URL: url,
-          B5_TEST_STATE: stateFile,
-          B5_TEST_CONTAINER: container,
-        },
-        stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
-      })
-      child.on('error', () => {}) // wait/cleanup below still fail finitely; never an unhandled event.
+      const child = registerOwnedFixture(
+        fork(path.resolve('tests/guard/process-death.fixture.ts'), [], {
+          execArgv: ['--import', 'tsx'],
+          env: fixtureEnvironment(process.env, stateFile),
+          stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+        }),
+      )
       try {
         await waitForBlockedExecutor(admin, target)
         await identity()
-        if (!child.kill('SIGKILL')) throw Error('Fixture kill not acknowledged')
-        await waitForFixtureExit(child)
+        await stopOwnedFixture(child)
         await admin.query('ROLLBACK')
         let acquired = false
         const until = Date.now() + 15000
@@ -270,21 +394,28 @@ describe.skipIf(!url || !container)(
           (await admin.query("SELECT to_regclass('public.b5_should_not_exist') missing")).rows[0]
             .missing,
         ).toBeNull()
-        const state = parseRunState(readFileSync(stateFile, 'utf8'), target)
-        expect(state.outcome).toBe('RUNNING')
+        const rawState = readFileSync(stateFile, 'utf8')
+        const state = parseRunState(rawState, target)
+        expect(state).toMatchObject({
+          outcome: 'RUNNING',
+          step: 'm1',
+          phase: 'committed',
+          plan: fixture([...blockedSql]).digest,
+          identity: stateIdentity(target),
+        })
+        expect(await history()).toEqual(expectedHistory(['m1']))
+        await noNext()
         const s = deps([bootstrap])
-        s.d.readState = async () => state
-        expect(await runGuardedMigration(s.d)).toBe(EXIT.REFUSED)
+        s.d.readState = async () => parseRunState(readFileSync(stateFile, 'utf8'), target)
+        await refusesRestart(s)
+        expect(readFileSync(stateFile, 'utf8')).toBe(rawState)
       } finally {
         await admin.query('ROLLBACK')
-        if (child.exitCode === null) {
-          child.kill('SIGKILL')
-          await waitForFixtureExit(child)
-        }
+        await stopOwnedFixture(child)
       }
     })
     it('I7 verifies actual deferred-constraint COMMIT rejection and aborted xid', async () => {
-      const s = deps([bootstrap], undefined, testOnlyPlan([DEFERRED_SQL]))
+      const s = deps([bootstrap], undefined, testOnlyPlan([DEFERRED_SQL, blockedSql[2]]))
       expect(await runGuardedMigration(s.d)).toBe(EXIT.MIGRATION_FAILED)
       expect(s.state).toMatchObject({ outcome: 'FAILED', phase: 'commit-sent', step: 'm1' })
       expect(
@@ -295,9 +426,13 @@ describe.skipIf(!url || !container)(
         (await admin.query("SELECT to_regclass('public.payload_migrations') present")).rows[0]
           .present,
       ).toBeNull()
+      expect(await history()).toEqual([])
+      await stateIs(s, 'FAILED', 'm1', 'commit-sent')
+      await noNext(s)
+      await refusesRestart(s)
     })
     it('I8 masks a real COMMIT acknowledgement at the test adapter boundary and never retries', async () => {
-      const s = deps([bootstrap], undefined, testOnlyPlan([BOOTSTRAP])),
+      const s = deps([bootstrap], undefined, testOnlyPlan([BOOTSTRAP, blockedSql[2]])),
         connect = s.d.connect
       s.d.connect = async (cfg) => {
         const c = await connect(cfg),
@@ -320,11 +455,15 @@ describe.skipIf(!url || !container)(
         (await admin.query('SELECT name FROM public.payload_migrations')).rows.map((r) => r.name),
       ).toEqual(['m1'])
       expect(await runGuardedMigration(s.d)).toBe(EXIT.REFUSED)
+      expect(await history()).toEqual(expectedHistory(['m1']))
+      await stateIs(s, 'UNCERTAIN', 'm1', 'commit-sent')
+      await noNext(s)
+      await refusesRestart(s)
     })
     it('I9 injects state-write failures before and after actual COMMIT, with verified DB outcomes', async () => {
       for (const phase of ['commit-preparing', 'commit-sent', 'committed', 'COMPLETE']) {
         await resetFixture() // Each subscenario is fresh, never a retry of a failed expectation.
-        const s = deps([bootstrap]),
+        const s = deps([bootstrap, blockedSql[2]]),
           write = s.d.writeState
         s.d.writeState = async (t, v) => {
           if (
@@ -367,7 +506,12 @@ describe.skipIf(!url || !container)(
           row.name,
           row.batch,
         ])
-        const s = deps([bootstrap, FAILURE_DDL]),
+        const original = (
+          await admin.query(
+            'SELECT id,name,batch::text AS batch FROM public.payload_migrations ORDER BY id',
+          )
+        ).rows
+        const s = deps([bootstrap, FAILURE_DDL, blockedSql[2]]),
           connect = s.d.connect
         let began = false
         s.d.connect = async (cfg) => {
@@ -382,6 +526,16 @@ describe.skipIf(!url || !container)(
         expect(await runGuardedMigration(s.d)).toBe(EXIT.STATUS_MISMATCH)
         expect(began).toBe(false)
         expect(s.state).toBeNull()
+        expect(await runGuardedMigration(s.d)).toBe(EXIT.STATUS_MISMATCH)
+        expect(began).toBe(false)
+        expect(
+          (
+            await admin.query(
+              'SELECT id,name,batch::text AS batch FROM public.payload_migrations ORDER BY id',
+            )
+          ).rows,
+        ).toEqual(original)
+        await noNext(s)
       }
     })
     it('I11 bad backup integrity or unreadable archive prevents executor connection', async () => {
@@ -402,9 +556,9 @@ describe.skipIf(!url || !container)(
         expect(await runGuardedMigration(s.d)).toBe(EXIT.BACKUP)
         expect(connects).toBe(0)
         expect(s.state).toBeNull()
+        expect(await runGuardedMigration(s.d)).toBe(EXIT.BACKUP)
+        expect(connects).toBe(0)
       }
-    })
-    it('I12 restart refuses all failure latches and unversioned/wrong-identity records before connection', async () => {
       for (const outcome of [
         'RUNNING',
         'FAILED',
@@ -438,6 +592,40 @@ describe.skipIf(!url || !container)(
         }
         expect(await runGuardedMigration(s.d)).toBe(EXIT.REFUSED)
         expect(connects).toBe(0)
+        expect(await s.d.readState(target)).toEqual(raw)
+        expect(await runGuardedMigration(s.d)).toBe(EXIT.REFUSED)
+        expect(connects).toBe(0)
+      }
+      expect(await history()).toEqual([])
+      await noNext()
+    })
+    it('I12 cuts the server COMMIT response at a test-only transport and verifies committed xid independently', async () => {
+      await identity()
+      const s = deps([bootstrap, blockedSql[2]])
+      let proxy: Awaited<ReturnType<typeof openCommitWireProxy>> | undefined
+      s.d.connect = async (cfg) => {
+        proxy = await openCommitWireProxy(cfg)
+        return s.track(await connectPg({ ...cfg, host: '127.0.0.1', port: proxy.port }))
+      }
+      try {
+        expect(await runGuardedMigration(s.d)).toBe(EXIT.UNCERTAIN)
+        if (!proxy) throw Error('Wire proxy never started')
+        expect(await proxy.proof).toEqual({
+          commitRequests: 1,
+          serverCommitTags: 1,
+          commitTagsDelivered: 0,
+          cut: true,
+        })
+        await stateIs(s, 'UNCERTAIN', 'm1', 'commit-sent')
+        expect(
+          (await admin.query('SELECT pg_xact_status($1::xid8) status', [s.state?.xid])).rows[0]
+            .status,
+        ).toBe('committed')
+        expect(await history()).toEqual(expectedHistory(['m1']))
+        await noNext(s)
+        await refusesRestart(s)
+      } finally {
+        if (proxy) await proxy.close()
       }
     })
   },

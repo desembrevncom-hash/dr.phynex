@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "containerId": "REPLACE_WITH_OWNER_APPROVED_CONTAINER_ID_64_HEX",
+  "ports": [{ "containerPort": "5432/tcp", "hostIp": "127.0.0.1", "hostPort": 55499 }],
+  "volumes": [
+    {
+      "name": "drphynex-b5-test-data",
+      "destination": "/var/lib/postgresql/data",
+      "readOnly": false
+    }
+  ],
+  "networks": [
+    { "name": "drphynex-b5-test-net", "id": "REPLACE_WITH_OWNER_APPROVED_NETWORK_ID_64_HEX" }
+  ]
+}

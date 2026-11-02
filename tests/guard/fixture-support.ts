@@ -2,7 +2,14 @@
 import { spawnSync, type ChildProcess } from 'node:child_process'
 import { isIP } from 'node:net'
 import { buildPlan, hash, type MigrationPlan } from '../../scripts/lib/migration-plan'
-import { archiveToolEnvironment } from '../../scripts/lib/archive-tool'
+import { systemTestEnvironment } from './test-environment.mjs'
+import {
+  inspectApprovedContainer,
+  inspectApprovedAttachments,
+  readResourcePolicy,
+  inspectVolumeUsers,
+  type ResourcePolicy,
+} from './resource-policy'
 import type { DbClient, Target } from '../../scripts/lib/migration-guard'
 
 export const TEST_DB = 'drphynex_migration_guard_test'
@@ -64,52 +71,68 @@ export function fixturePlan(sqls: readonly string[]) {
     }),
   )
 }
-export function verifyContainerInspection(raw: unknown, target: Target) {
-  const a = raw as {
-    Id?: string
-    State?: { Running?: boolean }
-    Config?: { Labels?: Record<string, string> }
-    NetworkSettings?: {
-      Ports?: Record<string, { HostIp: string; HostPort: string }[]>
-      Networks?: Record<string, { IPAddress?: string; GlobalIPv6Address?: string }>
-    }
-  }[]
-  const c = Array.isArray(a) && a.length === 1 ? a[0] : null
-  if (
-    !c?.Id ||
-    !/^[a-f0-9]{64}$/.test(c.Id) ||
-    c.State?.Running !== true ||
-    c.Config?.Labels?.['com.drphynex.migration-guard-test'] !== 'disposable-v1'
-  )
-    throw Error('Unapproved disposable container')
-  if (
-    !['localhost', '127.0.0.1', '::1'].includes(target.host) ||
-    !c.NetworkSettings?.Ports?.['5432/tcp']?.some(
-      (p) => ['127.0.0.1', '::1'].includes(p.HostIp) && p.HostPort === String(target.port),
-    )
-  )
-    throw Error('Container endpoint does not match URL')
-  return {
-    id: c.Id,
-    addresses: Object.values(c.NetworkSettings.Networks ?? {})
-      .flatMap((n) => [n.IPAddress, n.GlobalIPv6Address])
-      .filter((s): s is string => !!s)
-      .map(normalizeServerAddress),
-  }
+export function verifyContainerInspection(
+  raw: unknown,
+  target: Pick<Target, 'host' | 'port'>,
+  approval: ResourcePolicy,
+) {
+  return inspectApprovedContainer(raw, target, approval, normalizeServerAddress)
+}
+export function testSystemEnvironment() {
+  const runDir = process.env.B5_TEST_RUN_DIR,
+    dockerConfig = process.env.B5_TEST_DOCKER_CONFIG
+  if (!runDir || !dockerConfig) throw Error('Use the isolated integration launcher')
+  return systemTestEnvironment(process.env, { runDir, dockerConfig })
 }
 const IDENTITY_SQL =
   "SELECT current_database() db,current_user usr,d.oid::text oid,shobj_description(d.oid,'pg_database') marker,(r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls) privileged,inet_server_addr()::text address,inet_server_port() port,pg_postmaster_start_time()::text started FROM pg_database d JOIN pg_roles r ON r.rolname=current_user WHERE d.datname=current_database()"
 type Query = Pick<DbClient, 'query'>
-export async function assertDisposable(c: Query, t: Target, container: string) {
+export async function assertDisposable(
+  c: Query,
+  t: Target,
+  container: string,
+  approval = readResourcePolicy(process.env.B5_TEST_RESOURCES_FILE),
+) {
   // Both commands are read-only; neither provisions a role/container/database.
   const inspect = spawnSync('docker', ['inspect', container], {
     encoding: 'utf8',
-    env: archiveToolEnvironment(process.env),
+    env: testSystemEnvironment(),
     stdio: ['ignore', 'pipe', 'ignore'],
     timeout: 10000,
   })
   if (inspect.status !== 0) throw Error('Container inspection failed')
-  const proof = verifyContainerInspection(JSON.parse(inspect.stdout), t)
+  const proof = verifyContainerInspection(JSON.parse(inspect.stdout), t, approval)
+  const readDocker = (args: string[]) => {
+    const r = spawnSync('docker', args, {
+      encoding: 'utf8',
+      env: testSystemEnvironment(),
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 10000,
+    })
+    if (r.status !== 0) throw Error('Disposable attachment inspection failed')
+    return JSON.parse(r.stdout)
+  }
+  inspectApprovedAttachments(
+    approval.volumes.length
+      ? readDocker(['volume', 'inspect', ...approval.volumes.map((v) => v.name)])
+      : [],
+    readDocker(['network', 'inspect', ...approval.networks.map((v) => v.id)]),
+    approval,
+  )
+  for (const volume of approval.volumes) {
+    const r = spawnSync(
+      'docker',
+      ['ps', '--all', '--no-trunc', '--filter', 'volume=' + volume.name, '--format', '{{.ID}}'],
+      {
+        encoding: 'utf8',
+        env: testSystemEnvironment(),
+        stdio: ['ignore', 'pipe', 'ignore'],
+        timeout: 10000,
+      },
+    )
+    if (r.status !== 0) throw Error('Disposable volume ownership inspection failed')
+    inspectVolumeUsers(r.stdout.trim().split(/\r?\n/).filter(Boolean), approval)
+  }
   const live = (await c.query(IDENTITY_SQL)).rows[0]
   if (
     !live ||
@@ -142,7 +165,7 @@ export async function assertDisposable(c: Query, t: Target, container: string) {
     ],
     {
       encoding: 'utf8',
-      env: archiveToolEnvironment(process.env),
+      env: testSystemEnvironment(),
       stdio: ['ignore', 'pipe', 'ignore'],
       timeout: 10000,
     },
@@ -176,23 +199,49 @@ export async function waitForBlockedExecutor(control: Query, t: Target) {
   }
   throw Error('Approved fixture never reached blocked DDL')
 }
+const waits = new WeakMap<ChildProcess, Promise<void>>()
+const owned = new WeakSet<ChildProcess>()
+const exited = (c: ChildProcess) => c.exitCode != null || c.signalCode != null
+export function registerOwnedFixture(c: ChildProcess) {
+  owned.add(c)
+  c.on('error', () => {})
+  return c
+}
+export async function stopOwnedFixture(c: ChildProcess) {
+  if (!owned.has(c)) throw Error('Refusing to stop an unowned process')
+  if (!exited(c) && !c.killed && !c.kill('SIGKILL') && !exited(c))
+    throw Error('Owned fixture kill not acknowledged')
+  await waitForFixtureExit(c)
+}
 export function waitForFixtureExit(child: ChildProcess): Promise<void> {
-  if (child.exitCode !== null) return Promise.resolve()
-  return new Promise((resolve, reject) => {
-    const finish = (error?: Error) => {
+  if (exited(child)) return Promise.resolve()
+  const prior = waits.get(child)
+  if (prior) return prior
+  const promise = new Promise<void>((resolve, reject) => {
+    let done = false
+    const cleanup = () => {
       clearTimeout(timer)
-      child.removeListener('exit', exited)
-      child.removeListener('error', failed)
+      child.removeListener('exit', onExit)
+      child.removeListener('error', onError)
+    }
+    const finish = (error?: Error) => {
+      if (done) return
+      done = true
+      cleanup()
       if (error) reject(error)
       else resolve()
     }
-    const exited = () => finish(),
-      failed = () => finish(Error('Owned fixture process failed'))
+    const onExit = () => finish(),
+      onError = () => finish(Error('Owned fixture process failed'))
     const timer = setTimeout(
       () => finish(Error('Owned fixture process did not exit within 5s')),
       5000,
     )
-    child.once('exit', exited)
-    child.once('error', failed)
+    child.once('exit', onExit)
+    child.once('error', onError)
+    if (done) cleanup()
+    else if (exited(child)) finish() // closes the check/register race
   })
+  waits.set(child, promise)
+  return promise
 }

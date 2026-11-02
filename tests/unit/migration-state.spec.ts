@@ -9,6 +9,7 @@ import {
 } from '../guard/fixture-support'
 import { EventEmitter } from 'node:events'
 import type { ChildProcess } from 'node:child_process'
+import type { ResourcePolicy } from '../guard/resource-policy'
 const target = {
   name: 'test',
   host: '127.0.0.1',
@@ -122,13 +123,22 @@ describe('disposable container endpoint proof (no Docker execution)', () => {
     Id: 'a'.repeat(64),
     State: { Running: true },
     Config: { Labels: { 'com.drphynex.migration-guard-test': 'disposable-v1' } },
+    HostConfig: { NetworkMode: 'drphynex-b5-test-net' },
+    Mounts: [],
     NetworkSettings: {
       Ports: { '5432/tcp': [{ HostIp: '127.0.0.1', HostPort: '55499' }] },
-      Networks: { test: { IPAddress: '172.31.0.2' } },
+      Networks: { 'drphynex-b5-test-net': { NetworkID: 'b'.repeat(64), IPAddress: '172.31.0.2' } },
     },
   }
+  const policy: ResourcePolicy = {
+    version: 1,
+    containerId: proof.Id,
+    ports: [{ containerPort: '5432/tcp', hostIp: '127.0.0.1', hostPort: target.port }],
+    volumes: [],
+    networks: [{ name: 'drphynex-b5-test-net', id: 'b'.repeat(64) }],
+  }
   it('accepts only the labelled running container and exact loopback mapping', () =>
-    expect(verifyContainerInspection([proof], target).id).toBe(proof.Id))
+    expect(verifyContainerInspection([proof], target, policy).id).toBe(proof.Id))
   it.each([
     { ...proof, State: { Running: false } },
     { ...proof, Config: { Labels: {} } },
@@ -141,6 +151,6 @@ describe('disposable container endpoint proof (no Docker execution)', () => {
       NetworkSettings: { Ports: { '5432/tcp': [{ HostIp: '127.0.0.1', HostPort: '5432' }] } },
     },
   ])('refuses unsafe endpoint/container metadata', (s) =>
-    expect(() => verifyContainerInspection([s], target)).toThrow(),
+    expect(() => verifyContainerInspection([s], target, policy)).toThrow(),
   )
 })

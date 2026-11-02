@@ -85,3 +85,16 @@ Sẵn sàng bàn giao source để review lại; chỉ sau review mới quyết 
 - Đã so sánh nội dung trước/sau khi bỏ khác biệt EOL; gọi up() thật với mock sql/db cho cả năm file cho SQL giống hệt, không có tham số. Unit còn xác nhận plan bằng source CRLF không vượt manifest LF.
 - I1–I12 chỉ là code đã chuẩn bị. Các ca test-only không tạo đường bypass trong CLI. Bail=1, retry=0, một worker. Không chạy integration hoặc Docker, không kết nối PostgreSQL/Neon, không migration/build/deploy.
 - Đây là tự kiểm tra bản sửa, không phải kiểm toán độc lập. Nếu các kiểm tra cuối đạt, chỉ commit checkpoint với nhãn “B5 prepared for isolated integration — not approved for real migration”, rồi dừng sửa để review đúng SHA.
+
+
+## Harness revision on baseline 5a167e1 (02/11/2026)
+
+This revision changes only harness/config/test and related documentation. Production executor, SQL grammar, dependency, migration and manifest are unchanged. The earlier I12 restart-marker scenario is now part of I11 preflight checks; I12 is a test-only transport proxy cutting the COMMIT response, distinct from I8 after-ack adapter simulation. See the revised matrix for exact assertions, resource policy and launcher.
+
+- Regression before correction: 7 failures out of 8 new resource/cleanup tests (mixed public mappings/mounts/networks; SIGKILL and listener race).
+- Resource approval now covers the entire port/mount/network set and dedicated named volume use; bind mounts, unapproved/shared attachments and public mappings fail. A separate declaration, live DB identity and Docker inspections are all required.
+- Cleanup recognizes both exitCode and signalCode, handles check/listener race, shares a finite wait and only signals registered owned fixtures.
+- Integration config disables env files. A test-only launcher passes an allowlist, uses a fresh Docker config and local engine, fixes heap 2048 MiB, and filters the fixture child again. Sentinel tests do not read real secrets. No package script was changed.
+- I1–I12 now assert relevant history order/batch, state/phase, SQL effect and deliberate next invocation; failure cases prove no next SQL/effect and no automatic retry.
+- I12 code/protocol framing is implemented but NOT EXECUTED against PostgreSQL. Memory frames do not prove actual transport behavior, server commit, client error or independent transaction visibility; do not claim integration PASS.
+- Final verification: TypeScript noEmit/incremental=false PASS; ESLint max-warnings=0 PASS; 362/362 pure-memory unit tests PASS across 12 files, one worker and heap 2048 MiB; diff check PASS. Fixed SHA and full fingerprint are supplied at handoff. No Docker/PostgreSQL/integration/migration/build/deploy was executed. Atomic state and volume anchor remain unimplemented production blockers, not part of this revision.

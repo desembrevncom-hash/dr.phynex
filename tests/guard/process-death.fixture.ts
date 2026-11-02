@@ -5,9 +5,18 @@ import { fixturePlan, blockedSql, assertDisposable } from './fixture-support'
 import { parseRunState } from '../../scripts/lib/migration-state'
 import { runGuardedMigration, type Target } from '../../scripts/lib/migration-guard'
 import { connectPg } from '../../scripts/lib/pg-client'
+import path from 'node:path'
 const url = process.env.B5_TEST_URL!,
   stateFile = process.env.B5_TEST_STATE!
 const u = new URL(url)
+const runDir = process.env.B5_TEST_RUN_DIR
+if (
+  !runDir ||
+  !path.isAbsolute(stateFile) ||
+  path.relative(runDir, stateFile).startsWith('..') ||
+  path.isAbsolute(path.relative(runDir, stateFile))
+)
+  throw Error('Fixture state must stay in the owned run directory')
 if (
   u.pathname !== '/drphynex_migration_guard_test' ||
   !['localhost', '127.0.0.1', '[::1]'].includes(u.hostname) ||
