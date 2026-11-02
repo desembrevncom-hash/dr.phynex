@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "filename": "20261028_101829_initial.ts",
+      "sha256": "73abc35afdf5357fa4ce7797dd4709fcddcbaa9f621da2ea3179318ec1ff8700"
+    },
+    {
+      "filename": "20261029_021524_media_release_and_line_appearance.ts",
+      "sha256": "fd41d2ebeeba3e15b672c8c3ba06f6cb522a23e8e414a3b6f5610f3d4d708ec6"
+    },
+    {
+      "filename": "20261029_035541_product_editorial_note.ts",
+      "sha256": "f774000577d065d371f82a656ee99309b96baa1421d7c304795c38a5bbf5f388"
+    },
+    {
+      "filename": "20261029_080000_form_rate_limits.ts",
+      "sha256": "7e6674185ce5ee41f1d9f26a7f3a05a8f717b418bd1ffe90dd5aa94891e3ad9f"
+    },
+    {
+      "filename": "20261029_100000_storage_fields.ts",
+      "sha256": "3abc824b97c994fc05d9b0ed2a67c7875bca804abad3aaa054ec637e50b5beac"
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import { ContactSubmissions, PartnerInquiries } from './collections/Submissions'
 import { JournalTopics, ProductCategories, ProductLines, SkinConcerns } from './collections/Taxonomies'
 import { Users } from './collections/Users'
 import { emailAdapter } from './config/email'
+import { assertDeploymentEnv } from './config/deploy-env'
 import { objectStorage } from './config/storage'
 import { BrandPage, HomePage, PartnershipPage, SiteSettings } from './globals'
 import { contentDefaultLocale, localeLabels, locales } from './i18n/locales'
@@ -26,6 +27,7 @@ import { contentDefaultLocale, localeLabels, locales } from './i18n/locales'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+assertDeploymentEnv(process.env)
 const secret = process.env.PAYLOAD_SECRET
 if (!secret) throw new Error('PAYLOAD_SECRET is not set. Copy .env.example to .env.')
 
@@ -84,6 +86,7 @@ export default buildConfig({
     pool: { connectionString: process.env.DATABASE_URL || '', max: process.env.VERCEL ? 3 : 10 },
     // Schema changes go through migrations (npm run migrate:create / migrate), also locally.
     push: false,
+    disableCreateDatabase: true,
     migrationDir: path.resolve(dirname, 'migrations'),
   }),
   sharp,

@@ -1,0 +1,17 @@
+{
+  "$comment": "Template. Copy to deploy/migration-targets.json (or any path given in MIGRATION_TARGETS_FILE) and fill with values the project owner has approved. Identifiers only: never put passwords or connection strings here. host = the DIRECT (non-pooled) endpoint. marker = text the owner set with COMMENT ON DATABASE on that exact database/branch. role = the migration role (not a superuser).",
+  "version": 1,
+  "targets": {
+    "staging": {
+      "environment": "staging",
+      "host": "ep-example-staging-123456.ap-southeast-1.aws.neon.tech",
+      "port": 5432,
+      "database": "neondb",
+      "role": "drphynex_migrator",
+      "marker": "drphynex:staging:v1",
+      "settings": {},
+      "backupMaxAgeHours": 24,
+      "stateFile": "/persistent-owner-controlled-volume/drphynex-staging-state.json"
+    }
+  }
+}

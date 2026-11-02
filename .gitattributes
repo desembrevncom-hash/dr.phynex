@@ -1,0 +1,3 @@
+# Executable Payload migration sources must have identical bytes on Windows and Linux.
+src/migrations/*.ts text eol=lf
+src/migrations/*.js text eol=lf

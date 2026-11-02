@@ -5,8 +5,7 @@
   "description": "Dr.PhynEX brand website (Next.js + Payload CMS)",
   "type": "module",
   "scripts": {
-    "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
-    "build:vercel": "npm run migrate && npm run build",
+    "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=4096\" next build --webpack",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
@@ -14,13 +13,15 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
-    "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
+    "migrate": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/migrate-guarded.ts --local",
+    "migrate:guarded": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/migrate-guarded.ts",
     "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
     "migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",
     "db:up": "docker compose up -d --wait postgres",
     "db:down": "docker compose stop postgres",
     "test": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
-    "test:unit": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.unit.config.mts"
+    "test:unit": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.unit.config.mts",
+    "test:guard": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.guard.config.mts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1159.0",
@@ -46,11 +47,13 @@
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.19.9",
+    "@types/pg": "8.20.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "dotenv": "16.4.7",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.3",
+    "pg": "8.20.0",
     "prettier": "3.6.2",
     "tailwindcss": "4.3.3",
     "tsx": "4.23.15",
