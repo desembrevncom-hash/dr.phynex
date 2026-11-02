@@ -27,6 +27,10 @@ Before connecting and before destructive operations, enforce:
 - The single network name/ID must equal the declaration; host, default, none and container network
   modes fail, as do the default bridge and any shared network. Network inspect must show a local,
   **non-internal** bridge with the disposable label and exactly the approved container attached.
+- Every container from `docker ps --all`, stopped and created included, is inspected by ID. Only the
+  approved container may be attached to the network ID, name it in `NetworkMode`, or be shared by
+  `container:` mode. An incomplete listing or inspect fails closed, as does an attachment with no
+  full network ID. Two complete passes must match before any SQL runs.
 - Live SQL identity must match the approved container's psql identity: database OID/name/marker,
   role, server port and postmaster start time. Normalize only host /32 or /128 masks; reject subnets
   or mismatched server addresses. Missing tool/auth/permission/identity always fails closed.
@@ -177,8 +181,8 @@ output is kept in `tests/guard/fixtures/failed-internal-network/`, and must stay
 | Outbound from the container | **Allowed.** Docker NAT stays on; this harness does not block egress |
 
 Loopback publishing is an inbound restriction, not network isolation. Nothing here may be described
-as egress blocking. Exclusive attachment reads `Containers` in network inspect, which lists running
-endpoints; a stopped container attached to the bridge is not detected by this check.
+as egress blocking. `Containers` in network inspect lists running endpoints only, so exclusive
+attachment is also proven by the all-container check in the list above.
 
 The accepted-bridge regression is hand-written synthetic metadata. No inspect output of a
 non-internal run exists yet, so real publishing, connection and identity checks remain unproven.
@@ -187,3 +191,30 @@ non-internal run exists yet, so real publishing, connection and identity checks 
 bind to PowerShell `-Debug`; labels are read as JSON, never quoted into a Go template. It pins the
 image digest with `--pull never`, sends the password by environment name and stdin, writes the URL
 under DPAPI outside the repository, and refuses an output directory inside it.
+
+## Setup safety rules
+
+- **Endpoint.** Every Docker call goes through one function that passes `--host` and a cleared
+  environment plus a private `DOCKER_CONFIG` under the output directory, so `DOCKER_CONTEXT`,
+  `DOCKER_HOST` and TLS settings never reach the child. `docker info` must show context `default`
+  and daemon `docker-desktop` before the first create.
+- **Output directory.** Must be absolute, canonical, outside the repository and new, with an existing
+  parent. It is created by an exclusive OS call before any Docker command, and files are created
+  with `CreateNew`, so a ledger, policy or credential from another run cannot be overwritten.
+- **Deadline.** Each native command has a finite deadline (`-CommandTimeoutSeconds`, default 60).
+  On timeout only that child is stopped, through its own process handle.
+- **Unknown outcomes.** The intent is saved in `created-resources.json` before each create. A
+  timeout or failed client leaves state `unknown` (`pending` if the script itself died): a stopped
+  client does not prove the daemon created nothing, and `docker run` can fail after creating the
+  container. The ledger stays; the script never retries or removes anything.
+- **Secrets.** The container password exists only in the environment block of the one `docker run`
+  child, so there is no session variable to restore; generated values are cleared in `finally`.
+  Printed messages are constants, and Docker output is never forwarded.
+
+`tests/guard/setup-disposable.regression.ps1` checks these rules against `tests/guard/fake-docker.cs`
+only. It proves script behaviour, not real Docker behaviour: the `docker info` fields, the argument
+quoting against the real CLI, and whether `NetworkID` is filled in for stopped or created containers
+remain unverified. If it is empty there, the membership check refuses, including for containers
+unrelated to B5, until the owner resolves them.
+
+An atomic state file anchored in the volume remains required before any real migration.

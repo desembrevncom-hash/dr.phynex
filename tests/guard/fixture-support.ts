@@ -4,10 +4,13 @@ import { isIP } from 'node:net'
 import { buildPlan, hash, type MigrationPlan } from '../../scripts/lib/migration-plan'
 import { systemTestEnvironment } from './test-environment.mjs'
 import {
+  assertResourcesUnchanged,
   inspectApprovedContainer,
   inspectApprovedAttachments,
+  inspectNetworkMembers,
   readResourcePolicy,
   inspectVolumeUsers,
+  resourceSnapshot,
   type ResourcePolicy,
 } from './resource-policy'
 import type { DbClient, Target } from '../../scripts/lib/migration-guard'
@@ -87,52 +90,61 @@ export function testSystemEnvironment() {
 const IDENTITY_SQL =
   "SELECT current_database() db,current_user usr,d.oid::text oid,shobj_description(d.oid,'pg_database') marker,(r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls) privileged,inet_server_addr()::text address,inet_server_port() port,pg_postmaster_start_time()::text started FROM pg_database d JOIN pg_roles r ON r.rolname=current_user WHERE d.datname=current_database()"
 type Query = Pick<DbClient, 'query'>
-export async function assertDisposable(
-  c: Query,
-  t: Target,
+const MEMBER_BATCH = 100
+/** One complete read-only pass; neither command provisions a role/container/database. */
+function verifyResources(
   container: string,
-  approval = readResourcePolicy(process.env.B5_TEST_RESOURCES_FILE),
+  t: Pick<Target, 'host' | 'port'>,
+  approval: ResourcePolicy,
 ) {
-  // Both commands are read-only; neither provisions a role/container/database.
-  const inspect = spawnSync('docker', ['inspect', container], {
-    encoding: 'utf8',
-    env: testSystemEnvironment(),
-    stdio: ['ignore', 'pipe', 'ignore'],
-    timeout: 10000,
-  })
-  if (inspect.status !== 0) throw Error('Container inspection failed')
-  const proof = verifyContainerInspection(JSON.parse(inspect.stdout), t, approval)
-  const readDocker = (args: string[]) => {
+  const readText = (args: string[]) => {
     const r = spawnSync('docker', args, {
       encoding: 'utf8',
       env: testSystemEnvironment(),
       stdio: ['ignore', 'pipe', 'ignore'],
       timeout: 10000,
     })
-    if (r.status !== 0) throw Error('Disposable attachment inspection failed')
-    return JSON.parse(r.stdout)
+    if (r.status !== 0) throw Error('Disposable resource inspection failed')
+    return r.stdout
   }
-  inspectApprovedAttachments(
-    approval.volumes.length
-      ? readDocker(['volume', 'inspect', ...approval.volumes.map((v) => v.name)])
-      : [],
-    readDocker(['network', 'inspect', ...approval.networks.map((v) => v.id)]),
-    approval,
-  )
+  const readDocker = (args: string[]) => JSON.parse(readText(args))
+  const readIds = (args: string[]) => readText(args).trim().split(/\r?\n/).filter(Boolean)
+  const inspected = readDocker(['inspect', container])
+  const proof = verifyContainerInspection(inspected, t, approval)
+  const volumes = approval.volumes.length
+    ? readDocker(['volume', 'inspect', ...approval.volumes.map((v) => v.name)])
+    : []
+  const networks = readDocker(['network', 'inspect', ...approval.networks.map((v) => v.id)])
+  inspectApprovedAttachments(volumes, networks, approval)
+  const users = []
   for (const volume of approval.volumes) {
-    const r = spawnSync(
-      'docker',
-      ['ps', '--all', '--no-trunc', '--filter', 'volume=' + volume.name, '--format', '{{.ID}}'],
-      {
-        encoding: 'utf8',
-        env: testSystemEnvironment(),
-        stdio: ['ignore', 'pipe', 'ignore'],
-        timeout: 10000,
-      },
-    )
-    if (r.status !== 0) throw Error('Disposable volume ownership inspection failed')
-    inspectVolumeUsers(r.stdout.trim().split(/\r?\n/).filter(Boolean), approval)
+    const ids = readIds([
+      'ps',
+      '--all',
+      '--no-trunc',
+      '--filter',
+      'volume=' + volume.name,
+      '--format',
+      '{{.ID}}',
+    ])
+    inspectVolumeUsers(ids, approval)
+    users.push(...ids)
   }
+  const listed = readIds(['ps', '--all', '--no-trunc', '--format', '{{.ID}}'])
+  const rows: unknown[] = []
+  for (let i = 0; i < listed.length; i += MEMBER_BATCH)
+    rows.push(...readDocker(['container', 'inspect', ...listed.slice(i, i + MEMBER_BATCH)]))
+  const members = inspectNetworkMembers(listed, rows, approval)
+  return { proof, snapshot: resourceSnapshot(inspected, volumes, networks, users, members) }
+}
+export async function assertDisposable(
+  c: Query,
+  t: Target,
+  container: string,
+  approval = readResourcePolicy(process.env.B5_TEST_RESOURCES_FILE),
+) {
+  const { proof, snapshot } = verifyResources(container, t, approval)
+  assertResourcesUnchanged(snapshot, verifyResources(container, t, approval).snapshot)
   const live = (await c.query(IDENTITY_SQL)).rows[0]
   if (
     !live ||

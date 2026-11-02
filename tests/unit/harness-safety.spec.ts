@@ -204,9 +204,22 @@ describe('disposable setup script (source only; never executed here)', () => {
     expect(source).not.toMatch(/\bprune\b/)
   })
   it('passes Docker arguments as an array through a plain function', () => {
-    expect(source).toMatch(/function Invoke-Docker\(\[string\[\]\]\$DockerArgs\)/)
+    expect(source).toMatch(/function Invoke-Docker\(\[string\[\]\]\$DockerArgs,/)
     expect(source).toMatch(/'run', '-d'/)
     expect(source).not.toMatch(/ValueFromRemainingArguments/)
+  })
+  it('starts Docker in one place, pinned, filtered and under a deadline', () => {
+    expect(source).not.toMatch(/&\s*docker\b/)
+    expect(source.match(/\[Diagnostics\.Process\]::Start/g)).toHaveLength(1)
+    expect(source).toMatch(/@\('--host', \$Endpoint\) \+ \$DockerArgs/)
+    expect(source).toMatch(/EnvironmentVariables\.Clear\(\)/)
+    expect(source).toMatch(/\$child\.WaitForExit\(\(& \$remaining\)\)/)
+  })
+  it('never changes the session environment and never removes a resource', () => {
+    expect(source).not.toMatch(/\$env:/)
+    expect(source).not.toMatch(/Remove-Item/)
+    expect(source).not.toMatch(/'(rm|stop|kill)'/)
+    expect(source).not.toMatch(/taskkill|Stop-Process/)
   })
   it('reads labels as JSON instead of quoting them into a Go template', () => {
     expect(source).not.toMatch(/\{\{index/)

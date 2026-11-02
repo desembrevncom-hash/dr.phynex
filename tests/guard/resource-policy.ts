@@ -219,3 +219,82 @@ export function inspectApprovedAttachments(
 export function inspectVolumeUsers(ids: string[], p: ResourcePolicy) {
   if (ids.length !== 1 || ids[0] !== p.containerId) return fail('volume-exclusive')
 }
+type MemberRow = {
+  Id: string
+  HostConfig?: { NetworkMode?: unknown }
+  NetworkSettings?: { Networks?: Record<string, { NetworkID?: unknown }> | null }
+}
+/**
+ * Network inspect lists running endpoints only, so membership comes from inspecting every listed
+ * container, created and stopped included. An attachment without a full network ID cannot be
+ * ruled out, so it fails closed even on a container that looks unrelated.
+ */
+export function inspectNetworkMembers(listed: unknown, raw: unknown, approval: ResourcePolicy) {
+  const p = validateResourcePolicy(approval),
+    [network] = p.networks,
+    rows = raw as MemberRow[]
+  if (
+    !Array.isArray(listed) ||
+    !Array.isArray(rows) ||
+    !listed.every(id) ||
+    new Set(listed).size !== listed.length ||
+    !listed.includes(p.containerId) ||
+    !same(
+      rows.map((v) => v?.Id),
+      [...listed],
+    )
+  )
+    return fail('network-members-incomplete')
+  const members = rows.map((row) => {
+    const mode = row.HostConfig?.NetworkMode,
+      attachments = row.NetworkSettings?.Networks
+    if (typeof mode !== 'string' || !attachments || typeof attachments !== 'object')
+      return fail('network-members-incomplete')
+    const entries = Object.entries(attachments).map(([key, v]) => {
+      if (!id(v?.NetworkID)) return fail('network-members-incomplete')
+      return [key, v.NetworkID] as const
+    })
+    const shared = mode.startsWith('container:') ? mode.slice('container:'.length) : null
+    if (shared !== null && !id(shared)) return fail('network-members-incomplete')
+    const member =
+      shared === p.containerId ||
+      [network.name, network.id].includes(mode) ||
+      entries.some(([key, attached]) => key === network.name || attached === network.id)
+    if (member !== (row.Id === p.containerId)) return fail('network-member')
+    return [row.Id, mode, entries]
+  })
+  return members.sort((a, b) => String(a[0]).localeCompare(String(b[0])))
+}
+/** Everything one verification pass relied on; volatile inspect fields stay out. */
+export function resourceSnapshot(
+  container: unknown,
+  volumes: unknown,
+  networks: unknown,
+  volumeUsers: string[],
+  members: unknown,
+) {
+  const [c] = container as {
+    Id: string
+    Created?: string
+    State: { StartedAt?: string; Pid?: number }
+    HostConfig: { NetworkMode: string }
+    Mounts: unknown
+    NetworkSettings: { Ports: unknown; Networks: unknown }
+  }[]
+  return JSON.stringify([
+    c.Id,
+    c.Created,
+    c.State.StartedAt,
+    c.State.Pid,
+    c.HostConfig.NetworkMode,
+    c.Mounts,
+    c.NetworkSettings,
+    volumes,
+    networks,
+    volumeUsers,
+    members,
+  ])
+}
+export function assertResourcesUnchanged(first: string, second: string) {
+  if (first !== second) return fail('resource-changed')
+}
