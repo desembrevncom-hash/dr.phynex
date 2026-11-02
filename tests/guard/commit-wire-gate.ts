@@ -34,6 +34,10 @@ export class CommitWireGate {
   private started = false
   private armed = false
   readonly evidence = { commitRequests: 0, serverCommitTags: 0, commitTagsDelivered: 0, cut: false }
+  /** Type letter and byte length of every withheld backend frame; never its body. */
+  readonly withheld: { type: string; bytes: number }[] = []
+  /** Process ID from BackendKeyData. The cancel key beside it is never read or kept. */
+  backendPid: number | null = null
   frontend(chunk: Buffer) {
     return this.front.push(chunk).map((frame) => {
       if (this.started && frame[0] === 81 && frame.subarray(5).equals(COMMIT)) {
@@ -55,7 +59,9 @@ export class CommitWireGate {
           this.evidence.cut = true
         }
         // Withhold ALL server frames after COMMIT was forwarded, including C and Z.
+        this.withheld.push({ type: String.fromCharCode(frame[0]), bytes: frame.length })
       } else {
+        if (frame[0] === 75 && frame.length === 13) this.backendPid = frame.readInt32BE(5)
         if (frame[0] === 67 && frame.subarray(5).equals(COMMIT)) {
           this.evidence.commitTagsDelivered++
           throw Error('Unarmed COMMIT response')

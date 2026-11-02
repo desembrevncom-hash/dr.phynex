@@ -2,6 +2,14 @@
 import net from 'node:net'
 import type { DirectUrl } from '../../scripts/lib/migration-guard'
 import { CommitWireGate } from './commit-wire-gate'
+/** Counters, frame types/lengths, a backend PID and socket flags only: safe to persist. */
+export type WireProof = CommitWireGate['evidence'] & {
+  withheld: { type: string; bytes: number }[]
+  backendPid: number | null
+  clientDestroyed: boolean
+  upstreamDestroyed: boolean
+  cutAt: string
+}
 export async function openCommitWireProxy(config: DirectUrl) {
   if (!['localhost', '127.0.0.1', '::1'].includes(config.host) || config.ssl !== false)
     throw Error('Wire test requires approved loopback plaintext PostgreSQL')
@@ -18,8 +26,8 @@ export async function openCommitWireProxy(config: DirectUrl) {
   let accepted = false,
     settled = false,
     closed: Promise<void> | undefined
-  let resolveProof!: (value: typeof gate.evidence) => void, rejectProof!: (reason: Error) => void
-  const proof = new Promise<typeof gate.evidence>((resolve, reject) => {
+  let resolveProof!: (value: WireProof) => void, rejectProof!: (reason: Error) => void
+  const proof = new Promise<WireProof>((resolve, reject) => {
     resolveProof = resolve
     rejectProof = reject
   })
@@ -59,9 +67,17 @@ export async function openCommitWireProxy(config: DirectUrl) {
         for (const frame of gate.backend(chunk)) forward(client, upstream, frame)
         if (gate.evidence.cut && !settled) {
           settled = true
-          resolveProof({ ...gate.evidence })
           client.destroy()
           upstream.destroy()
+          // Taken after both sockets are destroyed, so the record cannot claim a cut that has not happened.
+          resolveProof({
+            ...gate.evidence,
+            withheld: [...gate.withheld],
+            backendPid: gate.backendPid,
+            clientDestroyed: client.destroyed,
+            upstreamDestroyed: upstream.destroyed,
+            cutAt: new Date().toISOString(),
+          })
         }
       } catch {
         fail()

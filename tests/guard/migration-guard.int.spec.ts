@@ -161,14 +161,29 @@ async function noNext(s?: Scenario) {
       expect(s.queries.filter((q) => q === sql).length).toBeLessThanOrEqual(1)
   }
 }
-async function refusesRestart(s: Scenario) {
+async function observeRestart(s: Scenario) {
   const before = await s.d.readState(target),
     queries = s.queries.length,
     h = await history()
-  expect(await runGuardedMigration(s.d)).toBe(EXIT.REFUSED)
-  expect(s.queries).toHaveLength(queries)
-  expect(await s.d.readState(target)).toEqual(before)
-  expect(await history()).toEqual(h)
+  const exit = await runGuardedMigration(s.d)
+  return {
+    exit,
+    newQueries: s.queries.length - queries,
+    stateUnchanged: JSON.stringify(await s.d.readState(target)) === JSON.stringify(before),
+    historyUnchanged: JSON.stringify(await history()) === JSON.stringify(h),
+  }
+}
+async function refusesRestart(s: Scenario) {
+  expect(await observeRestart(s)).toEqual({
+    exit: EXIT.REFUSED,
+    newQueries: 0,
+    stateUnchanged: true,
+    historyUnchanged: true,
+  })
+}
+/** Writes beside the case state; values are counters, names, xids and booleans, never SQL text. */
+function saveEvidence(name: string, value: unknown) {
+  writeFileSync(path.join(dir, name), JSON.stringify(value, null, 2) + '\n', { mode: 0o600 })
 }
 async function successfulNoop(s: Scenario) {
   const before = await s.d.readState(target),
@@ -247,6 +262,11 @@ describe.skipIf(!url || !container)(
         readFileSync('deploy/migrations.approved.json', 'utf8'),
       )
       s.d.loadPlan = async () => plan
+      saveEvidence('i1-plan.json', {
+        digest: plan.digest,
+        sourceFiles: Object.keys(sources).sort(),
+        steps: plan.steps.map((step) => ({ name: step.name, filename: step.filename, sha256: step.sha256 })),
+      })
       expect(await runGuardedMigration(s.d)).toBe(EXIT.OK)
       expect(
         (await admin.query('SELECT count(*)::int n FROM public.payload_migrations')).rows[0].n,
@@ -626,26 +646,78 @@ describe.skipIf(!url || !container)(
         proxy = await openCommitWireProxy(cfg)
         return s.track(await connectPg({ ...cfg, host: '127.0.0.1', port: proxy.port }))
       }
+      // Each field is recorded as soon as it is known, so a failed assertion still leaves the rest.
+      const evidence: Record<string, unknown> = { assertions: 'incomplete' }
+      let failure: unknown
       try {
-        expect(await runGuardedMigration(s.d)).toBe(EXIT.UNCERTAIN)
+        evidence.exit = await runGuardedMigration(s.d)
         if (!proxy) throw Error('Wire proxy never started')
-        expect(await proxy.proof).toEqual({
+        const proof = await proxy.proof.catch(() => null)
+        evidence.proof = proof ?? 'unavailable'
+        // Persisted bytes, not the in-memory value.
+        const state = parseRunState(readFileSync(path.join(dir, 'last-state.json'), 'utf8'), target)
+        evidence.state = state
+        evidence.independent = {
+          checkedAt: new Date().toISOString(),
+          backendPid: (admin as unknown as { processID: number }).processID,
+          xid: state?.xid ?? null,
+          xidStatus: (await admin.query('SELECT pg_xact_status($1::xid8) status', [state?.xid]))
+            .rows[0].status,
+          history: await history(),
+          effects: (
+            await admin.query(
+              "SELECT to_regclass('public.b5_before') IS NOT NULL AS first, to_regclass('public.b5_should_not_exist') IS NOT NULL AS next",
+            )
+          ).rows[0],
+          commitsSent: s.queries.filter((q) => q === 'COMMIT').length,
+          nextStatementSent: s.queries.includes(blockedSql[2]),
+        }
+        evidence.restart = await observeRestart(s)
+
+        expect(evidence.exit).toBe(EXIT.UNCERTAIN)
+        expect(proof).toMatchObject({
           commitRequests: 1,
           serverCommitTags: 1,
           commitTagsDelivered: 0,
           cut: true,
+          clientDestroyed: true,
+          upstreamDestroyed: true,
         })
+        expect(proof!.withheld.map((f) => f.type)).toContain('C')
+        expect(proof!.backendPid).not.toBeNull()
+        expect(proof!.backendPid).not.toBe((evidence.independent as { backendPid: number }).backendPid)
         await stateIs(s, 'UNCERTAIN', 'm1', 'commit-sent')
-        expect(
-          (await admin.query('SELECT pg_xact_status($1::xid8) status', [s.state?.xid])).rows[0]
-            .status,
-        ).toBe('committed')
-        expect(await history()).toEqual(expectedHistory(['m1']))
+        expect(evidence.independent).toMatchObject({
+          xidStatus: 'committed',
+          history: expectedHistory(['m1']),
+          effects: { first: true, next: false },
+          commitsSent: 1,
+          nextStatementSent: false,
+        })
         await noNext(s)
-        await refusesRestart(s)
-      } finally {
-        if (proxy) await proxy.close()
+        expect(evidence.restart).toEqual({
+          exit: EXIT.REFUSED,
+          newQueries: 0,
+          stateUnchanged: true,
+          historyUnchanged: true,
+        })
+        evidence.assertions = 'passed'
+      } catch (e) {
+        evidence.assertions = 'failed'
+        failure = e
       }
+      // Saved before the proxy is torn down; a save failure is reported, never hidden.
+      let saved = true
+      try {
+        saveEvidence('i12-evidence.json', evidence)
+      } catch {
+        saved = false
+      }
+      if (proxy) await proxy.close()
+      const unsaved = Error('I12 evidence could not be saved')
+      if (failure && !saved) throw new AggregateError([failure, unsaved], 'I12 failed; evidence not saved')
+      if (failure) throw failure
+      if (!saved) throw unsaved
     })
   },
 )

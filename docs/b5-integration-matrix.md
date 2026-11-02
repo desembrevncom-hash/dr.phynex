@@ -58,8 +58,23 @@ The process-death child receives an independently filtered test-only environment
 check these boundaries without reading real secrets or spawning a child.
 
 Raw child output is suppressed because an unexpected reporter error could include a credential.
-The test-only safe reporter retains only I-number and pass/fail/skip/unknown in results.json in the
-owned run directory. No raw title/error/SQL is copied. State artifacts stay under a unique case-
+The test-only safe reporter uses the Vitest 4.1.12 `onTestRunEnd` hook (the run of 2026-11-02 at
+`43139915` wrote no results because `onFinished` is not called there). results.json (version 2)
+keeps each case ID with passed/failed/skipped/pending, the run reason (passed/failed/interrupted),
+unhandled and collection error counts, and totals. No raw title/error/SQL is copied. With `bail: 1`
+Vitest reports a run with a failed case as `interrupted` and later cases as `pending`.
+
+The launcher writes launcher.json with the Vitest exit code/signal, whether it stopped the child,
+the results file status and a verdict, and run-context.json with the commit and working-tree paths.
+A missing or malformed results file is an **evidence error** (exit 2), never PASS or an executor
+failure. `node tests/guard/reporter-smoke.mjs` checks this through real Vitest processes (pass,
+deliberate fail, no results, corrupt file) with no database, Docker or env file.
+
+I1 saves its plan (digest, files, step names and hashes) as i1-plan.json. I12 saves
+i12-evidence.json before the proxy closes: transport proof, persisted state, an independent
+connection's xid status, history and effects, and the restart observation. A failed assertion still
+saves what was recorded; a failed save is reported as its own error. Polling the state file is not
+evidence for transient states: the earlier observer missed `20261029_035541_product_editorial_note`. State artifacts stay under a unique case-
 subdirectory there. They are retained, never automatically deleted. Launcher deadline is 1 hour;
 it requests stop on its own child and bounds force-stop handling. Forced termination is an uncertain
 cleanup event: verify owned workers/backend state manually, never infer successful completion or
@@ -119,7 +134,9 @@ allow plaintext on this isolated local route. It is not a general PG proxy or a 
 Bounded protocol parsing uses complete frames, 1 MiB frame and 2 MiB buffering/backpressure limits.
 All backend bytes after forwarding COMMIT are held; only observing the server's CommandComplete
 COMMIT provides server-side evidence. Neither that tag nor ReadyForQuery is delivered to pg client.
-Evidence contains counters/booleans only; no credentials or SQL packets are logged or persisted.
+Evidence contains counters/booleans, withheld frame types and lengths, the executor backend PID from
+BackendKeyData (never its cancel key) and the socket state after the cut; no credentials or SQL packets
+are logged or persisted. I12 requires that PID to differ from the independent checking connection.
 Idle sockets are bounded at 15s, proxy lifetime 30s, close 5s. It destroys only sockets/listener it owns.
 
 Pure-memory tests exercise every frontend/backend split, rejection/error/oversize cases, and absence

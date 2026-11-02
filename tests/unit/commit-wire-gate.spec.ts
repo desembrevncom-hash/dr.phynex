@@ -33,8 +33,24 @@ describe('test-only transport framing, entirely in memory', () => {
         commitTagsDelivered: 0,
         cut: true,
       })
-      expect(JSON.stringify(g.evidence)).not.toContain('SENTINEL')
+      expect(g.withheld).toEqual([
+        { type: 'C', bytes: ack.length },
+        { type: 'Z', bytes: ready.length },
+      ])
+      expect(JSON.stringify([g.evidence, g.withheld])).not.toContain('SENTINEL')
     }
+  })
+  it('keeps the backend PID from BackendKeyData and never the cancel key', () => {
+    const g = new CommitWireGate()
+    g.frontend(startup())
+    const key = Buffer.alloc(13)
+    key[0] = 75
+    key.writeInt32BE(12, 1)
+    key.writeInt32BE(4242, 5)
+    key.writeInt32BE(0x5e5e5e5e, 9)
+    expect(g.backend(key)).toEqual([key])
+    expect(g.backendPid).toBe(4242)
+    expect(JSON.stringify([g.evidence, g.withheld, g.backendPid])).not.toContain(String(0x5e5e5e5e))
   })
   it('assembles startup and query across all client-side splits without changing bytes', () => {
     const bytes = Buffer.concat([startup(), query])

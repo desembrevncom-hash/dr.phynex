@@ -14,7 +14,8 @@ import {
   validateResourcePolicy,
 } from '../guard/resource-policy'
 import { integrationEnvironment, fixtureEnvironment } from '../guard/test-environment.mjs'
-import { safeResults, allCasesPassed } from '../guard/safe-reporter.mjs'
+import { summarizeRun, allCasesPassed } from '../guard/safe-reporter.mjs'
+import { judge } from '../guard/run-integration.mjs'
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
@@ -395,11 +396,41 @@ describe('idempotent owned-child wait regressions (no processes)', () => {
   })
 })
 describe('test environment and reporter sentinels (no env file or service)', () => {
-  it('does not turn a skipped or incomplete matrix into launcher success', () => {
-    const all = Array.from({ length: 12 }, (_, i) => ({ id: 'I' + (i + 1), status: 'pass' }))
-    expect(allCasesPassed(all)).toBe(true)
-    expect(allCasesPassed(all.slice(0, 11))).toBe(false)
-    expect(allCasesPassed([...all.slice(0, 11), { id: 'I12', status: 'skip' }])).toBe(false)
+  const all = Array.from({ length: 12 }, (_, i) => ({ id: 'I' + (i + 1), state: 'passed' }))
+  const run = (cases: { id: string | null; state: string }[], extra = {}) => ({
+    version: 2,
+    reason: 'passed',
+    unhandledErrors: 0,
+    modules: [{ state: 'passed', collectionErrors: 0 }],
+    cases,
+    ...extra,
+  })
+  it('does not turn a skipped, pending or incomplete matrix into launcher success', () => {
+    expect(allCasesPassed(run(all))).toBe(true)
+    expect(allCasesPassed(run(all.slice(0, 11)))).toBe(false)
+    for (const state of ['skipped', 'pending', 'failed', 'unknown'])
+      expect(allCasesPassed(run([...all.slice(0, 11), { id: 'I12', state }]))).toBe(false)
+    expect(allCasesPassed(run([...all, { id: null, state: 'passed' }]))).toBe(false)
+    expect(allCasesPassed(run(all, { reason: 'interrupted' }))).toBe(false)
+    expect(allCasesPassed(run(all, { unhandledErrors: 1 }))).toBe(false)
+    expect(allCasesPassed(run(all, { modules: [{ state: 'failed', collectionErrors: 1 }] }))).toBe(false)
+    expect(allCasesPassed([{ id: 'I1', status: 'pass' }])).toBe(false)
+  })
+  it('judges evidence, interruption and failure separately from the Vitest exit', () => {
+    const exit = { code: 0, signal: null, stopped: false, spawnError: false }
+    const valid = (r: unknown) => ({ status: 'valid', results: r })
+    expect(judge(exit, valid(run(all)))).toBe('pass')
+    expect(judge(exit, { status: 'missing' })).toBe('evidence-error')
+    expect(judge({ ...exit, code: 1 }, { status: 'invalid' })).toBe('evidence-error')
+    expect(judge({ ...exit, code: 1 }, valid(run(all)))).toBe('fail')
+    expect(judge({ ...exit, stopped: true }, valid(run(all)))).toBe('interrupted')
+    expect(judge({ ...exit, signal: 'SIGKILL' }, valid(run(all)))).toBe('interrupted')
+    expect(
+      judge(
+        { ...exit, code: 1 },
+        valid(run([{ id: 'I1', state: 'failed' }], { reason: 'interrupted' })),
+      ),
+    ).toBe('fail')
   })
   it('loads only test configuration and explicitly disables Vite env-file discovery', () => {
     const source = readFileSync('vitest.guard.config.mts', 'utf8'),
@@ -447,18 +478,39 @@ describe('test environment and reporter sentinels (no env file or service)', () 
     expect(child).not.toHaveProperty('MIGRATION_GUARD_TEST_URL')
   })
   it('never emits raw titles/errors/SQL from the integration reporter', () => {
-    const result = safeResults([
-      {
-        tasks: [
-          {
-            name: 'I12 SECRET_SQL_SENTINEL',
-            type: 'test',
-            result: { state: 'fail', error: 'PASSWORD_SENTINEL' },
-          },
-        ],
+    const test = (name: string, state: string) => ({
+      name,
+      result: () => ({ state, errors: [{ message: 'PASSWORD_SENTINEL' }] }),
+    })
+    const testModule = {
+      state: () => 'failed',
+      errors: () => [{ message: 'COLLECTION_SENTINEL' }],
+      children: {
+        *allTests() {
+          yield test('I12 SECRET_SQL_SENTINEL', 'failed')
+          yield test('I3 title', 'pending')
+          yield test('helper SENTINEL', 'passed')
+        },
       },
-    ])
-    expect(result).toEqual([{ id: 'I12', status: 'fail' }])
+    }
+    const result = summarizeRun([testModule],[{ message: 'UNHANDLED_SENTINEL' }], 'interrupted')
+    expect(result).toEqual({
+      version: 2,
+      reason: 'interrupted',
+      unhandledErrors: 1,
+      modules: [{ state: 'failed', collectionErrors: 1 }],
+      cases: [
+        { id: 'I12', state: 'failed' },
+        { id: 'I3', state: 'pending' },
+        { id: null, state: 'passed' },
+      ],
+      totals: { passed: 1, failed: 1, skipped: 0, pending: 1, unknown: 0, unidentified: 1 },
+    })
     expect(JSON.stringify(result)).not.toMatch(/SENTINEL/)
+  })
+  it('uses the Vitest 4 lifecycle and not the removed onFinished hook', () => {
+    const source = readFileSync('tests/guard/safe-reporter.mjs', 'utf8')
+    expect(source).toMatch(/^\s*onTestRunEnd\(testModules, unhandledErrors, reason\) \{/m)
+    expect(source).not.toMatch(/^\s*onFinished\(/m)
   })
 })
