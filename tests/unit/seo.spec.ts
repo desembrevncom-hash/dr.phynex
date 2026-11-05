@@ -18,6 +18,13 @@ const empty: LocaleContent = {
   brandPage: false,
 }
 
+describe('Korean default alternates', () => {
+  it('uses Korean for x-default only where Korean is available', () => {
+    expect(alternatesFor('vi', '/brand')?.languages?.['x-default']).toBe(siteURL + '/ko/brand')
+    expect(alternatesFor('vi', '/privacy', ['en','vi'])?.languages).not.toHaveProperty('x-default')
+  })
+})
+
 describe('JSON-LD', () => {
   it('cannot break out of its script element', () => {
     const out = serializeJsonLd({ name: '</script><script>alert(1)</script>', note: `a${String.fromCharCode(0x2028)}b & c` })
@@ -92,7 +99,7 @@ describe('sitemap', () => {
     const product = map.find((e) => e.url.endsWith('/vi/products/mx-02-luma'))!
     expect(Object.keys(product.alternates!.languages!)).toEqual(['vi'])
     const privacy = map.find((e) => e.url.endsWith('/vi/privacy'))!
-    expect(Object.keys(privacy.alternates!.languages!).sort()).toEqual(['en', 'vi', 'x-default'])
+    expect(Object.keys(privacy.alternates!.languages!).sort()).toEqual(['en', 'vi'])
   })
 })
 

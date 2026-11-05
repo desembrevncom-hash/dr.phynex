@@ -217,5 +217,87 @@
     "ingredientDescription": "근거가 있는 성분 설명",
     "legalBody": "법무 검토를 거친 정책 문서",
     "articles": "저널 글"
+  },
+  "redesign": {
+    "heroTitle": "피부를 이해하는 새로운 시선.",
+    "heroBody": "과학적 이해와 매일의 세심한 케어 경험을 담은 한국 스킨케어.",
+    "explore": "제품 알아보기",
+    "brandLink": "브랜드 철학",
+    "collection": "네 가지 포뮬러, 하나의 관점.",
+    "collectionBody": "집중적인 스킨 컨디셔닝부터 일상의 편안함까지. MX와 RX 컬렉션을 만나보세요.",
+    "detail": "포뮬러 알아보기",
+    "noImage": "제품 이미지 준비 중",
+    "philosophy": "과학과 깊은 이해가 만나는 지점.",
+    "philosophyBody": "INSIGHTLOGY™는 피부 과학, 포뮬러 기술, 실무 경험과 고객에 대한 이해를 연결합니다. 포뮬러부터 사용 경험, 오랜 시간의 케어 가치까지 세심하게 살핍니다.",
+    "pillars": {
+      "science": "피부 과학",
+      "scienceBody": "피부와 피부가 필요로 하는 케어를 이해하는 데서 시작합니다.",
+      "formula": "포뮬러에 대한 생각",
+      "formulaBody": "개별 성분과 전체 포뮬러의 조합을 함께 고려합니다.",
+      "experience": "일상의 사용 경험",
+      "experienceBody": "실제 사용 경험과 고객에 대한 이해로 세부 사항을 다듬습니다."
+    },
+    "brandTitle": "과학에 집중하고, 사람을 이해합니다.",
+    "brandBody": "Dr. PhynEX는 세심한 포뮬러와 일상적인 피부 요구에 대한 이해로 스킨케어에 접근합니다. 컬렉션에 담긴 생각을 만나보세요.",
+    "contactTitle": "대화에서 시작하는 케어.",
+    "contactBody": "제품 상담, 전문적인 문의 또는 파트너십 제안. 필요한 내용을 알려주세요.",
+    "contactLink": "문의하기",
+    "professional": "파트너십 문의",
+    "formulaLabel": "주요 성분",
+    "packLabel": "용량 및 구성",
+    "priceLabel": "표시 가격",
+    "balmNote": "확인된 판매 용량은 50 g입니다. 이전 패키지 시안에는 40 mL로 표기되어 있으며 두 단위를 환산하지 않았습니다.",
+    "sheetNote": "병풀잎수 베이스. 자료 간 수치 확인이 끝날 때까지 병풀잎수 함량은 표시하지 않습니다.",
+    "products": {
+      "mx-01-forma": {
+        "line": "수분에 집중하는 매일의 균형.",
+        "body": "보습, 피부 장벽 케어와 스킨 컨디셔닝을 지향하는 포뮬러.",
+        "point1": "Sodium DNA 1%",
+        "point2": "Panthenol 1%",
+        "point3": "스킨 컨디셔닝"
+      },
+      "mx-02-luma": {
+        "line": "더 맑고 균일해 보이는 피부를 향해.",
+        "body": "밝고 균일한 피부 톤과 피부 장벽 케어를 지향합니다.",
+        "point1": "Niacinamide 2%",
+        "point2": "17종 아미노산",
+        "point3": "피부 장벽 케어"
+      },
+      "rx-matrix-balm": {
+        "line": "편안한 경험, 세심한 포뮬러.",
+        "body": "Panthenol, Sodium DNA, Niacinamide를 담은 스킨케어 밤.",
+        "point1": "Panthenol 5%",
+        "point2": "Sodium DNA 2%",
+        "point3": "Niacinamide 2%"
+      },
+      "rx-matrix-sheet": {
+        "line": "나를 위한 케어, 생각을 담은 포뮬러.",
+        "body": "병풀잎수 베이스에 Sodium DNA, Allantoin, Beta-Glucan을 담은 시트 포뮬러.",
+        "point1": "Sodium DNA 0.05%",
+        "point2": "Allantoin + Beta-Glucan",
+        "point3": "25 mL × 5매"
+      }
+    },
+    "collectionLabel": "컬렉션",
+    "series": "시리즈",
+    "baseline": "한국 스킨케어 — 포뮬러에 대한 관점",
+    "seriesLabel": "{family} 시리즈"
+  },
+  "homeSlider": {
+    "carousel": "Dr.PhynEX 주요 소개",
+    "controls": "슬라이드 조작",
+    "chooseSlide": "슬라이드 선택",
+    "pause": "자동 재생 정지",
+    "play": "자동 재생 시작",
+    "slideLabel": "{index} / {total}: {name}",
+    "dotLabel": "{index}번 슬라이드: {name}",
+    "brandHeadline": "피부를 이해하는 과학적 통찰, 정교한 포뮬러의 시작",
+    "brandCta": "브랜드 철학 보기",
+    "productCta": "{name} 자세히 보기"
+  },
+  "footer": {
+    "products": "Products",
+    "about": "About",
+    "rights": "All rights reserved."
   }
 }

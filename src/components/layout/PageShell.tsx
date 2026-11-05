@@ -9,6 +9,7 @@ import { locales, type Locale } from '@/i18n/locales'
 import { trackingConfig } from '@/lib/analytics/config'
 import { getPreviewUser } from '@/lib/preview'
 import { localizedPath } from '@/lib/seo'
+import { productBriefs } from '@/lib/product-brief'
 
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileMenu } from './MobileMenu'
@@ -43,10 +44,25 @@ type Props = {
 function Logo({ className }: { className: string }) {
   // Web copy of the original artwork: identical paths, viewBox trimmed to the artwork (1178×330)
   // so it renders larger at the same height. Light backgrounds only (DESIGN.md §2).
-  return <img src="/brand/drphynex-logo-web.svg" alt="" width={1178} height={330} className={className} />
+  return (
+    <img
+      src="/brand/drphynex-logo-web.svg"
+      alt=""
+      width={1178}
+      height={330}
+      className={className}
+    />
+  )
 }
 
-export async function PageShell({ locale, path, available = locales, bleed = false, search = '', children }: Props) {
+export async function PageShell({
+  locale,
+  path,
+  available = locales,
+  bleed = false,
+  search = '',
+  children,
+}: Props) {
   const [t, preview] = await Promise.all([getTranslations(), getPreviewUser()])
   const href = (p: string) => localizedPath(locale, p)
   // Off by default (env flag + IDs); never in staff preview. The admin has no PageShell.
@@ -58,7 +74,28 @@ export async function PageShell({ locale, path, available = locales, bleed = fal
     href: href(p),
     current: path === p || path.startsWith(`${p}/`),
   }))
-  const switcher = <LanguageSwitcher locale={locale} path={path} search={search} available={available} />
+  const headerItems = [
+    ...productBriefs.map((p) => ({
+      key: p.slug,
+      label: p.name,
+      href: href('/products/' + p.slug),
+      current: path === '/products/' + p.slug,
+    })),
+    ...items.filter((i) => i.key === 'brand' || i.key === 'contact'),
+  ]
+  const switcher = (variant: 'inline' | 'list') => (
+    <LanguageSwitcher
+      locale={locale}
+      path={path}
+      search={search}
+      available={available}
+      variant={variant}
+    />
+  )
+  const productLinks = headerItems.slice(0, productBriefs.length)
+  // Agreed footer scope: Brand and Contact only (plus the products and policy links).
+  const aboutKeys = ['brand', 'contact']
+  const aboutLinks = aboutKeys.flatMap((k) => items.filter((i) => i.key === k))
 
   return (
     <>
@@ -73,73 +110,99 @@ export async function PageShell({ locale, path, available = locales, bleed = fal
         <div role="note" className="bg-navy text-sm text-white">
           <div className="container-page on-dark flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2">
             <p>{t('preview.banner')}</p>
-            <a href={`/preview/exit?path=${encodeURIComponent(href(path))}`} className="underline underline-offset-4">
+            <a
+              href={`/preview/exit?path=${encodeURIComponent(href(path))}`}
+              className="underline underline-offset-4"
+            >
               {t('preview.exit')}
             </a>
           </div>
         </div>
       ) : null}
 
-      <header className="relative border-b border-line bg-surface">
-        <div className="container-page flex min-h-16 items-center justify-between gap-6 lg:min-h-20">
-          <Link href={href('')} className="shrink-0 py-2" aria-label={t('common.logoAlt')}>
-            <Logo className="h-10 w-auto lg:h-12" />
+      <header className="brand-header">
+        <div className="container-page brand-masthead">
+          <Link href={href('')} className="brand-logo" aria-label={t('common.logoAlt')}>
+            <Logo className="w-full h-auto" />
           </Link>
-
-          <nav aria-label={t('common.mainNav')} className="hidden lg:block">
-            <ul className="flex items-center gap-1 xl:gap-2">
-              {items.map((item) => (
-                <li key={item.key}>
-                  <Link
-                    href={item.href}
-                    aria-current={item.current ? 'page' : undefined}
-                    className="relative inline-flex min-h-11 items-center px-2 text-sm text-ink-muted transition-colors hover:text-navy aria-[current=page]:text-navy after:absolute after:inset-x-2 after:bottom-1.5 after:h-px after:origin-left after:scale-x-0 after:bg-navy after:transition-transform hover:after:scale-x-100 aria-[current=page]:after:scale-x-100"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <div className="flex items-center gap-1">
-            <div className="hidden lg:block">{switcher}</div>
+          <div className="brand-tools">
+            <div className="brand-lang-desktop">{switcher('inline')}</div>
+            <span className="brand-lang-tag" aria-hidden="true">
+              {locale.toUpperCase()}
+            </span>
             <MobileMenu
-              items={items}
+              items={headerItems}
               menuLabel={t('nav.menu')}
               closeLabel={t('nav.close')}
               navLabel={t('common.mainNav')}
-              footer={switcher}
+              footer={switcher('list')}
             />
           </div>
         </div>
+        <nav aria-label={t('common.mainNav')} className="brand-desktop-nav">
+          <ul className="container-page">
+            {headerItems.map((item) => (
+              <li key={item.key}>
+                <Link href={item.href} aria-current={item.current ? 'page' : undefined}>
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </header>
 
-      <main id="main" tabIndex={-1} className={`flex-1 focus:outline-none ${bleed ? '' : 'container-page py-10 lg:py-16'}`}>
+      <main
+        id="main"
+        tabIndex={-1}
+        className={`flex-1 focus:outline-none ${bleed ? '' : 'container-page py-10 lg:py-16'}`}
+      >
         {children}
       </main>
 
-      <footer className="border-t border-navy bg-surface">
-        <div className="container-page grid gap-8 py-10 md:grid-cols-[auto_1fr] md:gap-16 lg:py-14">
-          <Link href={href('')} aria-label={t('common.logoAlt')} className="self-start">
-            <Logo className="h-12 w-auto lg:h-14" />
-          </Link>
-          <nav aria-label={t('common.footerNav')} className="grid gap-6 md:grid-cols-[auto_auto] md:justify-self-end md:gap-16">
-            <ul className="grid grid-cols-2 items-start gap-x-6 text-sm sm:grid-cols-3 md:grid-cols-2">
-              {items.map((item) => (
-                <li key={item.key}>
-                  <Link href={item.href} className="inline-block py-2.5 leading-snug text-ink-muted hover:text-navy">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <ul className="flex flex-wrap gap-x-6 border-t border-line pt-4 text-sm md:grid md:content-start md:border-t-0 md:pt-0">
+      <footer className="site-footer on-dark">
+        <div className="container-page">
+          <div className="site-footer-grid">
+            <div>
+              <p className="site-footer-brand" lang="en">
+                Dr.PhynEX
+              </p>
+              <p className="site-footer-sub" lang="en">
+                BIOSCIENCE DERMATOLOGY
+              </p>
+              <p className="site-footer-tagline" lang="en">
+                Science-Driven. Insight-Led. Formula-Focused.
+              </p>
+            </div>
+            <nav aria-label={t('footer.products')}>
+              <h2 className="site-footer-heading">{t('footer.products')}</h2>
+              <ul className="site-footer-list">
+                {productLinks.map((item) => (
+                  <li key={item.key}>
+                    <Link href={item.href}>{item.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <nav aria-label={t('footer.about')}>
+              <h2 className="site-footer-heading">{t('footer.about')}</h2>
+              <ul className="site-footer-list">
+                {aboutLinks.map((item) => (
+                  <li key={item.key}>
+                    <Link href={item.href}>{item.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+          <div className="site-footer-bottom">
+            <p>
+              © 2026 <span lang="en">Dr.PhynEX</span>. {t('footer.rights')}
+            </p>
+            <ul aria-label={t('common.footerNav')} className="site-footer-legal">
               {legalNav.map(([key, p]) => (
                 <li key={key}>
-                  <Link href={href(p)} className="inline-flex min-h-10 items-center text-ink-muted hover:text-navy">
-                    {t(`nav.${key}`)}
-                  </Link>
+                  <Link href={href(p)}>{t(`nav.${key}`)}</Link>
                 </li>
               ))}
               {trackingOn ? (
@@ -148,7 +211,7 @@ export async function PageShell({ locale, path, available = locales, bleed = fal
                 </li>
               ) : null}
             </ul>
-          </nav>
+          </div>
         </div>
       </footer>
 

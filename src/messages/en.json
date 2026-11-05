@@ -217,5 +217,87 @@
     "ingredientDescription": "ingredient description with source",
     "legalBody": "policy text reviewed by the legal team",
     "articles": "Journal articles"
+  },
+  "redesign": {
+    "heroTitle": "A considered approach to skin.",
+    "heroBody": "Korean skincare, shaped by scientific understanding and the details of everyday care.",
+    "explore": "Explore the collection",
+    "brandLink": "Our approach",
+    "collection": "Four formulas. One considered approach.",
+    "collectionBody": "From focused conditioning to daily comfort. Discover the MX and RX collection.",
+    "detail": "Discover the formula",
+    "noImage": "Product photography to follow",
+    "philosophy": "Where science meets understanding.",
+    "philosophyBody": "INSIGHTLOGY™ brings together skin science, formulation technology, practical experience and an understanding of the people who use our products. A thoughtful approach to the formula, the experience and care over time.",
+    "pillars": {
+      "science": "Skin science",
+      "scienceBody": "Start with an understanding of skin and its needs.",
+      "formula": "Formula thinking",
+      "formulaBody": "Consider ingredients together, with attention to the complete formula.",
+      "experience": "Everyday experience",
+      "experienceBody": "Let practical use and customer understanding inform the details."
+    },
+    "brandTitle": "Science in focus. People in mind.",
+    "brandBody": "Dr. PhynEX approaches skincare through thoughtful formulations and an understanding of everyday skin needs. Meet the thinking behind our collection.",
+    "contactTitle": "A conversation starts here.",
+    "contactBody": "Questions about your routine, professional enquiries or a potential partnership. Let us know how we can help.",
+    "contactLink": "Get in touch",
+    "professional": "Professional partnerships",
+    "formulaLabel": "Formula focus",
+    "packLabel": "Pack size",
+    "priceLabel": "List price",
+    "balmNote": "Confirmed pack size: 50 g. Earlier packaging artwork shows 40 mL; the two units have not been converted.",
+    "sheetNote": "Centella Asiatica Leaf Water base. Its percentage is not displayed pending confirmation of the source documents.",
+    "products": {
+      "mx-01-forma": {
+        "line": "Focused moisture. Everyday balance.",
+        "body": "A formula oriented towards hydration, skin-barrier care and skin conditioning.",
+        "point1": "Sodium DNA 1%",
+        "point2": "Panthenol 1%",
+        "point3": "Skin conditioning"
+      },
+      "mx-02-luma": {
+        "line": "A brighter-looking, more even complexion.",
+        "body": "Care oriented towards a brighter-looking complexion, even tone and barrier support.",
+        "point1": "Niacinamide 2%",
+        "point2": "17 amino acids",
+        "point3": "Barrier support"
+      },
+      "rx-matrix-balm": {
+        "line": "Comfort, with a formula in focus.",
+        "body": "A skincare balm with Panthenol, Sodium DNA and Niacinamide.",
+        "point1": "Panthenol 5%",
+        "point2": "Sodium DNA 2%",
+        "point3": "Niacinamide 2%"
+      },
+      "rx-matrix-sheet": {
+        "line": "A moment of care. A considered formula.",
+        "body": "A sheet formula with a Centella Asiatica Leaf Water base, Sodium DNA, Allantoin and Beta-Glucan.",
+        "point1": "Sodium DNA 0.05%",
+        "point2": "Allantoin + Beta-Glucan",
+        "point3": "25 mL × 5 sheets"
+      }
+    },
+    "collectionLabel": "COLLECTION",
+    "series": "SERIES",
+    "baseline": "KOREAN SKINCARE — A FORMULA PERSPECTIVE",
+    "seriesLabel": "{family} SERIES"
+  },
+  "homeSlider": {
+    "carousel": "Dr.PhynEX highlights",
+    "controls": "Slider controls",
+    "chooseSlide": "Choose slide",
+    "pause": "Pause slideshow",
+    "play": "Play slideshow",
+    "slideLabel": "{index} of {total}: {name}",
+    "dotLabel": "Slide {index}: {name}",
+    "brandHeadline": "Scientific insight into skin, the beginning of sophisticated formulas",
+    "brandCta": "Explore brand philosophy",
+    "productCta": "Discover {name}"
+  },
+  "footer": {
+    "products": "Products",
+    "about": "About",
+    "rights": "All rights reserved."
   }
 }

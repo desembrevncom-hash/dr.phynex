@@ -5,8 +5,8 @@ export type Locale = (typeof locales)[number]
 /** Source language of all content (CMS default locale). */
 export const contentDefaultLocale: Locale = 'ko'
 
-/** Locale used when the browser language does not match (routing fallback). */
-export const routingDefaultLocale: Locale = 'en'
+/** First-visit default, independent of browser language. */
+export const routingDefaultLocale: Locale = 'ko'
 
 export const localeLabels: Record<Locale, string> = {
   ko: '한국어',

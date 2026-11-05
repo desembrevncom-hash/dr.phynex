@@ -217,5 +217,87 @@
     "ingredientDescription": "mô tả thành phần có nguồn",
     "legalBody": "văn bản chính sách đã được pháp lý duyệt",
     "articles": "bài viết Journal"
+  },
+  "redesign": {
+    "heroTitle": "Thấu hiểu làn da. Chăm sóc có cơ sở.",
+    "heroBody": "Mỹ phẩm Hàn Quốc, kết hợp hiểu biết khoa học và sự tinh tế trong từng trải nghiệm chăm sóc.",
+    "explore": "Khám phá sản phẩm",
+    "brandLink": "Triết lý thương hiệu",
+    "collection": "Bốn công thức. Một cách tiếp cận.",
+    "collectionBody": "Từ chăm sóc chuyên biệt đến sự dễ chịu mỗi ngày. Khám phá bộ sản phẩm MX và RX.",
+    "detail": "Khám phá công thức",
+    "noImage": "Hình sản phẩm đang được hoàn thiện",
+    "philosophy": "Khi khoa học gặp sự thấu hiểu.",
+    "philosophyBody": "INSIGHTLOGY™ kết hợp khoa học làn da, công nghệ công thức, kinh nghiệm thực tiễn và sự thấu hiểu người sử dụng. Chú trọng từng công thức, trải nghiệm chăm sóc và giá trị lâu dài.",
+    "pillars": {
+      "science": "Khoa học làn da",
+      "scienceBody": "Bắt đầu từ việc hiểu làn da và nhu cầu chăm sóc.",
+      "formula": "Tư duy công thức",
+      "formulaBody": "Cân nhắc sự kết hợp của các thành phần trong tổng thể công thức.",
+      "experience": "Trải nghiệm thực tế",
+      "experienceBody": "Để kinh nghiệm sử dụng và thấu hiểu khách hàng định hướng từng chi tiết."
+    },
+    "brandTitle": "Tập trung khoa học. Thấu hiểu con người.",
+    "brandBody": "Dr. PhynEX tiếp cận chăm sóc da bằng sự chú trọng công thức và hiểu biết về nhu cầu mỗi ngày. Khám phá tư duy phía sau bộ sản phẩm.",
+    "contactTitle": "Bắt đầu từ một cuộc trò chuyện.",
+    "contactBody": "Tư vấn sản phẩm, yêu cầu chuyên môn hay cơ hội hợp tác. Hãy cho chúng tôi biết bạn cần gì.",
+    "contactLink": "Liên hệ với chúng tôi",
+    "professional": "Hợp tác chuyên nghiệp",
+    "formulaLabel": "Thành phần nổi bật",
+    "packLabel": "Quy cách",
+    "priceLabel": "Giá niêm yết",
+    "balmNote": "Quy cách đã xác nhận: 50 g. Artwork bao bì cũ ghi 40 mL; không thực hiện quy đổi giữa hai đơn vị.",
+    "sheetNote": "Nền Centella Asiatica Leaf Water. Chưa hiển thị tỷ lệ rau má trong khi chờ thống nhất tài liệu.",
+    "products": {
+      "mx-01-forma": {
+        "line": "Dưỡng ẩm có trọng tâm. Cân bằng mỗi ngày.",
+        "body": "Công thức định hướng dưỡng ẩm, chăm sóc hàng rào da và skin conditioning.",
+        "point1": "Sodium DNA 1%",
+        "point2": "Panthenol 1%",
+        "point3": "Chăm sóc làn da"
+      },
+      "mx-02-luma": {
+        "line": "Hướng đến làn da sáng và đều màu.",
+        "body": "Chăm sóc theo định hướng sáng da, đều màu và hỗ trợ hàng rào bảo vệ da.",
+        "point1": "Niacinamide 2%",
+        "point2": "17 amino acid",
+        "point3": "Hỗ trợ hàng rào da"
+      },
+      "rx-matrix-balm": {
+        "line": "Dịu nhẹ trong trải nghiệm. Chú trọng công thức.",
+        "body": "Balm chăm sóc da với Panthenol, Sodium DNA và Niacinamide.",
+        "point1": "Panthenol 5%",
+        "point2": "Sodium DNA 2%",
+        "point3": "Niacinamide 2%"
+      },
+      "rx-matrix-sheet": {
+        "line": "Một khoảng chăm sóc. Một công thức có chủ đích.",
+        "body": "Mặt nạ với nền nước lá rau má, Sodium DNA, Allantoin và Beta-Glucan.",
+        "point1": "Sodium DNA 0,05%",
+        "point2": "Allantoin + Beta-Glucan",
+        "point3": "25 mL × 5 miếng"
+      }
+    },
+    "collectionLabel": "BỘ SẢN PHẨM",
+    "series": "Dòng",
+    "baseline": "MỸ PHẨM HÀN QUỐC — TƯ DUY CÔNG THỨC",
+    "seriesLabel": "Dòng {family}"
+  },
+  "homeSlider": {
+    "carousel": "Giới thiệu nổi bật Dr.PhynEX",
+    "controls": "Điều khiển trình chiếu",
+    "chooseSlide": "Chọn slide",
+    "pause": "Tạm dừng trình chiếu",
+    "play": "Phát trình chiếu",
+    "slideLabel": "{index} / {total}: {name}",
+    "dotLabel": "Slide {index}: {name}",
+    "brandHeadline": "Thấu hiểu làn da bằng khoa học, khởi đầu từ công thức chuẩn xác",
+    "brandCta": "Khám phá triết lý thương hiệu",
+    "productCta": "Tìm hiểu {name}"
+  },
+  "footer": {
+    "products": "Sản phẩm",
+    "about": "Về chúng tôi",
+    "rights": "Bảo lưu mọi quyền."
   }
 }

@@ -12,7 +12,7 @@ export const localizedPath = (locale: Locale, path: string) => `/${locale}${path
 
 /**
  * Canonical + hreflang for the locales where this page is actually available.
- * x-default points at /en when English is available.
+ * x-default points at the Korean entry when that locale is available.
  */
 export function alternatesFor(locale: Locale, path: string, available: readonly Locale[] = locales): Metadata['alternates'] {
   const languages: Record<string, string> = {}
