@@ -319,6 +319,7 @@ function setup(
               createrole: false,
               replication: false,
               bypassrls: false,
+              risky_roles: '',
             },
           ],
         }

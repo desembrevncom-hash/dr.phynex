@@ -222,7 +222,7 @@ export type DbClient = {
 export const LOCK_KEY = [0x44725068, 0x6d696772] as const
 export async function checkIdentity(c: DbClient, t: Target): Promise<number> {
   const { rows } = await c.query(
-    `SELECT current_database() AS db, current_user AS usr, r.rolsuper AS super, r.rolcreatedb AS createdb, r.rolcreaterole AS createrole, r.rolreplication AS replication, r.rolbypassrls AS bypassrls, shobj_description(d.oid, 'pg_database') AS marker, pg_backend_pid() AS pid FROM pg_database d JOIN pg_roles r ON r.rolname=current_user WHERE d.datname=current_database()`,
+    `SELECT current_database() AS db, current_user AS usr, r.rolsuper AS super, r.rolcreatedb AS createdb, r.rolcreaterole AS createrole, r.rolreplication AS replication, r.rolbypassrls AS bypassrls, shobj_description(d.oid, 'pg_database') AS marker, pg_backend_pid() AS pid, (SELECT coalesce(string_agg(x.rolname, ',' ORDER BY x.rolname), '') FROM pg_roles x WHERE x.oid <> r.oid AND (pg_has_role(r.oid, x.oid, 'MEMBER') OR pg_has_role(r.oid, x.oid, 'USAGE') OR pg_has_role(r.oid, x.oid, 'SET')) AND (x.rolsuper OR x.rolcreatedb OR x.rolcreaterole OR x.rolreplication OR x.rolbypassrls OR (left(x.rolname, 3) = 'pg_' AND x.rolname <> 'pg_database_owner'))) AS risky_roles FROM pg_database d JOIN pg_roles r ON r.rolname=current_user WHERE d.datname=current_database()`,
   )
   const r = rows[0]
   if (
@@ -236,6 +236,10 @@ export async function checkIdentity(c: DbClient, t: Target): Promise<number> {
       EXIT.IDENTITY,
       'Live database/role/marker is not approved or role is privileged',
     )
+  // Not only current_user: any role reachable by direct or indirect membership, inheritance or
+  // SET ROLE that is privileged (or a built-in pg_* role) makes the migrator unacceptable.
+  if (typeof r.risky_roles !== 'string' || r.risky_roles !== '')
+    throw new GuardError(EXIT.IDENTITY, 'Migration role can reach a privileged role')
   for (const [key, expected] of Object.entries(t.settings)) {
     const s = await c.query('SELECT current_setting($1,true) AS value', [key])
     if (s.rows[0]?.value !== expected)

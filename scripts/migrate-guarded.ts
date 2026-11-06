@@ -8,7 +8,8 @@ import { runGuardedMigration, sha256OfStream, type Target } from './lib/migratio
 import { buildPlan } from './lib/migration-plan'
 import { connectPg } from './lib/pg-client'
 import { listArchive } from './lib/archive-tool'
-import { parseRunState } from './lib/migration-state'
+import { parseRunState, stateIdentity } from './lib/migration-state'
+import { StateStoreError, isAnchorId, readStateText, writeStateText } from './lib/state-store'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const env = { ...process.env }
@@ -37,6 +38,22 @@ const statePath = (t: Target) => {
     throw new Error('Persistent state must be outside source checkout')
   return p
 }
+/** The expected anchor ID is trusted configuration (the target catalog), never read from the state volume. */
+const expectedAnchorId = (t: Target) => {
+  const id = (t as Target & { anchorId?: unknown }).anchorId
+  if (!isAnchorId(id)) throw new StateStoreError('ANCHOR_ID_UNCONFIGURED')
+  return id
+}
+/** Only fixed cause codes are printed; the core reports a refusal generically. */
+const report = (e: unknown) => {
+  if (e instanceof StateStoreError) console.error('[migration] state-store refusal: ' + e.code)
+}
+const PLAN_CAUSES = [
+  'Missing approved migration set',
+  'Migration discovery differs from approval',
+  'Migration fingerprint mismatch',
+  'Duplicate migration basename',
+]
 try {
   const code = await runGuardedMigration({
     env,
@@ -84,27 +101,38 @@ try {
         if (!st.isFile() || st.isSymbolicLink()) throw new Error('Migration must be regular file')
         sources[name] = await readFile(p, 'utf8')
       }
-      return buildPlan(
-        files,
-        sources,
-        await readFile(path.join(root, 'deploy/migrations.approved.json'), 'utf8'),
-      )
+      try {
+        return buildPlan(
+          files,
+          sources,
+          await readFile(path.join(root, 'deploy/migrations.approved.json'), 'utf8'),
+        )
+      } catch (e) {
+        if (e instanceof Error && PLAN_CAUSES.includes(e.message))
+          console.error('[migration] plan refusal: ' + e.message)
+        throw e
+      }
     },
     async readState(t) {
       try {
-        return parseRunState(await readFile(statePath(t), 'utf8'), t)
+        const text = await readStateText(statePath(t), stateIdentity(t), expectedAnchorId(t))
+        return text === null ? null : parseRunState(text, t)
       } catch (e) {
-        if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null
+        report(e)
         throw e
       }
     },
     async writeState(t, s) {
-      const h = await open(statePath(t), 'w', 0o600)
       try {
-        await h.writeFile(JSON.stringify(s) + '\n')
-        await h.sync()
-      } finally {
-        await h.close()
+        await writeStateText(
+          statePath(t),
+          stateIdentity(t),
+          expectedAnchorId(t),
+          JSON.stringify(s) + '\n',
+        )
+      } catch (e) {
+        report(e)
+        throw e
       }
     },
   })
