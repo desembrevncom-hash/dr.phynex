@@ -214,16 +214,20 @@ it('preserves a released binary when an editor attempts in-place replacement', a
 })
 
 it('preserves approved global EN when KO is published over a pending EN revision', async () => {
-  await payload.updateGlobal({
-    slug: 'home-page',
-    locale: 'en',
-    data: { headline: 'Approved global EN', translationStatus: 'approved', _status: 'published' },
-  })
-  await payload.updateGlobal({
-    slug: 'home-page',
-    locale: 'ko',
-    data: { headline: 'Approved global KO', translationStatus: 'approved', _status: 'published' },
-  })
+  // Same workflow as an editor: save content, approve in a separate save, then publish.
+  for (const [locale, headline] of [
+    ['en', 'Approved global EN'],
+    ['ko', 'Approved global KO'],
+  ] as const) {
+    await payload.updateGlobal({ slug: 'home-page', locale, draft: true, data: { headline } })
+    await payload.updateGlobal({
+      slug: 'home-page',
+      locale,
+      draft: true,
+      data: { translationStatus: 'approved' },
+    })
+    await payload.updateGlobal({ slug: 'home-page', locale, data: { _status: 'published' } })
+  }
   await payload.updateGlobal({
     slug: 'home-page',
     locale: 'en',

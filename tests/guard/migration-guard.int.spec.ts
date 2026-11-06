@@ -6,6 +6,7 @@ import { spawnSync, fork } from 'node:child_process'
 import pg from 'pg'
 import { beforeAll, beforeEach, afterAll, describe, it, expect } from 'vitest'
 import { buildPlan, type MigrationPlan } from '../../scripts/lib/migration-plan'
+import { testAllowlist } from '../helpers/migration-allowlist'
 import {
   runGuardedMigration,
   checkDirectUrl,
@@ -260,7 +261,7 @@ describe.skipIf(!url || !container)(
       const plan = buildPlan(
         files,
         sources,
-        readFileSync('deploy/migrations.approved.json', 'utf8'),
+        testAllowlist(),
       )
       s.d.loadPlan = async () => plan
       saveEvidence('i1-plan.json', {

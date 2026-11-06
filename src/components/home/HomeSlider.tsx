@@ -8,14 +8,23 @@ import { autoplayReducer, initialAutoplayState, isAutoplaying } from './autoplay
 export type HomeSlide = {
   key: string
   theme: 'brand' | 'forma' | 'luma' | 'balm' | 'sheet'
-  /** Latin display name, e.g. "MX-01 FORMA" or "INSIGHTLOGY™". */
+  /** Latin display name, e.g. "MX-01 FORMA" or "INSIGHTLOGY™", or a CMS title. */
   title: ReactNode
+  /** Language of the title; built-in display names are English, CMS titles use the page locale. */
+  titleLang?: string
   /** Accessible name used in slide/dot labels. */
   name: string
   headline: string
   description: ReactNode
   cta: { label: string; href: string }
+  /** Right-hand visual of the split layout (ignored when `background` is set). */
   visual: ReactNode
+  /** Full-frame banner image behind the copy. */
+  background?: ReactNode
+  /** Copy panel tone on a full-frame image. */
+  tone?: 'dark' | 'light'
+  /** The full-frame image already shows the copy: keep it for screen readers, show only the CTA. */
+  copyHidden?: boolean
 }
 
 type Labels = {
@@ -88,7 +97,7 @@ export function HomeSlider({ slides, labels }: { slides: HomeSlide[]; labels: La
 
   return (
     <section
-      className="home-slider"
+      className={`home-slider${slides[current]?.background != null ? ' is-full-active' : ''}`}
       aria-roledescription="carousel"
       aria-label={labels.carousel}
       onKeyDown={onKeyDown}
@@ -115,6 +124,8 @@ export function HomeSlider({ slides, labels }: { slides: HomeSlide[]; labels: La
         {slides.map((slide, i) => {
           const active = i === current
           const Heading = i === 0 ? 'h1' : 'h2'
+          const full = slide.background != null
+          const copy = slide.copyHidden ? ' sr-only' : ''
           return (
             <div
               key={slide.key}
@@ -124,16 +135,23 @@ export function HomeSlider({ slides, labels }: { slides: HomeSlide[]; labels: La
               aria-label={labels.slideLabels[i]}
               aria-hidden={!active}
               inert={!active}
-              className={`home-slide home-slide-${slide.theme}${active ? ' is-active' : ''}`}
+              className={`home-slide home-slide-${slide.theme}${active ? ' is-active' : ''}${
+                full ? ` home-slide-full home-tone-${slide.tone ?? 'dark'}` : ''
+              }${slide.copyHidden ? ' is-copy-hidden' : ''}`}
             >
+              {full ? <div className="home-slide-bg">{slide.background}</div> : null}
               <div className="container-page home-slide-inner">
                 <div className="home-slide-grid">
                   <div className="home-slide-text">
-                    <Heading className="home-slide-title" lang="en">
+                    <Heading className={'home-slide-title' + copy} lang={slide.titleLang ?? 'en'}>
                       {slide.title}
                     </Heading>
-                    <p className="home-slide-headline">{slide.headline}</p>
-                    <div className="home-slide-desc">{slide.description}</div>
+                    {slide.headline ? (
+                      <p className={'home-slide-headline' + copy}>{slide.headline}</p>
+                    ) : null}
+                    {slide.description ? (
+                      <div className={'home-slide-desc' + copy}>{slide.description}</div>
+                    ) : null}
                     <Link href={slide.cta.href} className="home-slide-cta">
                       <span>{slide.cta.label}</span>
                       <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -145,7 +163,7 @@ export function HomeSlider({ slides, labels }: { slides: HomeSlide[]; labels: La
                       </svg>
                     </Link>
                   </div>
-                  <div className="home-slide-visual">{slide.visual}</div>
+                  {full ? null : <div className="home-slide-visual">{slide.visual}</div>}
                 </div>
               </div>
             </div>

@@ -1,9 +1,11 @@
 // Pure in-memory tests of the SQL lexer/allowlist. No database is involved; these show what the
 // validator accepts or rejects, not how PostgreSQL would execute the SQL.
+import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import { buildPlan, literalMigration } from '../../scripts/lib/migration-plan'
+import { testAllowlist } from '../helpers/migration-allowlist'
 import { SqlRejected, tokenizeSql, validateMigrationSql } from '../../scripts/lib/sql-guard'
 
 const OK = 'CREATE TABLE "a" ("id" serial PRIMARY KEY NOT NULL)'
@@ -273,7 +275,36 @@ describe('fail closed on anything the lexer cannot read with certainty', () => {
   })
 })
 
-describe('the five approved migrations', () => {
+describe('home banners migration is proposed, not approved', () => {
+  const dir = 'src/migrations'
+  const files = readdirSync(dir)
+  const sources = Object.fromEntries(
+    files
+      .filter((f) => /\.(ts|js)$/.test(f) && f !== 'index.ts')
+      .map((f) => [f, readFileSync(`${dir}/${f}`, 'utf8')]),
+  )
+  const name = '20261105_085002_home_banners.ts'
+  it('is absent from the executor allowlist, so the real executor refuses the migration set', () => {
+    const approved = readFileSync('deploy/migrations.approved.json', 'utf8')
+    expect(approved).not.toContain('home_banners')
+    expect(() => buildPlan(files, sources, approved)).toThrow('Migration discovery differs')
+  })
+  it('the proposal records the exact bytes and cannot be read as an allowlist by itself', () => {
+    const proposed = JSON.parse(readFileSync('deploy/migrations.proposed.json', 'utf8'))
+    expect(proposed.files).toHaveLength(1)
+    expect(proposed.files[0].filename).toBe(name)
+    expect(
+      createHash('sha256')
+        .update(readFileSync(`${dir}/${name}`))
+        .digest('hex'),
+    ).toBe(proposed.files[0].sha256)
+    expect(() =>
+      buildPlan(files, sources, readFileSync('deploy/migrations.proposed.json', 'utf8')),
+    ).toThrow()
+  })
+})
+
+describe('the approved migrations plus the proposed one (test-only allowlist)', () => {
   it('pass unchanged with their pinned fingerprints', () => {
     const dir = 'src/migrations'
     const files = readdirSync(dir)
@@ -282,16 +313,17 @@ describe('the five approved migrations', () => {
         .filter((f) => /\.(ts|js)$/.test(f) && f !== 'index.ts')
         .map((f) => [f, readFileSync(`${dir}/${f}`, 'utf8')]),
     )
-    const plan = buildPlan(files, sources, readFileSync('deploy/migrations.approved.json', 'utf8'))
+    const plan = buildPlan(files, sources, testAllowlist())
     expect(plan.steps.map((s) => s.name)).toEqual([
       '20261028_101829_initial',
       '20261029_021524_media_release_and_line_appearance',
       '20261029_035541_product_editorial_note',
       '20261029_080000_form_rate_limits',
       '20261029_100000_storage_fields',
+      '20261105_085002_home_banners',
     ])
     expect(plan.steps.flatMap((s) => s.statements.map(validateMigrationSql))).toEqual([
-      665, 11, 2, 2, 4,
+      665, 11, 2, 2, 4, 282,
     ])
   })
 })

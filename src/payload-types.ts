@@ -1208,6 +1208,276 @@ export interface HomePage {
     title?: string | null;
     description?: string | null;
   };
+  banners: {
+    brand: {
+      /**
+       * A: a separate product image placed beside the text. B: a finished campaign image filling the frame; text and button stay HTML. C: no image needed.
+       */
+      visualType: 'packshot' | 'fullBleed' | 'brandOptics';
+      /**
+       * Pick from Media or upload. Visitors only see images marked "Cleared for publication"; otherwise they see the default visual, never a substitute image.
+       */
+      desktopImage?: (number | null) | Media;
+      /**
+       * Used below 768px. Leave empty to use the desktop image.
+       */
+      mobileImage?: (number | null) | Media;
+      /**
+       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
+       */
+      localeDesktopImage?: (number | null) | Media;
+      localeMobileImage?: (number | null) | Media;
+      /**
+       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
+       */
+      imageAlt?: string | null;
+      imagePosition?: ('focal' | 'center' | 'top' | 'bottom' | 'left' | 'right') | null;
+      /**
+       * Avoids showing the text twice. Title and tagline stay in the HTML for screen readers. Do not draw a CTA button into the image: the button is always HTML.
+       */
+      textDisplay?: ('overlay' | 'imageHasText') | null;
+      /**
+       * Leave empty to keep the site default content for this slot.
+       */
+      title?: string | null;
+      tagline?: string | null;
+      ctaLabel?: string | null;
+      /**
+       * The link automatically keeps the current language (/ko, /en, /vi).
+       */
+      ctaTarget:
+        | 'brand'
+        | 'contact'
+        | 'partnership'
+        | 'products'
+        | 'mx-01-forma'
+        | 'mx-02-luma'
+        | 'rx-matrix-balm'
+        | 'rx-matrix-sheet';
+      theme: 'brand' | 'forma' | 'luma' | 'balm' | 'sheet';
+      /**
+       * Text always sits on a translucent panel so it keeps contrast on any image.
+       */
+      textTone?: ('dark' | 'light') | null;
+    };
+    forma: {
+      /**
+       * A: a separate product image placed beside the text. B: a finished campaign image filling the frame; text and button stay HTML. C: no image needed.
+       */
+      visualType: 'packshot' | 'fullBleed' | 'brandOptics';
+      /**
+       * Pick from Media or upload. Visitors only see images marked "Cleared for publication"; otherwise they see the default visual, never a substitute image.
+       */
+      desktopImage?: (number | null) | Media;
+      /**
+       * Used below 768px. Leave empty to use the desktop image.
+       */
+      mobileImage?: (number | null) | Media;
+      /**
+       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
+       */
+      localeDesktopImage?: (number | null) | Media;
+      localeMobileImage?: (number | null) | Media;
+      /**
+       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
+       */
+      imageAlt?: string | null;
+      imagePosition?: ('focal' | 'center' | 'top' | 'bottom' | 'left' | 'right') | null;
+      /**
+       * Avoids showing the text twice. Title and tagline stay in the HTML for screen readers. Do not draw a CTA button into the image: the button is always HTML.
+       */
+      textDisplay?: ('overlay' | 'imageHasText') | null;
+      /**
+       * Leave empty to keep the site default content for this slot.
+       */
+      title?: string | null;
+      tagline?: string | null;
+      ctaLabel?: string | null;
+      /**
+       * The link automatically keeps the current language (/ko, /en, /vi).
+       */
+      ctaTarget:
+        | 'brand'
+        | 'contact'
+        | 'partnership'
+        | 'products'
+        | 'mx-01-forma'
+        | 'mx-02-luma'
+        | 'rx-matrix-balm'
+        | 'rx-matrix-sheet';
+      theme: 'brand' | 'forma' | 'luma' | 'balm' | 'sheet';
+      /**
+       * Text always sits on a translucent panel so it keeps contrast on any image.
+       */
+      textTone?: ('dark' | 'light') | null;
+    };
+    luma: {
+      /**
+       * A: a separate product image placed beside the text. B: a finished campaign image filling the frame; text and button stay HTML. C: no image needed.
+       */
+      visualType: 'packshot' | 'fullBleed' | 'brandOptics';
+      /**
+       * Pick from Media or upload. Visitors only see images marked "Cleared for publication"; otherwise they see the default visual, never a substitute image.
+       */
+      desktopImage?: (number | null) | Media;
+      /**
+       * Used below 768px. Leave empty to use the desktop image.
+       */
+      mobileImage?: (number | null) | Media;
+      /**
+       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
+       */
+      localeDesktopImage?: (number | null) | Media;
+      localeMobileImage?: (number | null) | Media;
+      /**
+       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
+       */
+      imageAlt?: string | null;
+      imagePosition?: ('focal' | 'center' | 'top' | 'bottom' | 'left' | 'right') | null;
+      /**
+       * Avoids showing the text twice. Title and tagline stay in the HTML for screen readers. Do not draw a CTA button into the image: the button is always HTML.
+       */
+      textDisplay?: ('overlay' | 'imageHasText') | null;
+      /**
+       * Leave empty to keep the site default content for this slot.
+       */
+      title?: string | null;
+      tagline?: string | null;
+      ctaLabel?: string | null;
+      /**
+       * The link automatically keeps the current language (/ko, /en, /vi).
+       */
+      ctaTarget:
+        | 'brand'
+        | 'contact'
+        | 'partnership'
+        | 'products'
+        | 'mx-01-forma'
+        | 'mx-02-luma'
+        | 'rx-matrix-balm'
+        | 'rx-matrix-sheet';
+      theme: 'brand' | 'forma' | 'luma' | 'balm' | 'sheet';
+      /**
+       * Text always sits on a translucent panel so it keeps contrast on any image.
+       */
+      textTone?: ('dark' | 'light') | null;
+    };
+    balm: {
+      /**
+       * A: a separate product image placed beside the text. B: a finished campaign image filling the frame; text and button stay HTML. C: no image needed.
+       */
+      visualType: 'packshot' | 'fullBleed' | 'brandOptics';
+      /**
+       * Pick from Media or upload. Visitors only see images marked "Cleared for publication"; otherwise they see the default visual, never a substitute image.
+       */
+      desktopImage?: (number | null) | Media;
+      /**
+       * Used below 768px. Leave empty to use the desktop image.
+       */
+      mobileImage?: (number | null) | Media;
+      /**
+       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
+       */
+      localeDesktopImage?: (number | null) | Media;
+      localeMobileImage?: (number | null) | Media;
+      /**
+       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
+       */
+      imageAlt?: string | null;
+      imagePosition?: ('focal' | 'center' | 'top' | 'bottom' | 'left' | 'right') | null;
+      /**
+       * Avoids showing the text twice. Title and tagline stay in the HTML for screen readers. Do not draw a CTA button into the image: the button is always HTML.
+       */
+      textDisplay?: ('overlay' | 'imageHasText') | null;
+      /**
+       * Leave empty to keep the site default content for this slot.
+       */
+      title?: string | null;
+      tagline?: string | null;
+      ctaLabel?: string | null;
+      /**
+       * The link automatically keeps the current language (/ko, /en, /vi).
+       */
+      ctaTarget:
+        | 'brand'
+        | 'contact'
+        | 'partnership'
+        | 'products'
+        | 'mx-01-forma'
+        | 'mx-02-luma'
+        | 'rx-matrix-balm'
+        | 'rx-matrix-sheet';
+      theme: 'brand' | 'forma' | 'luma' | 'balm' | 'sheet';
+      /**
+       * Text always sits on a translucent panel so it keeps contrast on any image.
+       */
+      textTone?: ('dark' | 'light') | null;
+    };
+    sheet: {
+      /**
+       * A: a separate product image placed beside the text. B: a finished campaign image filling the frame; text and button stay HTML. C: no image needed.
+       */
+      visualType: 'packshot' | 'fullBleed' | 'brandOptics';
+      /**
+       * Pick from Media or upload. Visitors only see images marked "Cleared for publication"; otherwise they see the default visual, never a substitute image.
+       */
+      desktopImage?: (number | null) | Media;
+      /**
+       * Used below 768px. Leave empty to use the desktop image.
+       */
+      mobileImage?: (number | null) | Media;
+      /**
+       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
+       */
+      localeDesktopImage?: (number | null) | Media;
+      localeMobileImage?: (number | null) | Media;
+      /**
+       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
+       */
+      imageAlt?: string | null;
+      imagePosition?: ('focal' | 'center' | 'top' | 'bottom' | 'left' | 'right') | null;
+      /**
+       * Avoids showing the text twice. Title and tagline stay in the HTML for screen readers. Do not draw a CTA button into the image: the button is always HTML.
+       */
+      textDisplay?: ('overlay' | 'imageHasText') | null;
+      /**
+       * Leave empty to keep the site default content for this slot.
+       */
+      title?: string | null;
+      tagline?: string | null;
+      ctaLabel?: string | null;
+      /**
+       * The link automatically keeps the current language (/ko, /en, /vi).
+       */
+      ctaTarget:
+        | 'brand'
+        | 'contact'
+        | 'partnership'
+        | 'products'
+        | 'mx-01-forma'
+        | 'mx-02-luma'
+        | 'rx-matrix-balm'
+        | 'rx-matrix-sheet';
+      theme: 'brand' | 'forma' | 'luma' | 'balm' | 'sheet';
+      /**
+       * Text always sits on a translucent panel so it keeps contrast on any image.
+       */
+      textTone?: ('dark' | 'light') | null;
+    };
+  };
+  bannerApprovals?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Images, visual type, CTA target and colours are shared by every language. After each change every language must be approved again (draft save with Approved, no other edits) before publishing.
+   */
+  bannerApprovalStatus?: string | null;
   /**
    * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
    */
@@ -1336,6 +1606,102 @@ export interface HomePageSelect<T extends boolean = true> {
         title?: T;
         description?: T;
       };
+  banners?:
+    | T
+    | {
+        brand?:
+          | T
+          | {
+              visualType?: T;
+              desktopImage?: T;
+              mobileImage?: T;
+              localeDesktopImage?: T;
+              localeMobileImage?: T;
+              imageAlt?: T;
+              imagePosition?: T;
+              textDisplay?: T;
+              title?: T;
+              tagline?: T;
+              ctaLabel?: T;
+              ctaTarget?: T;
+              theme?: T;
+              textTone?: T;
+            };
+        forma?:
+          | T
+          | {
+              visualType?: T;
+              desktopImage?: T;
+              mobileImage?: T;
+              localeDesktopImage?: T;
+              localeMobileImage?: T;
+              imageAlt?: T;
+              imagePosition?: T;
+              textDisplay?: T;
+              title?: T;
+              tagline?: T;
+              ctaLabel?: T;
+              ctaTarget?: T;
+              theme?: T;
+              textTone?: T;
+            };
+        luma?:
+          | T
+          | {
+              visualType?: T;
+              desktopImage?: T;
+              mobileImage?: T;
+              localeDesktopImage?: T;
+              localeMobileImage?: T;
+              imageAlt?: T;
+              imagePosition?: T;
+              textDisplay?: T;
+              title?: T;
+              tagline?: T;
+              ctaLabel?: T;
+              ctaTarget?: T;
+              theme?: T;
+              textTone?: T;
+            };
+        balm?:
+          | T
+          | {
+              visualType?: T;
+              desktopImage?: T;
+              mobileImage?: T;
+              localeDesktopImage?: T;
+              localeMobileImage?: T;
+              imageAlt?: T;
+              imagePosition?: T;
+              textDisplay?: T;
+              title?: T;
+              tagline?: T;
+              ctaLabel?: T;
+              ctaTarget?: T;
+              theme?: T;
+              textTone?: T;
+            };
+        sheet?:
+          | T
+          | {
+              visualType?: T;
+              desktopImage?: T;
+              mobileImage?: T;
+              localeDesktopImage?: T;
+              localeMobileImage?: T;
+              imageAlt?: T;
+              imagePosition?: T;
+              textDisplay?: T;
+              title?: T;
+              tagline?: T;
+              ctaLabel?: T;
+              ctaTarget?: T;
+              theme?: T;
+              textTone?: T;
+            };
+      };
+  bannerApprovals?: T;
+  bannerApprovalStatus?: T;
   translationStatus?: T;
   _status?: T;
   updatedAt?: T;

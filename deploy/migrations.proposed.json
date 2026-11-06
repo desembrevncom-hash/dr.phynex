@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "status": "PROPOSED ONLY. Not an allowlist: scripts/migrate-guarded.ts reads deploy/migrations.approved.json only, so this migration cannot be executed until a reviewer moves this entry into the approved file.",
+  "files": [
+    {
+      "filename": "20261105_085002_home_banners.ts",
+      "sha256": "92e833a903647237ffa943f6ab23603db7dd72dafa3eac75a33234f685b215b7"
+    }
+  ]
+}

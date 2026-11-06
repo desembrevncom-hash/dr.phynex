@@ -3,6 +3,7 @@ import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
 import { describe, it, expect } from 'vitest'
 import { buildPlan, literalMigration } from '../../scripts/lib/migration-plan'
+import { testAllowlist } from '../helpers/migration-allowlist'
 import { testOnlyPlan, DEFERRED_SQL } from '../guard/fixture-support'
 
 /** Execute actual transpiled up() against a mock tag/db, never import the real adapter. */
@@ -47,7 +48,7 @@ describe('migration byte policy and actual up() SQL (mock only)', () => {
           .filter((f) => f.endsWith('.ts') && f !== 'index.ts')
           .map((f) => [f, readFileSync('src/migrations/' + f, 'utf8')]),
       )
-    const plan = buildPlan(files, sources, readFileSync('deploy/migrations.approved.json', 'utf8'))
+    const plan = buildPlan(files, sources, testAllowlist())
     expect(readFileSync('.gitattributes', 'utf8')).toContain('src/migrations/*.ts text eol=lf')
     for (const step of plan.steps) {
       const source = sources[step.filename]
@@ -58,7 +59,7 @@ describe('migration byte policy and actual up() SQL (mock only)', () => {
         buildPlan(
           files,
           { ...sources, [step.filename]: source.replace(/\n/g, '\r\n') },
-          readFileSync('deploy/migrations.approved.json', 'utf8'),
+          testAllowlist(),
         ),
       ).toThrow()
     }

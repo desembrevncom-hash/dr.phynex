@@ -398,16 +398,12 @@ it('blocks translator transformations on unreleased Media even with Local overri
   expect(saved.publicRelease).toBe(false)
 })
 it('editor global draft resets approval for SEO and requires separate reapproval', async () => {
-  await payload.updateGlobal({
-    slug: 'home-page',
-    locale: 'en',
-    data: {
-      headline: 'Public headline',
-      seo: { title: 'Public metadata' },
-      translationStatus: 'approved',
-      _status: 'published',
-    },
-  })
+  // Same workflow as an editor: save content, approve in a separate save, then publish.
+  const seed = (data: Record<string, unknown>, draft: boolean) =>
+    payload.updateGlobal({ slug: 'home-page', locale: 'en', ...(draft ? { draft } : {}), data })
+  await seed({ headline: 'Public headline', seo: { title: 'Public metadata' } }, true)
+  await seed({ translationStatus: 'approved' }, true)
+  await seed({ _status: 'published' }, false)
   expect(
     (
       await rest(
