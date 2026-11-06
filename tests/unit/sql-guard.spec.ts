@@ -275,7 +275,7 @@ describe('fail closed on anything the lexer cannot read with certainty', () => {
   })
 })
 
-describe('home banners migration is proposed, not approved', () => {
+describe('home banners migration is approved', () => {
   const dir = 'src/migrations'
   const files = readdirSync(dir)
   const sources = Object.fromEntries(
@@ -284,27 +284,29 @@ describe('home banners migration is proposed, not approved', () => {
       .map((f) => [f, readFileSync(`${dir}/${f}`, 'utf8')]),
   )
   const name = '20261105_085002_home_banners.ts'
-  it('is absent from the executor allowlist, so the real executor refuses the migration set', () => {
+  it('the executor allowlist has exactly one entry per migration file, banner included', () => {
     const approved = readFileSync('deploy/migrations.approved.json', 'utf8')
-    expect(approved).not.toContain('home_banners')
-    expect(() => buildPlan(files, sources, approved)).toThrow('Migration discovery differs')
+    const names = JSON.parse(approved).files.map((f: { filename: string }) => f.filename)
+    expect(names).toHaveLength(6)
+    expect(names).toContain(name)
+    const plan = buildPlan(files, sources, approved)
+    expect(plan.steps).toHaveLength(6)
+    expect(plan.steps.at(-1)?.filename).toBe(name)
   })
-  it('the proposal records the exact bytes and cannot be read as an allowlist by itself', () => {
-    const proposed = JSON.parse(readFileSync('deploy/migrations.proposed.json', 'utf8'))
-    expect(proposed.files).toHaveLength(1)
-    expect(proposed.files[0].filename).toBe(name)
+  it('the approved fingerprint is the exact byte hash of the migration and nothing is left proposed', () => {
+    const entry = JSON.parse(readFileSync('deploy/migrations.approved.json', 'utf8')).files.find(
+      (f: { filename: string }) => f.filename === name,
+    )
     expect(
       createHash('sha256')
         .update(readFileSync(`${dir}/${name}`))
         .digest('hex'),
-    ).toBe(proposed.files[0].sha256)
-    expect(() =>
-      buildPlan(files, sources, readFileSync('deploy/migrations.proposed.json', 'utf8')),
-    ).toThrow()
+    ).toBe(entry.sha256)
+    expect(JSON.parse(readFileSync('deploy/migrations.proposed.json', 'utf8')).files).toEqual([])
   })
 })
 
-describe('the approved migrations plus the proposed one (test-only allowlist)', () => {
+describe('the approved migrations (via the test allowlist helper)', () => {
   it('pass unchanged with their pinned fingerprints', () => {
     const dir = 'src/migrations'
     const files = readdirSync(dir)
