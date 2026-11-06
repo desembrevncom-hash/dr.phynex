@@ -8,7 +8,7 @@ import { Arrow } from '@/components/ui/Arrow'
 import { PageIntro } from '@/components/ui/PageIntro'
 import { Pending } from '@/components/ui/Pending'
 import { findPublicBySlug, findPublicGlobal } from '@/lib/content'
-import { interestSlug } from '@/lib/contact-interest'
+import { interestSearch, interestSlug } from '@/lib/contact-interest'
 import { getPreviewUser } from '@/lib/preview'
 import { firstParam, pageLocale, type LocaleParams, type SearchParams } from '@/lib/locale'
 import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
@@ -40,7 +40,9 @@ export default async function ContactPage({ params, searchParams }: { params: Lo
   ] as const
 
   return (
-    <PageShell locale={locale} path="/contact" bleed>
+    // Switching language keeps the product only once it resolved here; the other language's page
+    // checks it again with its own access rules (and drops it if not approved there).
+    <PageShell locale={locale} path="/contact" search={product?.slug ? interestSearch(product.slug) : ''} bleed>
       <PageIntro title={t('contact.title')} lead={<p>{t('contact.lead')}</p>} />
 
       <div className="container-page grid gap-10 py-10 md:grid-cols-12 md:gap-8 lg:py-14">

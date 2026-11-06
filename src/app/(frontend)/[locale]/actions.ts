@@ -43,8 +43,10 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
     // as the page); anything else is dropped, never echoed. No schema field: it leads the message.
     const product = values.product && locale ? await findPublicBySlug('products', values.product, locale, 0) : null
     const message = product ? interestMessage(product.name, product.slug ?? values.product, values.message) : values.message
-    // Same email + same message within the window = a repeated click or resubmit: report success
-    // again without storing a second copy or counting a second lead.
+    // Every stored field identical within the window = a repeated click or resubmit: report
+    // success again without storing a second copy or counting a second lead. Any difference
+    // (e.g. a corrected phone number or name) is a new request and is stored.
+    const optional = (value: string | undefined) => (value ? { equals: value } : { exists: false })
     const repeat = await payload.find({
       collection: 'contact-submissions',
       overrideAccess: true,
@@ -54,6 +56,9 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
       where: {
         and: [
           { email: { equals: values.email } },
+          { name: { equals: values.name } },
+          { phone: optional(values.phone) },
+          { topic: optional(values.topic) },
           { message: { equals: message } },
           { createdAt: { greater_than: duplicateWindowStart().toISOString() } },
         ],

@@ -98,10 +98,25 @@ describe('contact from a product page', () => {
     expect(a.leadId).toBeTruthy()
     expect(b).toEqual({ status: 'success' })
     expect(await stored()).toHaveLength(1)
-    // A different message, or another email, is a new request.
+    // Any difference is a new request: message, email, a corrected phone or name, another topic.
     await submitContact({ status: 'idle' }, form({ product: 'int-public', message: 'Câu hỏi khác' }))
     await submitContact({ status: 'idle' }, form({ product: 'int-public', email: 'other@example.invalid' }))
-    expect(await stored()).toHaveLength(3)
+    await submitContact({ status: 'idle' }, form({ product: 'int-public', phone: '0900000000' }))
+    await submitContact({ status: 'idle' }, form({ product: 'int-public', name: 'Khách thử (sửa tên)' }))
+    await submitContact({ status: 'idle' }, form({ product: 'int-public', topic: 'other' }))
+    expect(await stored()).toHaveLength(6)
+    // Repeating the corrected one (phone filled in) is again only stored once.
+    expect(await submitContact({ status: 'idle' }, form({ product: 'int-public', phone: '0900000000' }))).toEqual({ status: 'success' })
+    expect(await stored()).toHaveLength(6)
+  })
+
+  it('a submission without phone/topic is matched as a repeat too (empty optional fields)', async () => {
+    await submitContact({ status: 'idle' }, form({ topic: '' }))
+    expect(await submitContact({ status: 'idle' }, form({ topic: '' }))).toEqual({ status: 'success' })
+    const docs = await stored()
+    expect(docs).toHaveLength(1)
+    expect(docs[0].phone ?? null).toBeNull()
+    expect(docs[0].topic ?? null).toBeNull()
   })
 
   it('missing required fields: nothing stored, errors per field', async () => {

@@ -13,7 +13,7 @@ vi.mock('@/lib/content', () => ({ getPayloadClient: async () => ({ create, find 
 vi.mock('@/lib/rate-limit', () => ({ clientIp: () => '203.0.113.9', rateLimitKey: () => 'k', sharedRateLimited: async () => false }))
 
 import { submitContact } from '@/app/(frontend)/[locale]/actions'
-import { contactHrefFor, duplicateWindowStart, interestMessage, interestSlug } from '@/lib/contact-interest'
+import { contactHrefFor, duplicateWindowStart, interestMessage, interestSearch, interestSlug } from '@/lib/contact-interest'
 
 // Database replaced by mocks: nothing is written anywhere.
 const form = (extra: Record<string, string> = {}) => {
@@ -69,8 +69,15 @@ describe('repeated submissions', () => {
     expect(r).toEqual({ status: 'success' })
     expect(create).not.toHaveBeenCalled()
     const where = JSON.stringify((find.mock.calls[0] as unknown as [{ where: unknown }])[0].where)
-    expect(where).toContain('t@example.invalid')
+    expect(where).toContain('"email":{"equals":"t@example.invalid"}')
+    expect(where).toContain('"name":{"equals":"Test"}')
+    expect(where).toContain('"phone":{"exists":false}')
+    expect(where).toContain('"topic":{"exists":false}')
     expect(where).toContain('"message":{"equals":"Hello"}')
+  })
+
+  it('the language switcher link keeps the product', () => {
+    expect(interestSearch('mx-01-forma')).toBe('?product=mx-01-forma')
   })
 
   it('the window starts ten minutes back', () => {
