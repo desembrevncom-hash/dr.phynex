@@ -1488,7 +1488,7 @@ export interface HomePage {
     | boolean
     | null;
   /**
-   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu bản nháp, xem lại, rồi bấm nút "Duyệt cấu hình cho [ngôn ngữ]" ở panel phía trên để duyệt; sau đó mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   _status?: ('draft' | 'published') | null;

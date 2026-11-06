@@ -67,6 +67,27 @@ for (const g of globals) {
   walk(g.fields, g.slug)
 }
 
+describe('Home Page approval help text', () => {
+  const statusHelp = (fields: any[]) => fields.find((f) => f.name === 'translationStatus')?.admin?.description // eslint-disable-line @typescript-eslint/no-explicit-any
+  it('points to the panel button on the Home Page, not to changing the dropdown', () => {
+    const home = statusHelp(globals.find((g) => g.slug === 'home-page')!.fields)
+    expect(home).toContain('Duyệt cấu hình cho [ngôn ngữ]')
+    expect(home).not.toMatch(/đặt "Đã duyệt"/)
+  })
+  it('keeps the generic text (with the dropdown) where there is no panel', () => {
+    expect(statusHelp(globals.find((g) => g.slug === 'brand-page')!.fields)).toMatch(/đặt "Đã duyệt"/)
+    expect(statusHelp(collections.find((c) => c.slug === 'products')!.fields)).toMatch(/đặt "Đã duyệt"/)
+  })
+  it('changes no option, access or hook of the status field', () => {
+    const home = globals.find((g) => g.slug === 'home-page')!.fields.find((f) => 'name' in f && f.name === 'translationStatus') as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    const brand = globals.find((g) => g.slug === 'brand-page')!.fields.find((f) => 'name' in f && f.name === 'translationStatus') as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(home.options).toEqual(brand.options)
+    expect(home.hooks).toBe(brand.hooks)
+    expect(home.access).toBe(brand.access)
+    expect(home.required).toBe(brand.required)
+  })
+})
+
 describe('Admin text is Vietnamese', () => {
   it('help text does not quote an English UI label that no longer exists', () => {
     expect(texts.filter((t) => /Cleared for publication/.test(t))).toEqual([])

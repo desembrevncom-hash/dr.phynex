@@ -43,7 +43,12 @@ export default buildConfig({
     components: { views: { dashboard: { Component: '/components/admin/Dashboard#Dashboard' } } },
   },
   // The Admin UI is Vietnamese only (no language selector). Content locales below are unrelated and stay ko/en/vi.
-  i18n: { supportedLanguages: { vi }, fallbackLanguage: 'vi' },
+  i18n: {
+    supportedLanguages: { vi },
+    fallbackLanguage: 'vi',
+    // The locale switcher chooses the CONTENT language (ko/en/vi), not the interface language.
+    translations: { vi: { general: { locale: 'Ngôn ngữ nội dung' } } },
+  },
   localization: {
     locales: locales.map((code) => ({ code, label: localeLabels[code] })),
     defaultLocale: contentDefaultLocale,

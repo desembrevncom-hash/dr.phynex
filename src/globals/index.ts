@@ -1,3 +1,5 @@
+import type { Field, GlobalConfig } from 'payload'
+
 import { editorsField } from '@/access/roles'
 import { contentGlobal } from '@/collections/factory'
 import { seoField } from '@/fields/common'
@@ -37,7 +39,23 @@ export const SiteSettings = contentGlobal({
   ],
 })
 
-export const HomePage = contentGlobal({
+/**
+ * Home Page only: the help text under "Trạng thái duyệt" points to the approval button of the panel
+ * (the server refuses an approval made by changing this dropdown). Presentation only; the field,
+ * its options, access and hooks are the shared translationStatusField unchanged.
+ */
+const homeStatusHelp =
+  'Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu bản nháp, xem lại, rồi bấm nút "Duyệt cấu hình cho [ngôn ngữ]" ở panel phía trên để duyệt; sau đó mới xuất bản ngôn ngữ này.'
+const withHomeStatusHelp = (global: GlobalConfig): GlobalConfig => ({
+  ...global,
+  fields: global.fields.map((field) =>
+    'name' in field && field.name === 'translationStatus'
+      ? ({ ...field, admin: { ...field.admin, description: homeStatusHelp } } as Field)
+      : field,
+  ),
+})
+
+export const HomePage = withHomeStatusHelp(contentGlobal({
   slug: 'home-page',
   admin: {
     group: 'Pages',
@@ -73,7 +91,7 @@ export const HomePage = contentGlobal({
     approvalStateField,
   ],
   hooks: { beforeOperation: [lockAndCaptureHomePage], beforeChange: [guardHomeBannerApproval] },
-})
+}))
 
 export const BrandPage = contentGlobal({
   slug: 'brand-page',
