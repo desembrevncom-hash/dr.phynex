@@ -145,7 +145,9 @@
     "hours": "운영 시간",
     "lead": "제품 또는 판매처에 관한 문의.",
     "otherWays": "다른 문의 방법",
-    "detailsTitle": "연락처"
+    "detailsTitle": "연락처",
+    "productLabel": "관심 제품",
+    "productRemove": "제품 선택 해제"
   },
   "partnership": {
     "title": "파트너십",

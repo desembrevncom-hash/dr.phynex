@@ -7,9 +7,10 @@ import { PageShell } from '@/components/layout/PageShell'
 import { Arrow } from '@/components/ui/Arrow'
 import { PageIntro } from '@/components/ui/PageIntro'
 import { Pending } from '@/components/ui/Pending'
-import { findPublicGlobal } from '@/lib/content'
+import { findPublicBySlug, findPublicGlobal } from '@/lib/content'
+import { interestSlug } from '@/lib/contact-interest'
 import { getPreviewUser } from '@/lib/preview'
-import { pageLocale, type LocaleParams } from '@/lib/locale'
+import { firstParam, pageLocale, type LocaleParams, type SearchParams } from '@/lib/locale'
 import { alternatesFor, localizedPath, withSocial } from '@/lib/seo'
 
 export async function generateMetadata({ params }: { params: LocaleParams }): Promise<Metadata> {
@@ -18,12 +19,15 @@ export async function generateMetadata({ params }: { params: LocaleParams }): Pr
   return withSocial({ title: t('title'), alternates: alternatesFor(locale, '/contact') }, locale)
 }
 
-export default async function ContactPage({ params }: { params: LocaleParams }) {
+export default async function ContactPage({ params, searchParams }: { params: LocaleParams; searchParams: SearchParams }) {
   const locale = await pageLocale(params)
-  const [t, settings, preview] = await Promise.all([
+  const slug = interestSlug(firstParam((await searchParams).product))
+  const [t, settings, preview, product] = await Promise.all([
     getTranslations(),
     findPublicGlobal('site-settings', locale),
     getPreviewUser(),
+    // Same access rules as the product page: guests only resolve published + approved products.
+    slug ? findPublicBySlug('products', slug, locale, 0) : null,
   ])
   // Contact details come only from Site settings once published + approved; nothing is hard-coded.
   const contact = settings?.contact
@@ -44,7 +48,12 @@ export default async function ContactPage({ params }: { params: LocaleParams }) 
           <h2 id="contact-form" className="mb-6 text-xl font-bold text-navy">
             {t('contact.formTitle')}
           </h2>
-          <ContactForm locale={locale} privacyHref={localizedPath(locale, '/privacy')} />
+          <ContactForm
+            locale={locale}
+            privacyHref={localizedPath(locale, '/privacy')}
+            product={product?.slug ? { slug: product.slug, name: product.name } : null}
+            clearProductHref={localizedPath(locale, '/contact')}
+          />
         </section>
 
         <aside className="md:col-span-4 md:row-start-1">

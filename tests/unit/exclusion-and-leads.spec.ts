@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 vi.mock('next/headers', () => ({ headers: async () => new Headers({ 'x-real-ip': '203.0.113.1' }) }))
-const create = vi.fn()
-vi.mock('@/lib/content', () => ({ getPayloadClient: async () => ({ create }) }))
+const { create, find } = vi.hoisted(() => ({ create: vi.fn(), find: vi.fn(async () => ({ docs: [] })) }))
+vi.mock('@/lib/content', () => ({ getPayloadClient: async () => ({ create, find }), findPublicBySlug: async () => null }))
 vi.mock('@/lib/rate-limit', () => ({
   clientIp: () => '203.0.113.1',
   rateLimitKey: () => 'k',

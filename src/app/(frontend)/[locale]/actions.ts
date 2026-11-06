@@ -4,7 +4,8 @@ import { randomUUID } from 'crypto'
 import { headers } from 'next/headers'
 
 import { isLocale } from '@/i18n/locales'
-import { getPayloadClient } from '@/lib/content'
+import { findPublicBySlug, getPayloadClient } from '@/lib/content'
+import { duplicateWindowStart, interestMessage, productSlugPattern } from '@/lib/contact-interest'
 import { isBot, validate, type FormState } from '@/lib/forms'
 import { clientIp, rateLimitKey, sharedRateLimited } from '@/lib/rate-limit'
 
@@ -31,10 +32,34 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
     topic: { max: 20, options: contactTopics },
     message: { required: true, max: 5000 },
   })
+  const locale = localeOf(formData)
+  const productSlug = formData.get('product')
+  if (typeof productSlug === 'string' && productSlugPattern.test(productSlug)) values.product = productSlug
   if (!ok) return { status: 'error', code: 'invalid', errors, values }
   try {
     if (await rateLimited('contact')) return { status: 'error', code: 'rateLimited', values }
     const payload = await getPayloadClient()
+    // The product of interest is kept only if this visitor can actually see it (same access rules
+    // as the page); anything else is dropped, never echoed. No schema field: it leads the message.
+    const product = values.product && locale ? await findPublicBySlug('products', values.product, locale, 0) : null
+    const message = product ? interestMessage(product.name, product.slug ?? values.product, values.message) : values.message
+    // Same email + same message within the window = a repeated click or resubmit: report success
+    // again without storing a second copy or counting a second lead.
+    const repeat = await payload.find({
+      collection: 'contact-submissions',
+      overrideAccess: true,
+      depth: 0,
+      limit: 1,
+      pagination: false,
+      where: {
+        and: [
+          { email: { equals: values.email } },
+          { message: { equals: message } },
+          { createdAt: { greater_than: duplicateWindowStart().toISOString() } },
+        ],
+      },
+    })
+    if (repeat.docs.length > 0) return { status: 'success' }
     // Public API cannot create submissions; this trusted server path writes after validation.
     await payload.create({
       collection: 'contact-submissions',
@@ -44,9 +69,9 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
         email: values.email,
         phone: values.phone || undefined,
         topic: (values.topic || undefined) as (typeof contactTopics)[number] | undefined,
-        message: values.message,
+        message,
         consent: true,
-        locale: localeOf(formData),
+        locale,
         status: 'new',
       },
     })
