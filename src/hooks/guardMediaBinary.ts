@@ -25,7 +25,7 @@ export const guardMediaBinary: CollectionBeforeOperationHook = async ({ args, op
   if (!req.file && !queryEdit && !focalFields && !identitySubmitted) return args
   // Payload's bulk update has no single original file identity. Never transform in bulk.
   if (typeof options.id !== 'string' && typeof options.id !== 'number') {
-    throw new APIError('Binary media edits require an individual record.', 403, null, true)
+    throw new APIError('Việc sửa tệp media phải thực hiện trên từng bản ghi riêng lẻ.', 403, null, true)
   }
   const original = await req.payload.findByID({
     collection: 'media',
@@ -44,11 +44,11 @@ export const guardMediaBinary: CollectionBeforeOperationHook = async ({ args, op
   )
   if (!req.file && !queryEdit && !focalChanged && !identityChanged) return args
   if (!isEditorUser(req.user)) {
-    throw new APIError('Only editors may replace or transform media binaries.', 403, null, true)
+    throw new APIError('Chỉ biên tập viên mới được thay hoặc biến đổi tệp media.', 403, null, true)
   }
   if (original.publicRelease) {
     throw new APIError(
-      'Create a new unreleased Media record, then approve and replace its relationship. Released binaries cannot be overwritten.',
+      'Hãy tạo bản ghi Media mới chưa công khai, duyệt rồi thay liên kết. Không thể ghi đè tệp đã công khai.',
       409,
       null,
       true,

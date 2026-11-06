@@ -1,4 +1,5 @@
 import { assertDisposableDatabase } from '../helpers/database'
+import { homeApprovalContext } from '../helpers/home-approval'
 import { randomBytes } from 'crypto'
 import { getPayload, type Migration, type Payload } from 'payload'
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
@@ -46,10 +47,21 @@ const saveDraft = (locale: 'ko' | 'en' | 'vi', data: Data, user: User = editor) 
     user,
     overrideAccess: false,
   })
+/** The Admin button: approve exactly the stored draft that is on screen (sends the server-computed basis). */
+const approve = async (locale: 'ko' | 'en' | 'vi') =>
+  payload.updateGlobal({
+    slug: 'home-page',
+    locale,
+    draft: true,
+    data: { translationStatus: 'approved' },
+    context: await homeApprovalContext(payload, locale),
+    user: editor,
+    overrideAccess: false,
+  })
 /** The project workflow: content draft → separate approval save → publish this locale. */
 const publish = async (locale: 'ko' | 'en' | 'vi', data: Data) => {
   await saveDraft(locale, data)
-  await saveDraft(locale, { translationStatus: 'approved' })
+  await approve(locale)
   await payload.updateGlobal({
     slug: 'home-page',
     locale,
@@ -157,7 +169,7 @@ describe('Home Page banners: drafts, locales and media access', () => {
     expect((await guestHome('ko')).banners?.forma?.title ?? undefined).toBeUndefined()
     expect((await staffDraft('ko')).banners.forma.title).toBe('KO campaign title')
 
-    await saveDraft('ko', { translationStatus: 'approved' })
+    await approve('ko')
     await payload.updateGlobal({
       slug: 'home-page',
       locale: 'ko',

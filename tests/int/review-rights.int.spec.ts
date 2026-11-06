@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto'
+import { homeApprovalContext } from '../helpers/home-approval'
 import { getPayload, handleEndpoints, type Payload, type Migration } from 'payload'
 import { beforeAll, afterAll, it, expect, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
@@ -200,7 +201,7 @@ it('preserves a released binary when an editor attempts in-place replacement', a
       data: { alt: 'new' },
       file: { data: png, name: 'new-editor.png', mimetype: 'image/png', size: png.length },
     }),
-  ).rejects.toThrow(/new unreleased/)
+  ).rejects.toThrow(/chưa công khai/)
   const saved = await payload.findByID({ collection: 'media', id: original.id })
   expect(saved.filename).toBe(original.filename)
   expect(saved.publicRelease).toBe(true)
@@ -251,6 +252,7 @@ it('preserves approved global EN when KO is published over a pending EN revision
     user: editor,
     overrideAccess: false,
     data: { translationStatus: 'approved' },
+    context: await homeApprovalContext(payload, 'ko'),
   })
   await payload.updateGlobal({
     slug: 'home-page',

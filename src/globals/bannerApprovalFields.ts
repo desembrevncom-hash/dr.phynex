@@ -1,6 +1,8 @@
 import type { Field } from 'payload'
 
-import { locales } from '@/i18n/locales'
+import { isStaffUser } from '@/access/roles'
+import { isLocale, locales } from '@/i18n/locales'
+import { readApprovalState } from '@/lib/approval-basis'
 import { readApprovals, sharedRevision } from '@/lib/banner-revision'
 
 const L = (vi: string, ko: string, en: string) => ({ vi, ko, en })
@@ -33,6 +35,8 @@ export const bannerApprovalStatusField: Field = {
     'Shared banner settings approval',
   ),
   admin: {
+    // Superseded on screen by the approval panel (approvalState); still readable through the API.
+    hidden: true,
     position: 'sidebar',
     readOnly: true,
     description: L(
@@ -54,6 +58,33 @@ export const bannerApprovalStatusField: Field = {
               `${l.toUpperCase()}: ${stateLabel[approvals[l] === current ? 'approved' : 'missing'][lang]}`,
           )
           .join(' · ')}`
+      },
+    ],
+  },
+}
+
+/**
+ * Read-only, not stored: the server-computed state the approval panel shows and the `basis` it must
+ * send back to approve (see lib/approval-basis.ts). Only computed for signed-in staff and for one
+ * concrete locale; every other reader (public site, other roles of API) gets nothing.
+ */
+export const approvalStateField: Field = {
+  name: 'approvalState',
+  type: 'json',
+  virtual: true,
+  label: 'Duyệt cấu hình banner',
+  access: { create: () => false, update: () => false },
+  admin: {
+    position: 'sidebar',
+    components: { Field: '/components/admin/ApprovalPanel#ApprovalPanel' },
+  },
+  hooks: {
+    afterRead: [
+      async ({ req, context }) => {
+        if (context?.skipApprovalState || !isStaffUser(req.user) || !isLocale(req.locale)) {
+          return undefined
+        }
+        return readApprovalState(req.payload, req.locale)
       },
     ],
   },

@@ -35,7 +35,7 @@ export const translationStatusField: Field = {
           req.user &&
           !isEditorUser(req.user)
         ) {
-          throw new APIError('Only editors or admins can approve a translation.', 403, null, true)
+          throw new APIError('Chỉ biên tập viên hoặc quản trị viên mới được duyệt bản dịch.', 403, null, true)
         }
         // A translator's draft is a new revision, never the previously approved text.
         if (previousValue === 'approved' && req.user && !isEditorUser(req.user)) return 'in-review'

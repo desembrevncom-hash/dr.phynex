@@ -19,7 +19,7 @@ export const slugField: Field = {
   validate: (value: unknown) =>
     typeof value === 'string' && slugPattern.test(value)
       ? true
-      : 'Use lowercase letters, numbers and single hyphens (e.g. "hydra-cream").',
+      : 'Dùng chữ thường, số và dấu gạch ngang đơn (ví dụ "hydra-cream").',
 }
 
 export const orderField: Field = {

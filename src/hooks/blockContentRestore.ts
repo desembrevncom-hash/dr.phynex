@@ -8,7 +8,7 @@ import {
 export const blockContentRestore: CollectionBeforeOperationHook = ({ args, operation }) => {
   if (operation === 'restoreVersion') {
     throw new APIError(
-      'Restore is disabled: whole-document snapshots cannot safely restore as a draft. Copy reviewed historical text into a new draft, then approve and publish each locale.',
+      'Không cho khôi phục phiên bản: bản chụp toàn bộ tài liệu không thể khôi phục an toàn thành bản nháp. Hãy chép văn bản lịch sử đã xem xét sang bản nháp mới, rồi duyệt và xuất bản từng ngôn ngữ.',
       409,
       null,
       true,

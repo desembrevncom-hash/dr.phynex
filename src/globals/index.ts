@@ -3,9 +3,9 @@ import { contentGlobal } from '@/collections/factory'
 import { seoField } from '@/fields/common'
 import { isLocale } from '@/i18n/locales'
 
-import { guardHomeBannerApproval } from '@/hooks/guardHomeBannerApproval'
+import { guardHomeBannerApproval, lockAndCaptureHomePage } from '@/hooks/guardHomeBannerApproval'
 
-import { bannerApprovalStatusField, bannerApprovalsField } from './bannerApprovalFields'
+import { approvalStateField, bannerApprovalStatusField, bannerApprovalsField } from './bannerApprovalFields'
 import { homeBannersField } from './homeBanners'
 
 const editorOnly = { create: editorsField, update: editorsField }
@@ -62,19 +62,17 @@ export const HomePage = contentGlobal({
         },
         {
           label: { vi: 'Banner trang chủ', ko: '메인 배너', en: 'Homepage banners' },
-          description: {
-            vi: 'Đúng 5 slot theo thứ tự slider. Lưu nháp → xem trước → duyệt (Approved) → xuất bản từng ngôn ngữ. Ảnh và các lựa chọn dùng chung áp dụng cho mọi ngôn ngữ khi xuất bản.',
-            ko: '슬라이더 순서대로 정확히 5개 슬롯. 임시 저장 → 미리보기 → 승인(Approved) → 언어별 게시. 공통 이미지와 설정은 게시 시 모든 언어에 적용됩니다.',
-            en: 'Exactly 5 slots in slider order. Save draft → preview → Approved → publish each language. Shared images and settings apply to every language once published.',
-          },
+          description:
+            'Đúng 5 banner theo thứ tự slider. Quy trình: lưu nháp → xem trước → bấm "Duyệt cấu hình cho [ngôn ngữ]" ở cột bên → xuất bản từng ngôn ngữ. Ảnh và các lựa chọn dùng chung áp dụng cho cả 3 ngôn ngữ khi xuất bản.',
           fields: [homeBannersField],
         },
       ],
     },
     bannerApprovalsField,
     bannerApprovalStatusField,
+    approvalStateField,
   ],
-  hooks: { beforeChange: [guardHomeBannerApproval] },
+  hooks: { beforeOperation: [lockAndCaptureHomePage], beforeChange: [guardHomeBannerApproval] },
 })
 
 export const BrandPage = contentGlobal({

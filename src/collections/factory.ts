@@ -6,8 +6,7 @@ import { editors, publishedAndApproved, staff } from '@/access/roles'
 import { translationStatusField } from '@/fields/translationStatus'
 import { guardGlobalPublishing, guardPublishing } from '@/hooks/guardPublishing'
 
-const restoreNotice =
-  'Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.'
+import { restoreNotice } from '@/config/restore-notice'
 const contentDescription = (description: unknown) =>
   typeof description === 'string' ? description + ' ' + restoreNotice : restoreNotice
 

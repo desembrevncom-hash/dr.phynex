@@ -22,7 +22,7 @@ export const publishOnlyRequestedLocale: CollectionBeforeOperationHook = ({
       options.publishAllLocales === 'true'
     ) {
       throw new APIError(
-        'Choose one valid locale (ko, en or vi); publishing all locales is disabled.',
+        'Hãy chọn đúng một ngôn ngữ hợp lệ (ko, en hoặc vi); không cho xuất bản tất cả ngôn ngữ cùng lúc.',
         400,
         null,
         true,

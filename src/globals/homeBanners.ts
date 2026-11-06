@@ -22,29 +22,29 @@ const editorOnly: { create: FieldAccess; update: FieldAccess } = {
 export const bannerSlots = [
   {
     name: 'brand',
-    label: '1 · Brand (Dr.PhynEX)',
+    label: 'Banner 1 · Brand (Dr.PhynEX)',
     visual: 'brandOptics',
     theme: 'brand',
     cta: 'brand',
   },
   {
     name: 'forma',
-    label: '2 · MX-01 Forma',
+    label: 'Banner 2 · MX-01 Forma',
     visual: 'packshot',
     theme: 'forma',
     cta: 'mx-01-forma',
   },
-  { name: 'luma', label: '3 · MX-02 Luma', visual: 'packshot', theme: 'luma', cta: 'mx-02-luma' },
+  { name: 'luma', label: 'Banner 3 · MX-02 Luma', visual: 'packshot', theme: 'luma', cta: 'mx-02-luma' },
   {
     name: 'balm',
-    label: '4 · RX Matrix Balm',
+    label: 'Banner 4 · RX Matrix Balm',
     visual: 'packshot',
     theme: 'balm',
     cta: 'rx-matrix-balm',
   },
   {
     name: 'sheet',
-    label: '5 · RX Matrix Sheet',
+    label: 'Banner 5 · RX Matrix Sheet',
     visual: 'packshot',
     theme: 'sheet',
     cta: 'rx-matrix-sheet',
@@ -127,7 +127,7 @@ const slotFields = (slot: (typeof bannerSlots)[number]): Field[] => [
     admin: {
       condition: hasImage,
       description: L(
-        'Chọn từ Media hoặc tải lên. Khách chỉ thấy ảnh đã tick "Cleared for publication"; nếu chưa, khách thấy visual mặc định, không thay bằng ảnh khác.',
+        'Chọn từ Media hoặc tải lên. Khách chỉ thấy ảnh đã tích "Đã duyệt cho phép công khai"; nếu chưa, khách thấy visual mặc định, không thay bằng ảnh khác.',
         'Media에서 선택하거나 업로드하세요. 방문자는 "Cleared for publication" 이미지만 볼 수 있으며, 아니면 기본 비주얼이 표시됩니다.',
         'Pick from Media or upload. Visitors only see images marked "Cleared for publication"; otherwise they see the default visual, never a substitute image.',
       ),
@@ -361,17 +361,88 @@ const slotFields = (slot: (typeof bannerSlots)[number]): Field[] => [
   },
 ]
 
+/**
+ * Section order matters for the database, not only for the screen: Payload names indexes by the
+ * order in which fields are declared, so the relative order of the four upload fields must stay
+ * desktopImage, mobileImage, localeDesktopImage, localeMobileImage (tests/int/storage.int.spec.ts
+ * fails on any schema drift; this release adds no migration). Hence: language text first (no
+ * uploads), then the shared section, then the per-language image overrides.
+ */
+/** Per language: text (edited for the language chosen in the locale switcher). */
+const localeTextNames = ['title', 'tagline', 'ctaLabel', 'imageAlt'] as const
+/** Per language: image overrides, only for full-frame banners. */
+const localeImageNames = ['localeDesktopImage', 'localeMobileImage'] as const
+/** Shared by all languages (editors only). Order follows what an editor decides first. */
+const sharedFieldNames = [
+  'visualType',
+  'desktopImage',
+  'mobileImage',
+  'imagePosition',
+  'textDisplay',
+  'ctaTarget',
+  'theme',
+  'textTone',
+] as const
+
+const byName = (fields: Field[], names: readonly string[]) =>
+  names.map((n) => fields.find((f) => 'name' in f && f.name === n)).filter((f): f is Field => !!f)
+
+/**
+ * UI-only layout: each slot is an accordion row (collapsible) holding the same named group as
+ * before, so stored field names, paths and columns are unchanged (banners.<slot>.<field>). Inside,
+ * fields are grouped by who they apply to: this language only, or all three languages.
+ */
 export const homeBannersField: GroupField = {
   name: 'banners',
   type: 'group',
   label: false,
-  fields: bannerSlots.map(
-    (slot): GroupField => ({
-      name: slot.name,
-      type: 'group',
+  fields: bannerSlots.map((slot, index): Field => {
+    const fields = slotFields(slot)
+    return {
+      type: 'collapsible',
       label: slot.label,
-      admin: { hideGutter: false },
-      fields: slotFields(slot),
-    }),
-  ),
+      admin: {
+        initCollapsed: index > 0,
+        components: { Label: { path: '/components/admin/SlotLabel#SlotLabel', clientProps: { slot: slot.name, title: slot.label } } },
+      },
+      fields: [
+        {
+          name: slot.name,
+          type: 'group',
+          label: false,
+          fields: [
+            {
+              type: 'collapsible',
+              label: 'Nội dung theo ngôn ngữ đang chọn',
+              admin: {
+                description:
+                  'Chỉ áp dụng cho ngôn ngữ đang chọn ở bộ chuyển ngôn ngữ phía trên (Hàn / Anh / Việt). Mỗi ngôn ngữ có bản riêng.',
+              },
+              fields: byName(fields, localeTextNames),
+            },
+            {
+              type: 'collapsible',
+              label: 'Cấu hình dùng chung cho cả 3 ngôn ngữ',
+              admin: {
+                description:
+                  'Chỉ biên tập viên và quản trị viên sửa được. Thay đổi ở đây áp dụng cho cả Hàn, Anh và Việt và yêu cầu duyệt lại mọi ngôn ngữ.',
+              },
+              fields: byName(fields, sharedFieldNames),
+            },
+            {
+              type: 'collapsible',
+              label: 'Ảnh riêng cho ngôn ngữ đang chọn (tuỳ chọn)',
+              admin: {
+                initCollapsed: true,
+                condition: (_data, siblingData) => siblingData?.visualType === 'fullBleed',
+                description:
+                  'Chỉ dùng khi ảnh banner toàn khung có chữ khác nhau theo ngôn ngữ. Mỗi ngôn ngữ có ảnh riêng; bỏ trống để dùng ảnh chung ở trên.',
+              },
+              fields: byName(fields, localeImageNames),
+            },
+          ],
+        },
+      ],
+    }
+  }),
 }

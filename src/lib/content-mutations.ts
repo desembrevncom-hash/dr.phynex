@@ -33,7 +33,7 @@ export function withContentLocaleGuard(payload: Payload): Payload {
           (options.publishAllLocales != null && options.publishAllLocales !== false)
         ) {
           throw new APIError(
-            'Content mutations require one valid locale matching publishSpecificLocale; all locales are disabled.',
+            'Thao tác nội dung cần đúng một ngôn ngữ hợp lệ khớp với publishSpecificLocale; không cho dùng tất cả ngôn ngữ.',
             400,
             null,
             true,

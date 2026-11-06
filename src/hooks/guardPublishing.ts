@@ -55,7 +55,7 @@ function review(
 ) {
   if (data._status === 'published' && user && !isEditorUser(user as never)) {
     throw new APIError(
-      'Only editors or admins can publish. Save as draft instead.',
+      'Chỉ biên tập viên hoặc quản trị viên mới được xuất bản. Hãy lưu bản nháp.',
       403,
       null,
       true,
@@ -69,7 +69,7 @@ function review(
   const changed = hasRevision && localizedChanged(fields, data, original!)
   if (changed && !savingDraft) {
     throw new APIError(
-      'Save content changes as a draft before review and publication.',
+      'Hãy lưu thay đổi nội dung dưới dạng bản nháp trước khi duyệt và xuất bản.',
       409,
       null,
       true,
@@ -85,7 +85,7 @@ function review(
     (approvalIntent === 'in-review' || approvalIntent === 'ai-draft')
   if (data._status === 'published' && (changed || (approval !== 'approved' && !withdrawal))) {
     throw new APIError(
-      'Save the draft and review it before publishing this locale.',
+      'Hãy lưu bản nháp và xem lại trước khi xuất bản ngôn ngữ này.',
       409,
       null,
       true,

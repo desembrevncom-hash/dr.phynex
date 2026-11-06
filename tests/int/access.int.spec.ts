@@ -1,4 +1,5 @@
 import { assertDisposableDatabase } from '../helpers/database'
+import { homeApprovalContext } from '../helpers/home-approval'
 import { randomBytes } from 'crypto'
 import { getPayload, type Migration, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -121,7 +122,7 @@ describe('publishing and translation approval', () => {
         user: editor,
         overrideAccess: false,
       }),
-    ).rejects.toThrow(/sourceDocument|Source|claims|review/i)
+    ).rejects.toThrow(/sourceDocument|Source|claims|review|nguồn|công bố|tuyên bố|xem lại|bản nháp/i)
   })
 
   it('guests never see drafts, even with draft=true', async () => {
@@ -256,7 +257,7 @@ describe('publishing and translation approval', () => {
         user: translator,
         overrideAccess: false,
       }),
-    ).rejects.toThrow(/approve/i)
+    ).rejects.toThrow(/duyệt/i)
 
     await expect(
       payload.update({
@@ -267,7 +268,7 @@ describe('publishing and translation approval', () => {
         user: translator,
         overrideAccess: false,
       }),
-    ).rejects.toThrow(/publish/i)
+    ).rejects.toThrow(/xuất bản/i)
 
     await expect(
       payload.create({
@@ -300,7 +301,7 @@ describe('globals', () => {
       slug: 'home-page',
       locale: 'en',
       draft: true,
-      data: { headline: 'Draft headline', translationStatus: 'approved' },
+      data: { headline: 'Draft headline' },
       user: editor,
       overrideAccess: false,
     })
@@ -320,6 +321,7 @@ describe('globals', () => {
       locale: 'en',
       draft: true,
       data: { translationStatus: 'approved' },
+      context: await homeApprovalContext(payload, 'en'),
       user: editor,
       overrideAccess: false,
     })

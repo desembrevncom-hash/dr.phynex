@@ -1,7 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
-import { en } from '@payloadcms/translations/languages/en'
-import { ko } from '@payloadcms/translations/languages/ko'
 import { vi } from '@payloadcms/translations/languages/vi'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -19,6 +17,7 @@ import { ContactSubmissions, PartnerInquiries } from './collections/Submissions'
 import { JournalTopics, ProductCategories, ProductLines, SkinConcerns } from './collections/Taxonomies'
 import { Users } from './collections/Users'
 import { emailAdapter } from './config/email'
+import { localizeCollection, localizeGlobal } from './config/admin-vi'
 import { assertDeploymentEnv } from './config/deploy-env'
 import { objectStorage } from './config/storage'
 import { BrandPage, HomePage, PartnershipPage, SiteSettings } from './globals'
@@ -41,8 +40,10 @@ export default buildConfig({
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: ' · Dr.PhynEX CMS' },
+    components: { views: { dashboard: { Component: '/components/admin/Dashboard#Dashboard' } } },
   },
-  i18n: { supportedLanguages: { en, ko, vi }, fallbackLanguage: 'en' },
+  // The Admin UI is Vietnamese only (no language selector). Content locales below are unrelated and stay ko/en/vi.
+  i18n: { supportedLanguages: { vi }, fallbackLanguage: 'vi' },
   localization: {
     locales: locales.map((code) => ({ code, label: localeLabels[code] })),
     defaultLocale: contentDefaultLocale,
@@ -67,8 +68,8 @@ export default buildConfig({
     ContactSubmissions,
     PartnerInquiries,
     Users,
-  ],
-  globals: [HomePage, BrandPage, PartnershipPage, SiteSettings],
+  ].map(localizeCollection),
+  globals: [HomePage, BrandPage, PartnershipPage, SiteSettings].map(localizeGlobal),
   // Every page renders its own h1 (title/name); CMS text starts at h2.
   editor: lexicalEditor({
     features: ({ defaultFeatures }) => [

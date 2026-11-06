@@ -1,4 +1,5 @@
 import sharp from 'sharp'
+import { homeApprovalContext } from '../helpers/home-approval'
 import { randomBytes, createHash } from 'node:crypto'
 import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -13,12 +14,12 @@ let payload: Payload
 let editor: User, translator: User
 const tokens: Record<string, string> = {}
 const guest = { locale: 'en' as const, fallbackLocale: false as const, overrideAccess: false }
-async function rest(path: string, data: unknown, role = 'editor', method = 'PATCH') {
+async function rest(path: string, data: unknown, role = 'editor', method = 'PATCH', extra: Record<string, string> = {}) {
   return handleEndpoints({
     config,
     request: new Request('http://localhost:3015/api/' + path, {
       method,
-      headers: { Authorization: 'JWT ' + tokens[role], 'Content-Type': 'application/json' },
+      headers: { Authorization: 'JWT ' + tokens[role], 'Content-Type': 'application/json', ...extra },
       body: JSON.stringify(data),
     }),
   })
@@ -200,7 +201,7 @@ it('rejects all and invalid locale publish after EN draft, preserving public glo
         locale: locale as 'en',
         data: { _status: 'published' },
       }),
-    ).rejects.toThrow(/locale/i)
+    ).rejects.toThrow(/ngôn ngữ/i)
     await expect(
       payload.update({
         collection: 'products',
@@ -208,7 +209,7 @@ it('rejects all and invalid locale publish after EN draft, preserving public glo
         locale: locale as 'en',
         data: { _status: 'published' },
       }),
-    ).rejects.toThrow(/locale/i)
+    ).rejects.toThrow(/ngôn ngữ/i)
   }
   const en = await payload.findGlobal({ slug: 'brand-page', ...guest }),
     ko = await payload.findGlobal({ slug: 'brand-page', ...guest, locale: 'ko' })
@@ -253,7 +254,7 @@ it('editor changes require separate intentional reapproval before publishing', a
       overrideAccess: false,
       data: { _status: 'published' },
     }),
-  ).rejects.toThrow(/review/i)
+  ).rejects.toThrow(/xem lại|duyệt/i)
   expect((await payload.findByID({ collection: 'products', id: p.id, ...guest })).name).toBe(
     'Reviewed',
   )
@@ -305,7 +306,7 @@ it('blocks whole-document restore over REST and Local API including draft=true',
         user: editor,
         overrideAccess: false,
       }),
-    ).rejects.toThrow(/restore/i)
+    ).rejects.toThrow(/khôi phục/i)
     await expect(
       payload.restoreGlobalVersion({
         slug: 'brand-page',
@@ -314,7 +315,7 @@ it('blocks whole-document restore over REST and Local API including draft=true',
         user: editor,
         overrideAccess: false,
       }),
-    ).rejects.toThrow(/restore/i)
+    ).rejects.toThrow(/khôi phục/i)
     expect(
       (
         await rest(
@@ -359,7 +360,7 @@ it('blocks translator transformations on unreleased Media even with Local overri
         overrideAccess,
         data: { focalX: 20, focalY: 30 },
       }),
-    ).rejects.toThrow(/editors/i)
+    ).rejects.toThrow(/biên tập viên/i)
     await expect(
       payload.update({
         collection: 'media',
@@ -369,7 +370,7 @@ it('blocks translator transformations on unreleased Media even with Local overri
         data: {},
         file: { data: png, name: 'blocked.png', mimetype: 'image/png', size: png.length },
       }),
-    ).rejects.toThrow(/editors/i)
+    ).rejects.toThrow(/biên tập viên/i)
   }
   expect(
     (
@@ -430,6 +431,7 @@ it('editor global draft resets approval for SEO and requires separate reapproval
         { translationStatus: 'approved' },
         'editor',
         'POST',
+        { 'x-approval-basis': (await homeApprovalContext(payload, 'en')).approvalBasis },
       )
     ).status,
   ).toBe(200)
@@ -511,7 +513,7 @@ it('rejects implicit live content edits and all-locale publication flags, preser
       user: editor,
       data: { name: 'Implicit replacement' },
     }),
-  ).rejects.toThrow(/draft/i)
+  ).rejects.toThrow(/bản nháp/i)
   expect(
     (
       await rest(
@@ -530,7 +532,7 @@ it('rejects implicit live content edits and all-locale publication flags, preser
       publishAllLocales: true,
       data: { _status: 'published' },
     }),
-  ).rejects.toThrow(/locale/i)
+  ).rejects.toThrow(/ngôn ngữ/i)
   await expect(
     payload.updateGlobal({
       slug: 'brand-page',
@@ -538,7 +540,7 @@ it('rejects implicit live content edits and all-locale publication flags, preser
       publishAllLocales: true,
       data: { _status: 'published' },
     }),
-  ).rejects.toThrow(/locale/i)
+  ).rejects.toThrow(/ngôn ngữ/i)
   expect((await payload.findByID({ collection: 'products', id: p.id, ...guest })).name).toBe(
     'Safe public',
   )
@@ -565,7 +567,7 @@ it('prevents file identity swaps through privileged Local calls carrying a staff
           url: '/api/media/file/replacement-identity.png',
         },
       }),
-    ).rejects.toThrow(/editors|new unreleased/i)
+    ).rejects.toThrow(/biên tập viên|chưa công khai/i)
   }
   const saved = await payload.findByID({ collection: 'media', id: m.id })
   expect(saved.filename).toBe(m.filename)
@@ -767,7 +769,7 @@ it('validates original Local mutation locale before publishSpecificLocale can re
         overrideAccess: false,
         data: { _status: 'published', translationStatus: 'approved' },
       }),
-    ).rejects.toThrow(/locale/i)
+    ).rejects.toThrow(/ngôn ngữ/i)
     await expect(
       guarded.update({
         collection: 'products',
@@ -776,7 +778,7 @@ it('validates original Local mutation locale before publishSpecificLocale can re
         publishSpecificLocale,
         data: { _status: 'published' },
       }),
-    ).rejects.toThrow(/locale/i)
+    ).rejects.toThrow(/ngôn ngữ/i)
     await expect(
       guarded.create({
         collection: 'products',
@@ -789,6 +791,6 @@ it('validates original Local mutation locale before publishSpecificLocale can re
         },
         ...{ publishSpecificLocale },
       } as Parameters<typeof guarded.create>[0]),
-    ).rejects.toThrow(/locale/i)
+    ).rejects.toThrow(/ngôn ngữ/i)
   }
 })

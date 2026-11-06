@@ -52,7 +52,19 @@ const draft = (locale: Loc, data: Data, user: User = editor) =>
     user,
     overrideAccess: false,
   })
-const approve = (locale: Loc) => draft(locale, { translationStatus: 'approved' })
+/** What the Admin button does: approve exactly the stored draft that was read with the document. */
+const approve = async (locale: Loc) => {
+  const seen = (await latest(locale)).approvalState as { basis: string }
+  return payload.updateGlobal({
+    slug: 'home-page',
+    locale,
+    draft: true,
+    data: { translationStatus: 'approved' },
+    context: { approvalBasis: seen.basis },
+    user: editor,
+    overrideAccess: false,
+  })
+}
 const publish = (locale: Loc) =>
   payload.updateGlobal({
     slug: 'home-page',
@@ -202,7 +214,7 @@ describe('shared banner approval', () => {
         user: editor,
         overrideAccess: false,
       }),
-    ).rejects.toThrow(/draft/i)
+    ).rejects.toThrow(/bản nháp/i)
     expect(formaImageId(await guestHome('ko'))).toBe(imageA.id)
     expect(formaImageId(await latest('ko'))).toBe(imageA.id)
   })
@@ -217,7 +229,7 @@ describe('shared banner approval', () => {
     expect(d.translationStatus).toBe('in-review')
     expect(readApprovals(d.bannerApprovals)).toEqual({})
     expect((await latest('en')).bannerApprovalStatus).toMatch(
-      /EN: needs approval|EN: cần duyệt lại|EN: 재승인/,
+      /EN: Chưa duyệt|EN: cần duyệt lại|EN: needs approval|EN: 재승인/,
     )
     // Public KO/EN unchanged and still consistent.
     for (const l of ['ko', 'en'] as const) {
@@ -417,13 +429,13 @@ describe.each([
     const before = await publicState()
     await expect(
       sys('ko', { _status: 'published', banners: { forma: { desktopImage: imageA.id } } }),
-    ).rejects.toThrow(/draft/i)
+    ).rejects.toThrow(/bản nháp/i)
     expect(await publicState()).toBe(before)
   })
 
   it('publishing the unapproved draft right after the change is refused', async () => {
     const before = await publicState()
-    await expect(sysPublish('ko')).rejects.toThrow(/review|approve/i)
+    await expect(sysPublish('ko')).rejects.toThrow(/xem lại|duyệt/i)
     expect(await publicState()).toBe(before)
   })
 

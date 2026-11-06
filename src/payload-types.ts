@@ -154,7 +154,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * Introduction only: no prices or purchase links. Calls to action point to Stores and Contact. Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Chỉ giới thiệu: không giá bán, không liên kết mua hàng. Nút kêu gọi hành động dẫn tới Cửa hàng và Liên hệ. Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products".
@@ -183,7 +183,7 @@ export interface Product {
     | {
         text: string;
         /**
-         * Name/reference of the brand document this claim comes from (required to publish).
+         * Tên/mã tham chiếu tài liệu thương hiệu mà tuyên bố công dụng này lấy từ đó (bắt buộc để xuất bản).
          */
         sourceDocument: string;
         sourceFile?: (number | null) | SourceDocument;
@@ -194,7 +194,7 @@ export interface Product {
   keyIngredients?: (number | Ingredient)[] | null;
   technologies?: (number | Technology)[] | null;
   /**
-   * Full INCI list as provided by the brand (not translated).
+   * Danh sách INCI đầy đủ do thương hiệu cung cấp (không dịch).
    */
   inci?: string | null;
   howToUse?: {
@@ -233,11 +233,11 @@ export interface Product {
   skinTypes?: ('dry' | 'oily' | 'combination' | 'normal' | 'sensitive')[] | null;
   sku?: string | null;
   /**
-   * e.g. "50 mL"
+   * Ví dụ: "50 mL"
    */
   volume?: string | null;
   /**
-   * Accent colour taken from the product packaging.
+   * Màu nhấn lấy từ bao bì sản phẩm.
    */
   accent: 'navy' | 'rx-red' | 'mx-cyan' | 'mx-pink';
   related?: (number | Product)[] | null;
@@ -246,15 +246,15 @@ export interface Product {
     description?: string | null;
   };
   /**
-   * Lowercase letters, numbers and hyphens. Shared by all languages.
+   * Chữ thường, số và dấu gạch ngang. Dùng chung cho mọi ngôn ngữ.
    */
   slug: string;
   /**
-   * Staff only, never shown on the site or in the public API: where this language version came from (copied from packaging, translated, AI-proposed) and open questions for the brand.
+   * Chỉ nhân sự xem, không bao giờ hiển thị trên website hay API công khai: nguồn gốc của bản ngôn ngữ này (chép từ bao bì, dịch, AI đề xuất) và các câu hỏi còn mở.
    */
   editorialNote?: string | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -262,7 +262,7 @@ export interface Product {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Files stay private until "Cleared for publication" is ticked. Only tick it for images the brand has approved for public use; internal documents go in Source documents.
+ * Tệp luôn riêng tư cho đến khi tích "Đã duyệt cho phép công khai". Chỉ tích với ảnh thương hiệu đã đồng ý dùng công khai; tài liệu nội bộ hãy đưa vào Tài liệu nguồn.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
@@ -273,11 +273,11 @@ export interface Media {
   caption?: string | null;
   credit?: string | null;
   /**
-   * Visitors can only view or list this file when ticked.
+   * Khách chỉ xem hoặc liệt kê được tệp này khi đã tích chọn.
    */
   publicRelease?: boolean | null;
   /**
-   * Internal: source of the image and how it was checked against the packaging artwork.
+   * Nội bộ: nguồn của ảnh và cách đã đối chiếu với thiết kế bao bì.
    */
   reviewNote?: string | null;
   prefix?: string | null;
@@ -295,7 +295,7 @@ export interface Media {
   focalY?: number | null;
 }
 /**
- * Internal reference files (e.g. product dossiers). Staff only, never served publicly.
+ * Tệp tham chiếu nội bộ (ví dụ hồ sơ sản phẩm). Chỉ nhân sự xem, không bao giờ công khai.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "source-documents".
@@ -319,7 +319,7 @@ export interface SourceDocument {
   focalY?: number | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ingredients".
@@ -328,7 +328,7 @@ export interface Ingredient {
   id: number;
   name: string;
   /**
-   * Standard INCI name (not translated).
+   * Tên INCI chuẩn (không dịch).
    */
   inciName?: string | null;
   summary?: string | null;
@@ -349,7 +349,7 @@ export interface Ingredient {
   } | null;
   image?: (number | null) | Media;
   /**
-   * Internal references backing this description. Not shown publicly.
+   * Nguồn tham khảo nội bộ cho phần mô tả này. Không hiển thị công khai.
    */
   sources?:
     | {
@@ -364,12 +364,12 @@ export interface Ingredient {
     description?: string | null;
   };
   /**
-   * Lowercase letters, numbers and hyphens. Shared by all languages.
+   * Chữ thường, số và dấu gạch ngang. Dùng chung cho mọi ngôn ngữ.
    */
   slug: string;
   order?: number | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -377,7 +377,7 @@ export interface Ingredient {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "technologies".
@@ -403,7 +403,7 @@ export interface Technology {
   } | null;
   image?: (number | null) | Media;
   /**
-   * Internal references backing this description. Not shown publicly.
+   * Nguồn tham khảo nội bộ cho phần mô tả này. Không hiển thị công khai.
    */
   sources?:
     | {
@@ -418,12 +418,12 @@ export interface Technology {
     description?: string | null;
   };
   /**
-   * Lowercase letters, numbers and hyphens. Shared by all languages.
+   * Chữ thường, số và dấu gạch ngang. Dùng chung cho mọi ngôn ngữ.
    */
   slug: string;
   order?: number | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -431,7 +431,7 @@ export interface Technology {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "product-lines".
@@ -442,16 +442,16 @@ export interface ProductLine {
   description?: string | null;
   heroImage?: (number | null) | Media;
   /**
-   * Section style on the site, matching the line packaging.
+   * Kiểu hiển thị khu vực trên website, khớp với bao bì của dòng.
    */
   appearance: 'light' | 'dark';
   /**
-   * Lowercase letters, numbers and hyphens. Shared by all languages.
+   * Chữ thường, số và dấu gạch ngang. Dùng chung cho mọi ngôn ngữ.
    */
   slug: string;
   order?: number | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -459,7 +459,7 @@ export interface ProductLine {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "product-categories".
@@ -468,12 +468,12 @@ export interface ProductCategory {
   id: number;
   name: string;
   /**
-   * Lowercase letters, numbers and hyphens. Shared by all languages.
+   * Chữ thường, số và dấu gạch ngang. Dùng chung cho mọi ngôn ngữ.
    */
   slug: string;
   order?: number | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -481,7 +481,7 @@ export interface ProductCategory {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "skin-concerns".
@@ -490,12 +490,12 @@ export interface SkinConcern {
   id: number;
   name: string;
   /**
-   * Lowercase letters, numbers and hyphens. Shared by all languages.
+   * Chữ thường, số và dấu gạch ngang. Dùng chung cho mọi ngôn ngữ.
    */
   slug: string;
   order?: number | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -503,7 +503,7 @@ export interface SkinConcern {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "articles".
@@ -537,11 +537,11 @@ export interface Article {
     description?: string | null;
   };
   /**
-   * Lowercase letters, numbers and hyphens. Shared by all languages.
+   * Chữ thường, số và dấu gạch ngang. Dùng chung cho mọi ngôn ngữ.
    */
   slug: string;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -549,7 +549,7 @@ export interface Article {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "journal-topics".
@@ -558,12 +558,12 @@ export interface JournalTopic {
   id: number;
   name: string;
   /**
-   * Lowercase letters, numbers and hyphens. Shared by all languages.
+   * Chữ thường, số và dấu gạch ngang. Dùng chung cho mọi ngôn ngữ.
    */
   slug: string;
   order?: number | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -571,7 +571,7 @@ export interface JournalTopic {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "stores".
@@ -581,7 +581,7 @@ export interface Store {
   name: string;
   type: 'store' | 'distributor' | 'other';
   /**
-   * ISO 3166-1 alpha-2 code, e.g. KR, VN, US.
+   * Mã quốc gia ISO 3166-1 alpha-2, ví dụ KR, VN, US.
    */
   country: string;
   city?: string | null;
@@ -593,7 +593,7 @@ export interface Store {
   lng?: number | null;
   order?: number | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -601,7 +601,7 @@ export interface Store {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "legal-pages".
@@ -626,7 +626,7 @@ export interface LegalPage {
     [k: string]: unknown;
   } | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   updatedAt: string;
@@ -678,7 +678,7 @@ export interface User {
   id: number;
   name?: string | null;
   /**
-   * Admin: everything. Editor: content + publishing. Translator: text drafts only.
+   * Quản trị viên: toàn quyền. Biên tập viên: nội dung và xuất bản. Biên dịch viên: chỉ soạn bản nháp văn bản.
    */
   role: 'admin' | 'editor' | 'translator';
   updatedAt: string;
@@ -1192,7 +1192,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home-page".
@@ -1211,6 +1211,16 @@ export interface HomePage {
   banners: {
     brand: {
       /**
+       * Leave empty to keep the site default content for this slot.
+       */
+      title?: string | null;
+      tagline?: string | null;
+      ctaLabel?: string | null;
+      /**
+       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
+       */
+      imageAlt?: string | null;
+      /**
        * A: a separate product image placed beside the text. B: a finished campaign image filling the frame; text and button stay HTML. C: no image needed.
        */
       visualType: 'packshot' | 'fullBleed' | 'brandOptics';
@@ -1222,26 +1232,11 @@ export interface HomePage {
        * Used below 768px. Leave empty to use the desktop image.
        */
       mobileImage?: (number | null) | Media;
-      /**
-       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
-       */
-      localeDesktopImage?: (number | null) | Media;
-      localeMobileImage?: (number | null) | Media;
-      /**
-       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
-       */
-      imageAlt?: string | null;
       imagePosition?: ('focal' | 'center' | 'top' | 'bottom' | 'left' | 'right') | null;
       /**
        * Avoids showing the text twice. Title and tagline stay in the HTML for screen readers. Do not draw a CTA button into the image: the button is always HTML.
        */
       textDisplay?: ('overlay' | 'imageHasText') | null;
-      /**
-       * Leave empty to keep the site default content for this slot.
-       */
-      title?: string | null;
-      tagline?: string | null;
-      ctaLabel?: string | null;
       /**
        * The link automatically keeps the current language (/ko, /en, /vi).
        */
@@ -1259,9 +1254,24 @@ export interface HomePage {
        * Text always sits on a translucent panel so it keeps contrast on any image.
        */
       textTone?: ('dark' | 'light') | null;
+      /**
+       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
+       */
+      localeDesktopImage?: (number | null) | Media;
+      localeMobileImage?: (number | null) | Media;
     };
     forma: {
       /**
+       * Leave empty to keep the site default content for this slot.
+       */
+      title?: string | null;
+      tagline?: string | null;
+      ctaLabel?: string | null;
+      /**
+       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
+       */
+      imageAlt?: string | null;
+      /**
        * A: a separate product image placed beside the text. B: a finished campaign image filling the frame; text and button stay HTML. C: no image needed.
        */
       visualType: 'packshot' | 'fullBleed' | 'brandOptics';
@@ -1273,26 +1283,11 @@ export interface HomePage {
        * Used below 768px. Leave empty to use the desktop image.
        */
       mobileImage?: (number | null) | Media;
-      /**
-       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
-       */
-      localeDesktopImage?: (number | null) | Media;
-      localeMobileImage?: (number | null) | Media;
-      /**
-       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
-       */
-      imageAlt?: string | null;
       imagePosition?: ('focal' | 'center' | 'top' | 'bottom' | 'left' | 'right') | null;
       /**
        * Avoids showing the text twice. Title and tagline stay in the HTML for screen readers. Do not draw a CTA button into the image: the button is always HTML.
        */
       textDisplay?: ('overlay' | 'imageHasText') | null;
-      /**
-       * Leave empty to keep the site default content for this slot.
-       */
-      title?: string | null;
-      tagline?: string | null;
-      ctaLabel?: string | null;
       /**
        * The link automatically keeps the current language (/ko, /en, /vi).
        */
@@ -1310,9 +1305,24 @@ export interface HomePage {
        * Text always sits on a translucent panel so it keeps contrast on any image.
        */
       textTone?: ('dark' | 'light') | null;
+      /**
+       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
+       */
+      localeDesktopImage?: (number | null) | Media;
+      localeMobileImage?: (number | null) | Media;
     };
     luma: {
       /**
+       * Leave empty to keep the site default content for this slot.
+       */
+      title?: string | null;
+      tagline?: string | null;
+      ctaLabel?: string | null;
+      /**
+       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
+       */
+      imageAlt?: string | null;
+      /**
        * A: a separate product image placed beside the text. B: a finished campaign image filling the frame; text and button stay HTML. C: no image needed.
        */
       visualType: 'packshot' | 'fullBleed' | 'brandOptics';
@@ -1324,26 +1334,11 @@ export interface HomePage {
        * Used below 768px. Leave empty to use the desktop image.
        */
       mobileImage?: (number | null) | Media;
-      /**
-       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
-       */
-      localeDesktopImage?: (number | null) | Media;
-      localeMobileImage?: (number | null) | Media;
-      /**
-       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
-       */
-      imageAlt?: string | null;
       imagePosition?: ('focal' | 'center' | 'top' | 'bottom' | 'left' | 'right') | null;
       /**
        * Avoids showing the text twice. Title and tagline stay in the HTML for screen readers. Do not draw a CTA button into the image: the button is always HTML.
        */
       textDisplay?: ('overlay' | 'imageHasText') | null;
-      /**
-       * Leave empty to keep the site default content for this slot.
-       */
-      title?: string | null;
-      tagline?: string | null;
-      ctaLabel?: string | null;
       /**
        * The link automatically keeps the current language (/ko, /en, /vi).
        */
@@ -1361,9 +1356,24 @@ export interface HomePage {
        * Text always sits on a translucent panel so it keeps contrast on any image.
        */
       textTone?: ('dark' | 'light') | null;
+      /**
+       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
+       */
+      localeDesktopImage?: (number | null) | Media;
+      localeMobileImage?: (number | null) | Media;
     };
     balm: {
       /**
+       * Leave empty to keep the site default content for this slot.
+       */
+      title?: string | null;
+      tagline?: string | null;
+      ctaLabel?: string | null;
+      /**
+       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
+       */
+      imageAlt?: string | null;
+      /**
        * A: a separate product image placed beside the text. B: a finished campaign image filling the frame; text and button stay HTML. C: no image needed.
        */
       visualType: 'packshot' | 'fullBleed' | 'brandOptics';
@@ -1375,26 +1385,11 @@ export interface HomePage {
        * Used below 768px. Leave empty to use the desktop image.
        */
       mobileImage?: (number | null) | Media;
-      /**
-       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
-       */
-      localeDesktopImage?: (number | null) | Media;
-      localeMobileImage?: (number | null) | Media;
-      /**
-       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
-       */
-      imageAlt?: string | null;
       imagePosition?: ('focal' | 'center' | 'top' | 'bottom' | 'left' | 'right') | null;
       /**
        * Avoids showing the text twice. Title and tagline stay in the HTML for screen readers. Do not draw a CTA button into the image: the button is always HTML.
        */
       textDisplay?: ('overlay' | 'imageHasText') | null;
-      /**
-       * Leave empty to keep the site default content for this slot.
-       */
-      title?: string | null;
-      tagline?: string | null;
-      ctaLabel?: string | null;
       /**
        * The link automatically keeps the current language (/ko, /en, /vi).
        */
@@ -1412,9 +1407,24 @@ export interface HomePage {
        * Text always sits on a translucent panel so it keeps contrast on any image.
        */
       textTone?: ('dark' | 'light') | null;
+      /**
+       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
+       */
+      localeDesktopImage?: (number | null) | Media;
+      localeMobileImage?: (number | null) | Media;
     };
     sheet: {
       /**
+       * Leave empty to keep the site default content for this slot.
+       */
+      title?: string | null;
+      tagline?: string | null;
+      ctaLabel?: string | null;
+      /**
+       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
+       */
+      imageAlt?: string | null;
+      /**
        * A: a separate product image placed beside the text. B: a finished campaign image filling the frame; text and button stay HTML. C: no image needed.
        */
       visualType: 'packshot' | 'fullBleed' | 'brandOptics';
@@ -1426,26 +1436,11 @@ export interface HomePage {
        * Used below 768px. Leave empty to use the desktop image.
        */
       mobileImage?: (number | null) | Media;
-      /**
-       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
-       */
-      localeDesktopImage?: (number | null) | Media;
-      localeMobileImage?: (number | null) | Media;
-      /**
-       * Short description of the image. Empty uses the Media alt text. With "image already contains the text" the image is decorative and the HTML text is read instead.
-       */
-      imageAlt?: string | null;
       imagePosition?: ('focal' | 'center' | 'top' | 'bottom' | 'left' | 'right') | null;
       /**
        * Avoids showing the text twice. Title and tagline stay in the HTML for screen readers. Do not draw a CTA button into the image: the button is always HTML.
        */
       textDisplay?: ('overlay' | 'imageHasText') | null;
-      /**
-       * Leave empty to keep the site default content for this slot.
-       */
-      title?: string | null;
-      tagline?: string | null;
-      ctaLabel?: string | null;
       /**
        * The link automatically keeps the current language (/ko, /en, /vi).
        */
@@ -1463,6 +1458,11 @@ export interface HomePage {
        * Text always sits on a translucent panel so it keeps contrast on any image.
        */
       textTone?: ('dark' | 'light') | null;
+      /**
+       * Only needed when the campaign image contains language-specific text. Leave empty to use the shared image.
+       */
+      localeDesktopImage?: (number | null) | Media;
+      localeMobileImage?: (number | null) | Media;
     };
   };
   bannerApprovals?:
@@ -1478,8 +1478,17 @@ export interface HomePage {
    * Images, visual type, CTA target and colours are shared by every language. After each change every language must be approved again (draft save with Approved, no other edits) before publishing.
    */
   bannerApprovalStatus?: string | null;
+  approvalState?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   _status?: ('draft' | 'published') | null;
@@ -1487,7 +1496,7 @@ export interface HomePage {
   createdAt?: string | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-page".
@@ -1516,7 +1525,7 @@ export interface BrandPage {
     description?: string | null;
   };
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   _status?: ('draft' | 'published') | null;
@@ -1524,7 +1533,7 @@ export interface BrandPage {
   createdAt?: string | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "partnership-page".
@@ -1553,7 +1562,7 @@ export interface PartnershipPage {
     description?: string | null;
   };
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   _status?: ('draft' | 'published') | null;
@@ -1561,7 +1570,7 @@ export interface PartnershipPage {
   createdAt?: string | null;
 }
 /**
- * Restore is disabled: versions are whole-document snapshots across languages. Read history and copy text into a new draft; save, approve, then publish each locale separately.
+ * Không cho khôi phục phiên bản: mỗi phiên bản là bản chụp toàn bộ các ngôn ngữ. Hãy xem lịch sử và chép văn bản sang một bản nháp mới; lưu, duyệt rồi xuất bản từng ngôn ngữ riêng.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings".
@@ -1583,7 +1592,7 @@ export interface SiteSetting {
       }[]
     | null;
   /**
-   * Per language. Content changes reset approval, including editor changes. Save the draft first, review it, set Approved in a separate save without content edits, then publish this language.
+   * Theo từng ngôn ngữ. Mọi thay đổi nội dung (kể cả của biên tập viên) đều đặt lại việc duyệt. Hãy lưu nháp, xem lại, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi mới xuất bản ngôn ngữ này.
    */
   translationStatus: 'ai-draft' | 'in-review' | 'approved';
   _status?: ('draft' | 'published') | null;
@@ -1612,96 +1621,97 @@ export interface HomePageSelect<T extends boolean = true> {
         brand?:
           | T
           | {
-              visualType?: T;
-              desktopImage?: T;
-              mobileImage?: T;
-              localeDesktopImage?: T;
-              localeMobileImage?: T;
-              imageAlt?: T;
-              imagePosition?: T;
-              textDisplay?: T;
               title?: T;
               tagline?: T;
               ctaLabel?: T;
+              imageAlt?: T;
+              visualType?: T;
+              desktopImage?: T;
+              mobileImage?: T;
+              imagePosition?: T;
+              textDisplay?: T;
               ctaTarget?: T;
               theme?: T;
               textTone?: T;
+              localeDesktopImage?: T;
+              localeMobileImage?: T;
             };
         forma?:
           | T
           | {
-              visualType?: T;
-              desktopImage?: T;
-              mobileImage?: T;
-              localeDesktopImage?: T;
-              localeMobileImage?: T;
-              imageAlt?: T;
-              imagePosition?: T;
-              textDisplay?: T;
               title?: T;
               tagline?: T;
               ctaLabel?: T;
+              imageAlt?: T;
+              visualType?: T;
+              desktopImage?: T;
+              mobileImage?: T;
+              imagePosition?: T;
+              textDisplay?: T;
               ctaTarget?: T;
               theme?: T;
               textTone?: T;
+              localeDesktopImage?: T;
+              localeMobileImage?: T;
             };
         luma?:
           | T
           | {
-              visualType?: T;
-              desktopImage?: T;
-              mobileImage?: T;
-              localeDesktopImage?: T;
-              localeMobileImage?: T;
-              imageAlt?: T;
-              imagePosition?: T;
-              textDisplay?: T;
               title?: T;
               tagline?: T;
               ctaLabel?: T;
+              imageAlt?: T;
+              visualType?: T;
+              desktopImage?: T;
+              mobileImage?: T;
+              imagePosition?: T;
+              textDisplay?: T;
               ctaTarget?: T;
               theme?: T;
               textTone?: T;
+              localeDesktopImage?: T;
+              localeMobileImage?: T;
             };
         balm?:
           | T
           | {
-              visualType?: T;
-              desktopImage?: T;
-              mobileImage?: T;
-              localeDesktopImage?: T;
-              localeMobileImage?: T;
-              imageAlt?: T;
-              imagePosition?: T;
-              textDisplay?: T;
               title?: T;
               tagline?: T;
               ctaLabel?: T;
+              imageAlt?: T;
+              visualType?: T;
+              desktopImage?: T;
+              mobileImage?: T;
+              imagePosition?: T;
+              textDisplay?: T;
               ctaTarget?: T;
               theme?: T;
               textTone?: T;
+              localeDesktopImage?: T;
+              localeMobileImage?: T;
             };
         sheet?:
           | T
           | {
-              visualType?: T;
-              desktopImage?: T;
-              mobileImage?: T;
-              localeDesktopImage?: T;
-              localeMobileImage?: T;
-              imageAlt?: T;
-              imagePosition?: T;
-              textDisplay?: T;
               title?: T;
               tagline?: T;
               ctaLabel?: T;
+              imageAlt?: T;
+              visualType?: T;
+              desktopImage?: T;
+              mobileImage?: T;
+              imagePosition?: T;
+              textDisplay?: T;
               ctaTarget?: T;
               theme?: T;
               textTone?: T;
+              localeDesktopImage?: T;
+              localeMobileImage?: T;
             };
       };
   bannerApprovals?: T;
   bannerApprovalStatus?: T;
+  approvalState?: T;
   translationStatus?: T;
   _status?: T;
   updatedAt?: T;
