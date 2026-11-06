@@ -37,6 +37,8 @@ Chung:
 
 ## 3. Mâu thuẫn — cần chủ sản phẩm quyết định (không tự chọn)
 
+> Bảng đầy đủ, đã đối chiếu lại: `DECISIONS-M1-M8.md` (thay cho bảng dưới; M8 được sửa: bản VI dịch đúng bản KO).
+
 | # | Nội dung | Nguồn A | Nguồn B | Đang hiển thị |
 |---|---|---|---|---|
 | M1 | Quy cách RX MATRIX BALM | CMS + ảnh hộp (artwork): **40 mL** | Brief 05/11 (`src/lib/product-brief.ts` và câu `redesign.balmNote` trong messages): **50 g** "đã xác nhận" | Trang sản phẩm: 40 mL (CMS). Giá trị 50 g chưa được hiển thị ở đâu trong bản đã commit |
