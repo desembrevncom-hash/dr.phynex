@@ -63,6 +63,25 @@ export type ApprovalState = {
    * save.
    */
   docSave: string | null
+  /**
+   * Basis of the document this state was delivered WITH (the one the Admin form is built from),
+   * computed by attachShownBasis with exactly the same rules as `basis`. For drafts saved before
+   * save markers existed, the Admin may only approve when this equals the stored `basis`.
+   */
+  shownBasis?: string
+}
+
+/**
+ * Global afterRead hook of the Home Page. Runs after every field hook, on the final document that
+ * the caller (the Admin document view among others) receives, and records that document's basis
+ * next to the stored draft's basis. No extra read, no write.
+ */
+export const attachShownBasis = ({ doc }: { doc: Record<string, unknown> }) => {
+  const state = doc?.approvalState
+  if (state && typeof state === 'object' && !Array.isArray(state)) {
+    doc.approvalState = { ...(state as ApprovalState), shownBasis: basisOfDocument(doc) }
+  }
+  return doc
 }
 
 /**

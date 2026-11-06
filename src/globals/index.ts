@@ -6,6 +6,7 @@ import { seoField } from '@/fields/common'
 import { isLocale } from '@/i18n/locales'
 
 import { guardHomeBannerApproval, lockAndCaptureHomePage } from '@/hooks/guardHomeBannerApproval'
+import { attachShownBasis } from '@/lib/approval-basis'
 
 import { approvalStateField, bannerApprovalStatusField, bannerApprovalsField } from './bannerApprovalFields'
 import { homeBannersField } from './homeBanners'
@@ -90,7 +91,11 @@ export const HomePage = withHomeStatusHelp(contentGlobal({
     bannerApprovalStatusField,
     approvalStateField,
   ],
-  hooks: { beforeOperation: [lockAndCaptureHomePage], beforeChange: [guardHomeBannerApproval] },
+  hooks: {
+    beforeOperation: [lockAndCaptureHomePage],
+    beforeChange: [guardHomeBannerApproval],
+    afterRead: [attachShownBasis],
+  },
 }))
 
 export const BrandPage = contentGlobal({

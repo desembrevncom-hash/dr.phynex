@@ -3,8 +3,10 @@
 import {
   toast,
   useAuth,
+  useConfig,
   useDocumentInfo,
   useField,
+  useForm,
   useFormModified,
   useFormProcessing,
   useLocale,
@@ -42,6 +44,13 @@ export function ApprovalPanel({ path }: { path: string }) {
   const { code } = useLocale()
   const router = useRouter()
   const { lastUpdateTime, data: shownDoc } = useDocumentInfo()
+  const { submit } = useForm()
+  const {
+    config: {
+      routes: { api },
+    },
+  } = useConfig()
+  const [updating, setUpdating] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{
     locale: string
@@ -101,15 +110,38 @@ export function ApprovalPanel({ path }: { path: string }) {
   const view = approvalView({
     state,
     shownSave: saveMarker((shownDoc as { bannerApprovals?: unknown } | undefined)?.bannerApprovals),
+    // The basis of the document this form was loaded with (same locale only).
+    loadedShownBasis: loaded?.locale === locale ? loaded.shownBasis : undefined,
     canApprove,
     modified,
-    busy: processing || busy || refresher.pending,
+    busy: processing || busy || updating || refresher.pending,
     localeApproved: approvedHere,
     localeName: localeName[locale],
   })
   const blocked = view.reason
   const request = buildApprovalRequest(state, locale, localeName[locale])
   const shownMessage = message && message.locale === locale ? message : null
+
+  /**
+   * Old draft without a save marker: save the form exactly like "Lưu bản nháp" does (same request,
+   * draft only, never approves or publishes). The saved document then carries a marker and the
+   * panel re-reads the state, so form and basis come from that one successful save. A failed save
+   * changes nothing and the button stays locked.
+   */
+  async function updateDraft() {
+    if (!view.legacy || updating) return
+    setUpdating(true)
+    try {
+      await submit({
+        action: `${api}/globals/home-page?locale=${locale}&depth=0&fallback-locale=null&draft=true`,
+        method: 'POST',
+        overrides: { _status: 'draft' },
+        skipValidation: true,
+      })
+    } finally {
+      setUpdating(false)
+    }
+  }
 
   async function approve() {
     if (blocked || !request) return
@@ -200,6 +232,16 @@ export function ApprovalPanel({ path }: { path: string }) {
       {!state && !refresher.pending ? (
         <button type="button" className="dx-approval__reload" onClick={() => refresh(locale)}>
           Thử đọc lại trạng thái
+        </button>
+      ) : null}
+      {view.legacy && canApprove ? (
+        <button
+          type="button"
+          className="dx-approval__reload"
+          onClick={updateDraft}
+          disabled={updating || processing}
+        >
+          Cập nhật bản nháp để tiếp tục duyệt
         </button>
       ) : null}
       {view.stale ? (
