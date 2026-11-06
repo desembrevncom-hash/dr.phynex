@@ -74,7 +74,7 @@
     "byConcern": "Skin concern",
     "noResults": "No products match these filters.",
     "line": "Line",
-    "volume": "Volume",
+    "volume": "Pack size",
     "claims": "What it does",
     "keyIngredients": "Key ingredients",
     "technologies": "Technologies",
@@ -82,7 +82,7 @@
     "howToUse": "How to use",
     "cautions": "Cautions",
     "related": "Related products",
-    "ctaTitle": "Where to find it",
+    "ctaTitle": "Buy through a consultation",
     "ctaStores": "Find a store",
     "ctaContact": "Contact us",
     "breadcrumb": "Breadcrumb",
@@ -94,7 +94,10 @@
     "relatedSameLine": "More from the {line} line",
     "count": "{count, plural, =0 {No products} one {# product} other {# products}}",
     "viewAll": "View all products",
-    "filterLabel": "Filter by line"
+    "filterLabel": "Filter by line",
+    "productType": "Product type",
+    "ctaBody": "Send a request about this product. Dr.PhynEX will reply to the email or phone number you leave.",
+    "ctaConsult": "Request a consultation"
   },
   "ingredients": {
     "title": "Ingredients & Technology",
@@ -218,7 +221,8 @@
     "brandBody": "brand story and brand page content",
     "ingredientDescription": "ingredient description with source",
     "legalBody": "policy text reviewed by the legal team",
-    "articles": "Journal articles"
+    "articles": "Journal articles",
+    "productType": "product type (assign a category in the CMS)"
   },
   "redesign": {
     "heroTitle": "A considered approach to skin.",
@@ -301,5 +305,19 @@
     "products": "Products",
     "about": "About",
     "rights": "All rights reserved."
+  },
+  "staffReview": {
+    "title": "Review note (staff only, draft preview)",
+    "translation": "{locale} version:",
+    "publication": "Version shown:",
+    "status": {
+      "ai-draft": "AI draft, not approved",
+      "in-review": "In review",
+      "approved": "Approved"
+    },
+    "draft": "Draft, not published",
+    "published": "Published",
+    "privateImages": "{count, plural, one {# image is} other {# images are}} not cleared for publication: visitors will not see {count, plural, one {it} other {them}}.",
+    "note": "Editorial note: content sources and open questions"
   }
 }

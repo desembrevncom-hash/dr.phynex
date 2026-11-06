@@ -8,6 +8,7 @@ export type PendingKey =
   | 'lineDescription'
   | 'heroImage'
   | 'productImage'
+  | 'productType'
   | 'moreImages'
   | 'shortDescription'
   | 'description'

@@ -6,11 +6,13 @@ import type { ReactNode } from 'react'
 
 import { PageShell } from '@/components/layout/PageShell'
 import { ProductGallery, type GalleryImage } from '@/components/product/ProductGallery'
+import { StaffReviewNote } from '@/components/product/StaffReviewNote'
 import { accentBar, accentText, ProductTile } from '@/components/product/ProductTile'
 import { Arrow } from '@/components/ui/Arrow'
 import { mediaSrc } from '@/components/ui/MediaImage'
 import { Pending, type PendingKey } from '@/components/ui/Pending'
 import { RichText } from '@/components/ui/RichText'
+import { contactHrefFor } from '@/lib/contact-interest'
 import { approvedLocalesFor, findPublic, findPublicBySlug, populated, populatedList } from '@/lib/content'
 import { pageLocale, type SlugParams } from '@/lib/locale'
 import { getPreviewUser } from '@/lib/preview'
@@ -19,7 +21,7 @@ import { breadcrumbLd, productLd } from '@/lib/structured-data'
 import { keepBrandTogether } from '@/lib/text'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { TrackContent } from '@/components/analytics/TrackContent'
-import type { Ingredient, Media, Product, ProductLine, Technology } from '@/payload-types'
+import type { Ingredient, Media, Product, ProductCategory, ProductLine, Technology } from '@/payload-types'
 
 /** First product image cleared for publication (share cards and structured data only). */
 const firstPublicImage = (product: Product) =>
@@ -82,6 +84,8 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
   const line = populated<ProductLine>(product.line)
   const ingredients = populatedList<Ingredient>(product.keyIngredients)
   const technologies = populatedList<Technology>(product.technologies)
+  // Product type comes only from the categories assigned in the CMS; nothing is inferred.
+  const productTypes = populatedList<ProductCategory>(product.categories).map((c) => c.name).filter(Boolean)
   const claims = product.claims ?? []
 
   // Related: editor's choice first, otherwise the rest of the same line.
@@ -152,6 +156,8 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
         </ol>
       </nav>
 
+      {preview ? <StaffReviewNote product={product} locale={locale} /> : null}
+
       <article>
         {/* DOM order is name → images → details, so phones and tablets reach the name and
             pack size first and screen readers meet a single h1. On desktop the grid places the
@@ -169,6 +175,12 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
               {keepBrandTogether(product.name)}
             </h1>
             <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              {productTypes.length > 0 ? (
+                <div className="flex gap-2">
+                  <dt className="text-ink-muted">{t('products.productType')}</dt>
+                  <dd className="font-semibold text-ink">{productTypes.join(', ')}</dd>
+                </div>
+              ) : null}
               <div className="flex gap-2">
                 <dt className="text-ink-muted">{t('products.volume')}</dt>
                 <dd className="font-semibold text-ink">{product.volume || '—'}</dd>
@@ -180,6 +192,7 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
                 </div>
               ) : null}
             </dl>
+            {productTypes.length === 0 ? <Pending label="productType" className="mt-3 text-ink-muted" /> : null}
           </header>
 
           <div className="md:col-span-7 lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-1">
@@ -206,20 +219,25 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
               )}
             </div>
 
-            <div className="mt-6 rounded-lg bg-surface-muted p-5 lg:mt-8 lg:p-6">
-              <h2 className="text-base font-bold text-navy">{t('products.ctaTitle')}</h2>
+            {/* Buying works through a consultation for now (no cart, price or checkout): the main
+                action opens the contact form with this product already filled in. */}
+            <section aria-labelledby="buy-title" className="mt-6 rounded-lg bg-surface-muted p-5 lg:mt-8 lg:p-6">
+              <h2 id="buy-title" className="text-base font-bold text-navy">
+                {t('products.ctaTitle')}
+              </h2>
+              <p className="mt-2 text-sm text-ink-muted">{t('products.ctaBody')}</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <Link
-                  href={href('/stores')}
+                  href={contactHrefFor(href('/contact'), slug)}
                   className="inline-flex min-h-12 items-center rounded bg-navy px-6 text-sm font-semibold text-white transition-colors hover:bg-navy-strong"
                 >
-                  {t('products.ctaStores')}
+                  {t('products.ctaConsult')}
                 </Link>
                 <Link
-                  href={href('/contact')}
+                  href={href('/stores')}
                   className="inline-flex min-h-12 items-center rounded border border-navy px-6 text-sm font-semibold text-navy transition-colors hover:bg-surface"
                 >
-                  {t('products.ctaContact')}
+                  {t('products.ctaStores')}
                 </Link>
               </div>
               <p className="mt-4 text-sm text-ink-muted">
@@ -229,7 +247,7 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
                   <Arrow />
                 </Link>
               </p>
-            </div>
+            </section>
           </div>
         </div>
 
