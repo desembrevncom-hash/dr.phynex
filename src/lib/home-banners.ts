@@ -58,6 +58,27 @@ export function objectPosition(preset: unknown, media: Media): string {
   return `${clampPct(media.focalX)}% ${clampPct(media.focalY)}%`
 }
 
+/**
+ * Copy of a slide whose text comes from the CMS. The CMS has no description field: the slot keeps its own built-in
+ * description (brand paragraphs, or the product's description) so the layout and content stay as they are; only
+ * title, tagline and CTA are replaced. Adding a CMS description field would need a schema + migration.
+ */
+export function cmsSlideCopy<D>(
+  builtInDescription: D,
+  text: Extract<ResolvedText, { source: 'cms' }>,
+  locale: string,
+  cta: { label: string; href: string },
+) {
+  return {
+    title: text.title,
+    titleLang: locale,
+    name: text.title,
+    headline: text.tagline,
+    description: builtInDescription,
+    cta,
+  }
+}
+
 const defaults = Object.fromEntries(bannerSlots.map((s) => [s.name, s])) as Record<
   BannerSlotName,
   (typeof bannerSlots)[number]

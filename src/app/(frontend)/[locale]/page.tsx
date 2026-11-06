@@ -5,7 +5,7 @@ import { BannerPicture } from '@/components/home/BannerPicture'
 import { HomeSlider, type HomeSlide } from '@/components/home/HomeSlider'
 import { firstImage } from '@/components/product/ProductTile'
 import { populated, findPublic, findPublicGlobal } from '@/lib/content'
-import { ctaPath, resolveHomeBanners, type ResolvedSlot } from '@/lib/home-banners'
+import { cmsSlideCopy, ctaPath, resolveHomeBanners, type ResolvedSlot } from '@/lib/home-banners'
 import { bannersApprovedFor } from '@/lib/banner-revision'
 import { pageLocale, type LocaleParams } from '@/lib/locale'
 import { getPreviewUser } from '@/lib/preview'
@@ -145,15 +145,10 @@ export default async function HomePage({ params }: { params: LocaleParams }) {
     if (r.text.source === 'default') return base
     return {
       ...base,
-      title: r.text.title,
-      titleLang: locale,
-      name: r.text.title,
-      headline: r.text.tagline,
-      description: null,
-      cta: {
+      ...cmsSlideCopy(fallback.description, r.text, locale, {
         label: r.text.ctaLabel ?? ctaLabelFor(r.text.ctaTarget),
         href: href(ctaPath(r.text.ctaTarget)),
-      },
+      }),
     }
   }
 

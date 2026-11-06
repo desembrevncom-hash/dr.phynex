@@ -1152,6 +1152,14 @@
     height: 200px;
   }
 }
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Brand has the longest copy (two description paragraphs). Its decorative art is 24px shorter than on the other
+     slides so the CTA keeps ≥16px above the 44px controls in KO/EN/VI (measured 21px at the tightest). Banner height,
+     type sizes and control hit areas are unchanged; the art scales with its box (height: 100%, 1:1). */
+  .home-slide-brand .home-slide-visual {
+    height: 176px;
+  }
+}
 @media (min-width: 1024px) {
   .home-slide-visual {
     height: 480px;

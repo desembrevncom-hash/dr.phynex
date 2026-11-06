@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { objectPosition, resolveHomeBanners, resolveSlot } from '@/lib/home-banners'
+import { cmsSlideCopy, objectPosition, resolveHomeBanners, resolveSlot } from '@/lib/home-banners'
 import type { Media } from '@/payload-types'
 
 const media = (id: number, over: Partial<Media> = {}): Media =>
@@ -132,5 +132,39 @@ describe('home banners: fallback rules', () => {
     expect(objectPosition('focal', media(1, { focalX: 20, focalY: 80 }))).toBe('20% 80%')
     expect(objectPosition('focal', media(1, { focalX: 250, focalY: -3 }))).toBe('100% 0%')
     expect(objectPosition('0 0; color:red', media(1))).toBe('50% 50%')
+  })
+})
+
+describe('home banners: CMS text without a description (regression)', () => {
+  // The CMS has title, tagline and CTA label, but no description field. The slide must keep the slot's built-in
+  // description instead of losing it (the earlier version set it to null, so the paragraph disappeared in preview).
+  const cms = { title: 'MX-01 FORMA', tagline: 'Focused moisture.', ctaLabel: 'Discover MX-01' }
+  const builtIn = { paragraphs: ['Built-in description of this slot'] }
+
+  it('uses the CMS title, tagline and CTA, and keeps the built-in description (same object, not a copy or null)', () => {
+    const r = resolveSlot('forma', cms)
+    expect(r.text.source).toBe('cms')
+    if (r.text.source !== 'cms') throw new Error('unreachable')
+    const out = cmsSlideCopy(builtIn, r.text, 'en', {
+      label: 'Discover MX-01',
+      href: '/en/products/mx-01-forma',
+    })
+    expect(out.description).toBe(builtIn)
+    expect(out).toMatchObject({
+      title: 'MX-01 FORMA',
+      name: 'MX-01 FORMA',
+      titleLang: 'en',
+      headline: 'Focused moisture.',
+      cta: { label: 'Discover MX-01', href: '/en/products/mx-01-forma' },
+    })
+  })
+
+  it('holds for all five slots and does not touch who may see the slide (default text is still default)', () => {
+    for (const slot of ['brand', 'forma', 'luma', 'balm', 'sheet'] as const) {
+      const r = resolveSlot(slot, { ...cms, title: `T ${slot}` })
+      if (r.text.source !== 'cms') throw new Error('expected CMS text')
+      expect(cmsSlideCopy(slot, r.text, 'vi', { label: 'x', href: '/vi' }).description).toBe(slot)
+      expect(resolveSlot(slot, { tagline: 'only a tagline' }).text.source).toBe('default')
+    }
   })
 })
