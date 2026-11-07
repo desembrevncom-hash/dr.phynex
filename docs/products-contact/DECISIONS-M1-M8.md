@@ -11,7 +11,12 @@
 | M4 | **Một phần, 07/11**: **đã đồng ý câu slider trung tính** cho MX-02 LUMA. VI "Khám phá Dr. PhynEX MX-02 LUMA", EN "Discover Dr. PhynEX MX-02 LUMA", KO "닥터파이넥스 MX-02 LUMA를 만나보세요". **Công dụng trên trang sản phẩm vẫn chờ tài liệu xác nhận.** | Đã lưu **nháp** banner LUMA (tiêu đề "MX-02 LUMA" + câu trên) ở cả 3 ngôn ngữ trên DB thử; preview đã kiểm, nút vẫn dẫn tới `/…/products/mx-02-luma`. Chưa duyệt, chưa xuất bản, DB thật chưa sửa. **Cập nhật:**
 - Câu mặc định trong mã (`redesign.products.mx-02-luma.line/body`) đã đổi sang câu trung tính (commit `fix(home)` sau `b45dfc8`). Vì vậy khách thấy câu mới ngay, không phải chờ banner được xuất bản.
 - Bản KO viết "닥터피넥스" theo bao bì, cả trong mã lẫn bản nháp banner trên DB thử.
-- Mô tả ngắn LUMA (bản nháp trên DB thử) và mô tả mặc định trong mã chỉ còn liệt kê thành phần có trên bao bì: VI "Công thức chứa Sodium DNA, exosome sữa, 17 loại axit amin và phức hợp vitamin.", EN "A formula with Sodium DNA, Milk Exosome, 17 amino acids and a vitamin complex.", KO "Sodium DNA와 엑소좀, 17종 아미노산, 비타민 컴플렉스를 담은 포뮬러입니다.".
+- **Câu chữ slider đã được duyệt (07/11):** mô tả thống nhất KO/EN/VI, dùng cho mô tả mặc định trong mã và mô tả ngắn LUMA (bản nháp trên DB thử):
+  - VI "Công thức chứa Sodium DNA, exosome sữa, 17 loại axit amin và phức hợp vitamin."
+  - EN "A formula with Sodium DNA, Milk Exosome, 17 amino acids and a vitamin complex."
+  - KO "Sodium DNA와 우유엑소좀, 17종 아미노산, 비타민 컴플렉스를 담은 포뮬러입니다."
+- Nguồn trên hộp: bảng thành phần KO ghi "우유엑소좀"; mô tả mặt bên EN ghi "Milk Exosome"; INCI ghi "Milk Exosomes"; mặt trên hộp ghi "PDRN X MILK EXOSOME". Riêng mô tả mặt sau KO chỉ ghi "엑소좀".
+- Phạm vi đã duyệt chỉ gồm câu chữ slider. Mục Công dụng vẫn chờ tài liệu; dữ liệu thật và việc xuất bản nằm ngoài đợt này.
 - DB thật chưa sửa.
 - Các key `point1–3` của LUMA (gồm "Niacinamide 2%", "hàng rào da") không được dùng ở đâu; giữ nguyên. |
 | M2, M3, M5, M7, M8 | Chờ quyết định | Xem bảng dưới. |
