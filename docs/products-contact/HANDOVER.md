@@ -66,3 +66,12 @@ Dùng cửa sổ ẩn danh (cookie localhost dùng chung giữa các cổng: đ�
 - Giới hạn tần suất được kiểm trước bước chống trùng, nên các lần bấm lặp vẫn tính vào hạn mức 5 lần/10 phút/IP. Yêu cầu bị giới hạn không được lưu, nhưng form giữ nguyên dữ liệu và báo lỗi rõ để khách gửi lại sau.
 - Chưa kiểm bằng trình đọc màn hình thật; đã kiểm focus/aria bằng script.
 - Commit `13259a8` riêng lẻ chưa được build/test độc lập; toàn bộ kiểm tra chạy trên `f8e535e` và lại trên `8b04aff`.
+
+## Bổ sung 07/11: khối "Thông tin liên hệ" chỉnh sửa trong Admin (demo)
+
+- **Admin → Cài đặt → Cài đặt website → "Thông tin liên hệ"**: dùng lại các trường có sẵn `contact.email`, `contact.phone`, `contact.address`, `contact.hours`, **không đổi schema, không migration**; chỉ thêm nhãn và hướng dẫn tiếng Việt ("Email công khai", "Hotline", "Địa chỉ", "Giờ làm việc"). `payload-types.ts` chỉ thêm comment mô tả.
+- Email và hotline dùng chung cho mọi ngôn ngữ; địa chỉ và giờ làm việc theo từng ngôn ngữ. Email công khai tách khỏi email nhận thông báo nội bộ (`FORM_NOTIFY_TO`, cấu hình máy chủ, không hiển thị).
+- Trang Liên hệ và chân trang (mọi trang) cùng đọc khối này qua một helper (`src/lib/contact-details.ts`): email là `mailto:`, hotline là `tel:+821098765432`. Khách thấy giá trị khi khối đã được duyệt + xuất bản cho ngôn ngữ đó; nhân viên thấy bản nháp trong chế độ xem trước.
+- Chân trang: thương hiệu · Sản phẩm · Về chúng tôi · Liên hệ (4 cột desktop, 2 cột tablet; điện thoại: hai danh sách link cạnh nhau, khối liên hệ trải ngang). **Chưa nhận được ảnh tham chiếu bố cục chân trang** trong tin nhắn; bố cục hiện tại theo nhận diện có sẵn, sẽ chỉnh khi có ảnh.
+- DB thử (`scripts/seed-contact-demo.ts`, kiểm marker): giá trị đã chốt; bản dịch địa chỉ/giờ làm việc KO/EN/VI do tôi viết, cần duyệt. 3 điểm bán **minh họa** Seoul/Busan/Incheon trong mục Điểm bán, nhãn theo ngôn ngữ ("Điểm bán minh họa" / "예시 매장" / "Sample store"), chỉ tên thành phố, **chỉ tồn tại trên DB thử**, không được nhập vào bản phát hành.
+- Nghiệm thu trên 3021 (`contact-block/09-accept.log`, 19/19): KO/EN/VI × 390/768/1440 trang Liên hệ + chân trang có link email/hotline, không tràn ngang; 3 điểm bán có nhãn đúng ngôn ngữ; Admin hiển thị khối với nhãn tiếng Việt; sửa hotline trong Admin → lưu nháp → xem trước trang Liên hệ (VI) và chân trang (KO) cùng đổi, khách giữ giá trị đã xuất bản; nhập lại giá trị đã chốt → cả hai trở lại; khôi phục trạng thái đã duyệt + xuất bản bằng script. Form tư vấn: `11-form-flow.log` 18/18.
