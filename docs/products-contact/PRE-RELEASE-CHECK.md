@@ -23,6 +23,7 @@ hoặc `npm run check:release-data -- <đường dẫn .env>`.
 - **Khi có truyền file**, `DATABASE_URL` chỉ được lấy từ chính file đó. File không tồn tại, không đọc được, hoặc không có hay để trống `DATABASE_URL` thì trả **exit 2 trước khi kết nối**. Script **không bao giờ** chuyển sang `DATABASE_URL` của shell, nên gõ sai đường dẫn không thể khiến nó kiểm nhầm một DB khác.
 - **Khi không truyền file** (`node scripts/check-release-data.mjs` hoặc `npm run check:release-data`), script dùng `DATABASE_URL` của shell. Nếu shell không có biến này thì trả exit 2.
 - Dòng đầu kết quả in tên database và nguồn đã dùng (`source: env file …` hoặc `source: shell DATABASE_URL`). **Đối chiếu tên này với DB đích** trước khi tin kết quả.
+- `DATABASE_URL` phải là URL PostgreSQL rõ ràng: `postgres://` hoặc `postgresql://`, có host, có tên database, và port hợp lệ nếu có ghi. Giá trị như `fixture-only`, scheme khác hay port sai bị từ chối với exit 2, trước khi tạo kết nối. Lỗi kết nối chỉ báo lý do cố định kèm mã lỗi (ví dụ `connection refused (code ECONNREFUSED)`), không in thông báo thô của driver.
 - Script mở transaction READ ONLY, không ghi gì và không in mật khẩu hay chuỗi kết nối.
 - Kiểm cả bản đã xuất bản lẫn các phiên bản nháp hoặc lịch sử (`_stores_v`, `_products_v`).
 - Kết quả:
