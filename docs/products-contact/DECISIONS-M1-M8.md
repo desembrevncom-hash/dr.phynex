@@ -8,7 +8,8 @@
 |---|---|---|
 | M1 | **ĐÃ CHỐT: Balm 40 mL** | CMS đã ghi 40 mL, khớp ảnh hộp. Cần bỏ `50 g` trong `src/lib/product-brief.ts` và câu `redesign.balmNote` (KO/EN/VI) để mã không còn giữ giá trị cũ. |
 | M6 | **ĐÃ CHỐT** (07/11): tên VI **"Ampoule Dr. PhynEX MX-01 FORMA"** và **"Ampoule Dr. PhynEX MX-02 LUMA"**; tên KO/EN giữ nguyên | Đã sửa dữ liệu nguồn của script nạp (`scripts/import-preview-content.ts`) và bản nháp VI trên DB thử. **DB thật chưa sửa**: biên tập viên đổi tên VI trong Admin rồi lưu nháp, duyệt và xuất bản theo workflow. |
-| M2, M3, M4, M5, M7, M8 | Chờ quyết định | Xem bảng dưới. |
+| M4 | **Một phần, 07/11**: **đã đồng ý câu slider trung tính** cho MX-02 LUMA. VI "Khám phá Dr. PhynEX MX-02 LUMA", EN "Discover Dr. PhynEX MX-02 LUMA", KO "닥터파이넥스 MX-02 LUMA를 만나보세요". **Công dụng trên trang sản phẩm vẫn chờ tài liệu xác nhận.** | Đã lưu **nháp** banner LUMA (tiêu đề "MX-02 LUMA" + câu trên) ở cả 3 ngôn ngữ trên DB thử; preview đã kiểm, nút vẫn dẫn tới `/…/products/mx-02-luma`. Chưa duyệt, chưa xuất bản, DB thật chưa sửa. Còn lại: (1) dòng mô tả dưới câu slider lấy từ **mô tả ngắn của sản phẩm**, hiện vẫn ghi "chức năng kép" (CMS không có trường mô tả cho slide); (2) khách vẫn thấy câu mặc định cũ trong mã (`redesign.products.mx-02-luma.line/body`) cho tới khi banner được duyệt và xuất bản, hoặc câu mặc định được sửa trong mã; (3) bản KO viết "닥터파이넥스", còn tên KO trên bao bì là "닥터피넥스". |
+| M2, M3, M5, M7, M8 | Chờ quyết định | Xem bảng dưới. |
 
 | # | Hiện trạng | Nguồn đối chiếu | Điểm mâu thuẫn | Quyết định cần chủ sản phẩm |
 |---|---|---|---|---|
