@@ -2,6 +2,14 @@
 
 Đọc ngày 06/11/2026 từ database thật `drphynex` (transaction READ ONLY, version nháp mới nhất), mã nguồn nhánh `products-contact` và ảnh bao bì đang lưu trong CMS. **Không có mục nào đã được sửa để "giải quyết" mâu thuẫn**; mọi thay đổi nội dung sẽ đi qua workflow duyệt sau khi bạn quyết định. Bảng này thay cho bảng §3 của `SURVEY.md` (M8 đã được đối chiếu lại: bản VI dịch đúng bản KO, mâu thuẫn nằm giữa KO và EN).
 
+## Trạng thái (cập nhật 07/11/2026)
+
+| # | Trạng thái | Việc còn lại (chưa làm, chờ yêu cầu) |
+|---|---|---|
+| M1 | **ĐÃ CHỐT: Balm 40 mL** | CMS đã ghi 40 mL, khớp ảnh hộp. Cần bỏ `50 g` trong `src/lib/product-brief.ts` và câu `redesign.balmNote` (KO/EN/VI) để mã không còn giữ giá trị cũ. |
+| M6 | **ĐÃ CHỐT** (tên hai ampoule MX-01/MX-02) | Yêu cầu chốt chưa ghi tên chính xác. Cần ghi tên VI (và KO/EN nếu đổi) để sửa CMS qua workflow duyệt. |
+| M2, M3, M4, M5, M7, M8 | Chờ quyết định | Xem bảng dưới. |
+
 | # | Hiện trạng | Nguồn đối chiếu | Điểm mâu thuẫn | Quyết định cần chủ sản phẩm |
 |---|---|---|---|---|
 | M1 | **Quy cách RX MATRIX BALM**: CMS `volume` = "40 mL"; trang sản phẩm hiển thị "Quy cách 40 mL". | Ảnh hộp trong CMS (private): "Net 40mL / 1.35 fl.oz". Brief 05/11 `src/lib/product-brief.ts`: `pack: '50 g'`; messages `redesign.balmNote`: "Quy cách đã xác nhận: 50 g. Artwork bao bì cũ ghi 40 mL" (câu này không hiển thị ở bản đã commit). | 40 mL (CMS + artwork) và 50 g "đã xác nhận" (brief); khác cả đơn vị (thể tích và khối lượng). | Quy cách bán thực tế là gì. Nếu 50 g: cần artwork/ảnh mới và sửa CMS qua duyệt. Nếu 40 mL: bỏ 50 g khỏi brief. |

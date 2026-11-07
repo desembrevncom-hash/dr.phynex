@@ -75,3 +75,15 @@ Dùng cửa sổ ẩn danh (cookie localhost dùng chung giữa các cổng: đ�
 - Chân trang (theo ảnh tham chiếu nhận ngày 07/11, chỉ lấy bố cục): phía trên là thương hiệu · Sản phẩm · Về chúng tôi (dưới desktop: hai danh sách link cạnh nhau). Bên dưới là **dải liên hệ riêng, căn giữa**, không chen vào nhóm điều hướng: địa chỉ, rồi "HOTLINE | số", "EMAIL | địa chỉ", "GIỜ LÀM VIỆC | giờ"; điện thoại: mỗi mục một dòng, nhãn trên giá trị. Cuối cùng là link pháp lý và copyright căn giữa.
 - DB thử (`scripts/seed-contact-demo.ts`, kiểm marker): giá trị đã chốt; bản dịch địa chỉ/giờ làm việc KO/EN/VI do tôi viết, cần duyệt. 3 điểm bán **minh họa** Seoul/Busan/Incheon trong mục Điểm bán, nhãn theo ngôn ngữ ("Điểm bán minh họa" / "예시 매장" / "Sample store"), chỉ tên thành phố, **chỉ tồn tại trên DB thử**, không được nhập vào bản phát hành. **Bước kiểm tra riêng trước phát hành:** `PRE-RELEASE-CHECK.md` (`npm run check:release-data`, chỉ đọc; DB thử NOT CLEAN, DB thật CLEAN).
 - Nghiệm thu trên 3021 (`contact-block/09-accept.log`, 19/19): KO/EN/VI × 390/768/1440 trang Liên hệ + chân trang có link email/hotline, không tràn ngang; 3 điểm bán có nhãn đúng ngôn ngữ; Admin hiển thị khối với nhãn tiếng Việt; sửa hotline trong Admin → lưu nháp → xem trước trang Liên hệ (VI) và chân trang (KO) cùng đổi, khách giữ giá trị đã xuất bản; nhập lại giá trị đã chốt → cả hai trở lại; khôi phục trạng thái đã duyệt + xuất bản bằng script. Form tư vấn: `11-form-flow.log` 18/18.
+## Chốt review 07/11: Liên hệ, chân trang và `check:release-data` (mốc `709acae`)
+
+- Phạm vi đã review và chốt: `d0ca9a9..709acae`.
+- Mã Liên hệ/chân trang gồm `29fcfc0`, `0e33a48`, `9780fae`; không có file nào trong `src/` đổi sau `9780fae`.
+- P2 của `check:release-data` đã đóng qua `3d0e48c`, `4fc3be0`, `72d2a1e`, `709acae`:
+  - có truyền file `.env` thì chỉ đọc file đó;
+  - URL được xác thực trước khi tạo client, gồm cả port trống, ký tự điều khiển, tham số query làm đổi host/port/database, và key trùng tên thuộc tính kế thừa;
+  - không in lỗi thô; `PGPORT` không đổi được đích.
+- Hồ sơ review (ngoài repo): `drphynex-products-review-evidence/contact-review/REVIEW-NOTE.md`.
+- Bộ integration chưa chạy lại cho phạm vi này.
+- Bản xem thử 3021 được giữ để duyệt.
+- Quyết định nội dung: M1 (Balm 40 mL) và M6 (tên hai ampoule) đã chốt; xem `DECISIONS-M1-M8.md` mục "Trạng thái".
