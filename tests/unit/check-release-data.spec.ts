@@ -27,12 +27,21 @@ const listen = () =>
   })
 const urlFor = (l: Listener, db: string) => `postgres://checker:not-a-secret@127.0.0.1:${l.port}/${db}`
 
+// Preloaded into the child: reports EVERY TCP connect the script attempts, whatever the target
+// (not only the two listeners), so "0 TCP connections" is measured for the whole process.
+const TCP_MARK = 'TCP_CONNECT_ATTEMPT'
+const hookSource = `const net = require('net'); const c = net.Socket.prototype.connect;
+net.Socket.prototype.connect = function (...a) { process.stderr.write('${TCP_MARK}\\n'); return c.apply(this, a) }`
+let hook: string
+const tcpAttempts = (out: string) => out.split(TCP_MARK).length - 1
+
 const run = (args: string[], shellUrl?: string) =>
   new Promise<{ code: number | null; out: string }>((done) => {
     const env = { ...process.env }
     delete env.DATABASE_URL
+    for (const k of ['PGHOST', 'PGPORT', 'PGDATABASE']) delete env[k]
     if (shellUrl) env.DATABASE_URL = shellUrl
-    const child = spawn(process.execPath, [script, ...args], { env, cwd: tmpdir() })
+    const child = spawn(process.execPath, ['--require', hook, script, ...args], { env, cwd: tmpdir() })
     let out = ''
     child.stdout.on('data', (d) => (out += d))
     child.stderr.on('data', (d) => (out += d))
@@ -46,6 +55,8 @@ beforeAll(async () => {
   shellDb = await listen()
   fileDb = await listen()
   dir = mkdtempSync(join(tmpdir(), 'release-check-'))
+  hook = join(dir, 'count-tcp.cjs')
+  writeFileSync(hook, hookSource)
 })
 afterAll(() => {
   shellDb.server.close()
@@ -56,6 +67,95 @@ const reset = () => {
   shellDb.connections = 0
   fileDb.connections = 0
 }
+
+describe('P2 follow-up: empty port, control characters, target-changing query parameters', () => {
+  // Each bad URL is tried from the env file (shell URL set and ignored) and from the shell.
+  const cases = (port: number): Array<[string, string, RegExp]> => [
+    // 1. port declared but empty (WHATWG would read it as "no port" → pg would use 5432/PGPORT)
+    ['empty port', 'postgres://checker:not-a-secret@127.0.0.1:/file_db', /port declared but empty/],
+    ['empty port, IPv6', 'postgres://checker:not-a-secret@[::1]:/file_db', /port declared but empty/],
+    // 2. database name with control characters after decoding
+    ['%00 in database', `postgres://checker:not-a-secret@127.0.0.1:${port}/file%00db`, /invalid database name/],
+    ['%0A in database', `postgres://checker:not-a-secret@127.0.0.1:${port}/file%0Adb`, /invalid database name/],
+    ['%1F in database', `postgresql://checker:not-a-secret@127.0.0.1:${port}/file%1Fdb`, /invalid database name/],
+    // 3. query parameters that change or contradict host, port or database
+    ['?host= another host', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?host=10.9.8.7`, /query parameter host conflicts with the URL host/],
+    ['?host= unix socket', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?host=%2Fvar%2Frun%2Fpostgresql`, /query parameter host conflicts/],
+    ['?host= empty', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?host=`, /query parameter host is empty/],
+    ['?hostaddr= another address', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?hostaddr=10.9.8.7`, /query parameter hostaddr conflicts/],
+    ['?port= another port', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?port=6543`, /query parameter port conflicts with the URL port/],
+    ['?port= without URL port (≠ 5432)', 'postgres://checker:not-a-secret@127.0.0.1/file_db?port=6543', /query parameter port conflicts/],
+    ['?port= invalid', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?port=65a`, /query parameter port is invalid/],
+    ['?port= twice, one conflicting', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?port=${port}&port=6543`, /query parameter port conflicts/],
+    ['?database= another db', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?database=other_db`, /query parameter database conflicts/],
+    ['?dbname= another db', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?dbname=other_db`, /query parameter dbname conflicts/],
+    ['?ssl=false (pg would turn TLS on)', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?ssl=false`, /invalid ssl value/],
+    ['?sslmode= typo', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?sslmode=requird`, /invalid sslmode value/],
+  ]
+  const leaks = ['not-a-secret', 'checker', '127.0.0.1', '10.9.8.7', 'file_db', 'other_db', '6543', 'postgresql%2F', '/var/run']
+
+  it('from the env file: CANNOT CHECK, exit 2, 0 TCP connections (shell URL set and ignored)', async () => {
+    for (const [name, value, reason] of cases(fileDb.port)) {
+      reset()
+      writeFileSync(join(dir, 'p2.env'), `DATABASE_URL=${value}\n`)
+      const r = await run([join(dir, 'p2.env')], urlFor(shellDb, 'shell_db'))
+      expect(r.code, name).toBe(2)
+      expect(r.out, name).toMatch(/CANNOT CHECK: DATABASE_URL from env file .* is not a valid PostgreSQL URL \(/)
+      expect(r.out, name).toMatch(reason)
+      expect(tcpAttempts(r.out), `${name}: TCP attempts`).toBe(0)
+      expect(fileDb.connections + shellDb.connections, name).toBe(0)
+      for (const leak of leaks) expect(r.out.replace(dir, '<dir>'), `${name}: ${leak}`).not.toContain(leak)
+    }
+  })
+
+  it('from the shell: CANNOT CHECK, exit 2, 0 TCP connections', async () => {
+    for (const [name, value, reason] of cases(shellDb.port)) {
+      reset()
+      const r = await run([], value)
+      expect(r.code, name).toBe(2)
+      expect(r.out, name).toMatch(/CANNOT CHECK: DATABASE_URL from shell DATABASE_URL is not a valid PostgreSQL URL \(/)
+      expect(r.out, name).toMatch(reason)
+      expect(tcpAttempts(r.out), `${name}: TCP attempts`).toBe(0)
+      expect(fileDb.connections + shellDb.connections, name).toBe(0)
+      for (const leak of leaks) expect(r.out, `${name}: ${leak}`).not.toContain(leak)
+    }
+  })
+
+  it('still accepted, and still only the chosen source: agreeing query values and valid SSL options', async () => {
+    const ok = (l: Listener) => [
+      `${urlFor(l, 'file_db')}?host=127.0.0.1&port=${l.port}&database=file_db`,
+      `${urlFor(l, 'file_db')}?sslmode=disable`,
+      `${urlFor(l, 'file_db')}?ssl=0&application_name=release-check`,
+    ]
+    for (const value of ok(fileDb)) {
+      reset()
+      writeFileSync(join(dir, 'ok.env'), `DATABASE_URL=${value}\n`)
+      const r = await run([join(dir, 'ok.env')], urlFor(shellDb, 'shell_db'))
+      expect(r.out, value).not.toMatch(/not a valid PostgreSQL URL/)
+      expect(tcpAttempts(r.out), value).toBeGreaterThan(0) // the hook sees connections when allowed
+      expect(fileDb.connections, value).toBeGreaterThan(0)
+      expect(shellDb.connections, value).toBe(0)
+    }
+  })
+
+  it('a URL without a port goes to 5432 explicitly, never to PGPORT from the environment', async () => {
+    // PGPORT points at the shell listener; the URL has no port. If PGPORT were honoured, the shell
+    // listener would see a connection.
+    reset()
+    const env: NodeJS.ProcessEnv = { ...process.env, PGPORT: String(shellDb.port) }
+    delete env.DATABASE_URL
+    const out = await new Promise<string>((done) => {
+      writeFileSync(join(dir, 'noport.env'), 'DATABASE_URL=postgres://checker:not-a-secret@127.0.0.1/file_db\n')
+      const child = spawn(process.execPath, ['--require', hook, script, join(dir, 'noport.env')], { env, cwd: tmpdir() })
+      let o = ''
+      child.stdout.on('data', (d) => (o += d))
+      child.stderr.on('data', (d) => (o += d))
+      child.on('close', () => done(o))
+    })
+    expect(shellDb.connections).toBe(0)
+    expect(out).not.toMatch(/not a valid PostgreSQL URL/)
+  })
+})
 
 describe('check:release-data validates DATABASE_URL before creating a client', () => {
   // Every bad URL points at a counting listener where it can, so "no connection" is measured.

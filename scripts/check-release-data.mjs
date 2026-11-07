@@ -22,6 +22,8 @@ import { resolve } from 'node:path'
 const require = createRequire(import.meta.url)
 const dotenv = require('dotenv')
 const pg = require('pg')
+// The connection-string parser pg itself uses (resolved through pg, so it is the same copy).
+const { parse: parseConnectionString } = createRequire(require.resolve('pg'))('pg-connection-string')
 
 const cannotCheck = (reason) => {
   console.error(`CANNOT CHECK: ${reason}`)
@@ -48,33 +50,89 @@ if (process.argv[2] !== undefined) {
   source = 'shell DATABASE_URL'
 }
 
+const DEFAULT_PORT = '5432'
+// Query parameters that can redirect where pg (pg-connection-string) or libpq-style tools connect.
+// pg: `host` and `port` in the query OVERRIDE the URL's host/port. `database`, `dbname`, `db` and
+// `hostaddr` are not used by pg for postgres:// URLs, but they would make the URL say one target
+// while pg connects to another, so they must agree with the URL or be absent.
+const TARGET_PARAMS = ['host', 'hostaddr', 'port', 'database', 'dbname', 'db']
+// SSL options pg understands; values outside these sets are refused (e.g. ssl=false, which pg would
+// treat as a truthy string and turn TLS ON). Valid SSL settings pass through unchanged.
+const SSL_VALUES = { ssl: ['true', '1', '0', 'no-verify'], sslmode: ['disable', 'prefer', 'require', 'verify-ca', 'verify-full', 'no-verify'] }
+const hasControlChars = (s) => /[\u0000-\u001f\u007f]/.test(s)
+
 /**
  * Accepts only an explicit PostgreSQL URL: postgres:// or postgresql://, a host, a valid port when
- * one is written (1–65535) and a database name. Returns a fixed reason, never the URL or any part
- * of it, so nothing about the connection can end up in the output.
+ * one is written (1–65535, never declared-but-empty), a database name without control characters,
+ * and no query parameter that changes or contradicts host, port or database. Returns
+ * { reason } with a fixed text (never the URL or any part of it) or { connectionString } to hand to
+ * pg, with the port written out explicitly (so PGPORT in the environment cannot redirect it).
  */
-function invalidDatabaseUrl(value) {
+function checkDatabaseUrl(value) {
+  if (hasControlChars(value)) return { reason: 'control characters in the URL' }
   let parsed
   try {
     // The WHATWG parser already rejects non-numeric ports and ports above 65535.
     parsed = new URL(value)
   } catch {
-    return /^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? 'malformed URL or invalid port' : 'not a URL'
+    return { reason: /^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? 'malformed URL or invalid port' : 'not a URL' }
   }
-  if (parsed.protocol !== 'postgres:' && parsed.protocol !== 'postgresql:') return 'scheme must be postgres:// or postgresql://'
-  if (!parsed.hostname) return 'missing host'
-  if (parsed.port !== '' && Number(parsed.port) < 1) return 'invalid port'
+  if (parsed.protocol !== 'postgres:' && parsed.protocol !== 'postgresql:') return { reason: 'scheme must be postgres:// or postgresql://' }
+  if (!parsed.hostname) return { reason: 'missing host' }
+  // "host:" with nothing after the colon parses as "no port" in WHATWG: refuse it explicitly.
+  const authority = value.slice(value.indexOf('//') + 2).split(/[/?#]/)[0]
+  if (authority.slice(authority.lastIndexOf('@') + 1).endsWith(':')) return { reason: 'port declared but empty' }
+  if (parsed.port !== '' && Number(parsed.port) < 1) return { reason: 'invalid port' }
+  const path = parsed.pathname.replace(/^\//, '')
   let database
   try {
-    database = decodeURIComponent(parsed.pathname.replace(/^\//, ''))
+    database = decodeURIComponent(path)
+    // pg itself decodes with decodeURI; both readings must be clean.
+    if (hasControlChars(decodeURI(path))) return { reason: 'invalid database name' }
   } catch {
-    return 'invalid database name'
+    return { reason: 'invalid database name' }
   }
-  if (!database || database.includes('/')) return 'missing database name'
-  return null
+  if (hasControlChars(database)) return { reason: 'invalid database name' }
+  if (!database || database.includes('/')) return { reason: 'missing database name' }
+
+  const host = parsed.hostname.replace(/^\[(.+)\]$/, '$1').toLowerCase()
+  const port = parsed.port || DEFAULT_PORT
+  const params = parsed.searchParams
+  for (const key of new Set([...params.keys()])) {
+    const values = params.getAll(key)
+    if (values.some(hasControlChars)) return { reason: `invalid query parameter ${TARGET_PARAMS.includes(key) || key in SSL_VALUES ? key : '(name hidden)'}` }
+    if (!TARGET_PARAMS.includes(key)) {
+      if (key in SSL_VALUES && !values.every((v) => SSL_VALUES[key].includes(v))) return { reason: `invalid ${key} value` }
+      continue
+    }
+    for (const v of values) {
+      if (v.trim() === '') return { reason: `query parameter ${key} is empty` }
+      if ((key === 'host' || key === 'hostaddr') && v.replace(/^\[(.+)\]$/, '$1').toLowerCase() !== host) return { reason: `query parameter ${key} conflicts with the URL host` }
+      if (key === 'port' && (!/^\d{1,5}$/.test(v) || Number(v) < 1 || Number(v) > 65535)) return { reason: 'query parameter port is invalid' }
+      if (key === 'port' && String(Number(v)) !== String(Number(port))) return { reason: 'query parameter port conflicts with the URL port' }
+      if ((key === 'database' || key === 'dbname' || key === 'db') && v !== database) return { reason: `query parameter ${key} conflicts with the URL database` }
+    }
+  }
+
+  // Explicit port for pg (an empty port would fall back to PGPORT from the environment).
+  const normalized = new URL(parsed.href)
+  if (!normalized.port) normalized.port = DEFAULT_PORT
+
+  // Final cross-check with the very parser pg uses: the effective target must be the URL's.
+  let effective
+  try {
+    effective = parseConnectionString(normalized.href)
+  } catch {
+    return { reason: 'connection string not accepted by the PostgreSQL driver' }
+  }
+  if (String(effective.host ?? '').toLowerCase() !== host) return { reason: 'effective host differs from the URL host' }
+  if (String(effective.port ?? '') !== String(Number(port))) return { reason: 'effective port differs from the URL port' }
+  if (effective.database !== database) return { reason: 'effective database differs from the URL database' }
+  return { connectionString: normalized.href }
 }
-const invalid = invalidDatabaseUrl(url)
-if (invalid) cannotCheck(`DATABASE_URL from ${source} is not a valid PostgreSQL URL (${invalid})`)
+const checked = checkDatabaseUrl(url)
+if (checked.reason) cannotCheck(`DATABASE_URL from ${source} is not a valid PostgreSQL URL (${checked.reason})`)
+url = checked.connectionString
 
 /** Fixed descriptions for connection/query failures: the raw driver message (host, port, user,
  * database names) is never printed, only a category and the error code. */
