@@ -10,10 +10,13 @@ export async function ContactDetailsList({ rows, variant }: { rows: ContactRow[]
   const t = await getTranslations('contact')
   if (rows.length === 0) return null
   const footer = variant === 'footer'
+  // Footer band (owner's reference): address first, then hotline, email and hours on one line.
+  const footerOrder: ContactRow['key'][] = ['address', 'phone', 'email', 'hours']
+  const shown = footer ? [...rows].sort((a, b) => footerOrder.indexOf(a.key) - footerOrder.indexOf(b.key)) : rows
   return (
     <dl className={footer ? 'site-footer-contact' : 'border-t border-line text-sm'}>
-      {rows.map((row) => (
-        <div key={row.key} className={footer ? undefined : 'border-b border-line py-3'}>
+      {shown.map((row) => (
+        <div key={row.key} data-key={row.key} className={footer ? undefined : 'border-b border-line py-3'}>
           <dt className={footer ? undefined : 'text-ink-muted'}>{t(row.key)}</dt>
           <dd className={footer ? undefined : 'mt-1 whitespace-pre-line font-medium text-ink'}>
             {'href' in row ? (

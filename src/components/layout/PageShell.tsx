@@ -171,7 +171,7 @@ export async function PageShell({
 
       <footer className="site-footer on-dark">
         <div className="container-page">
-          <div className={`site-footer-grid${contact.length > 0 ? ' site-footer-grid--contact' : ''}`}>
+          <div className="site-footer-grid">
             <div>
               <p className="site-footer-brand" lang="en">
                 Dr.PhynEX
@@ -203,19 +203,18 @@ export async function PageShell({
                 ))}
               </ul>
             </nav>
-            {contact.length > 0 ? (
-              <section aria-labelledby="footer-contact">
-                <h2 id="footer-contact" className="site-footer-heading">
-                  {t('footer.contact')}
-                </h2>
-                <ContactDetailsList rows={contact} variant="footer" />
-              </section>
-            ) : null}
           </div>
+          {/* Contact band (layout after the owner's reference): its own centred strip under the
+              navigation, never mixed into the link groups. Same CMS block as the Contact page. */}
+          {contact.length > 0 ? (
+            <section aria-labelledby="footer-contact" className="site-footer-band">
+              <h2 id="footer-contact" className="sr-only">
+                {t('footer.contact')}
+              </h2>
+              <ContactDetailsList rows={contact} variant="footer" />
+            </section>
+          ) : null}
           <div className="site-footer-bottom">
-            <p>
-              © 2026 <span lang="en">Dr.PhynEX</span>. {t('footer.rights')}
-            </p>
             <ul aria-label={t('common.footerNav')} className="site-footer-legal">
               {legalNav.map(([key, p]) => (
                 <li key={key}>
@@ -228,6 +227,9 @@ export async function PageShell({
                 </li>
               ) : null}
             </ul>
+            <p>
+              © 2026 <span lang="en">Dr.PhynEX</span>. {t('footer.rights')}
+            </p>
           </div>
         </div>
       </footer>
