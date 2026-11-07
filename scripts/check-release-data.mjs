@@ -99,10 +99,14 @@ function checkDatabaseUrl(value) {
   const port = parsed.port || DEFAULT_PORT
   const params = parsed.searchParams
   for (const key of new Set([...params.keys()])) {
+    // Names of inherited object properties (constructor, toString, __proto__, …) are refused
+    // outright: they must never reach a lookup table here or the driver's parser.
+    if (key in Object.prototype) return { reason: 'query parameter name not allowed' }
     const values = params.getAll(key)
-    if (values.some(hasControlChars)) return { reason: `invalid query parameter ${TARGET_PARAMS.includes(key) || key in SSL_VALUES ? key : '(name hidden)'}` }
+    const isSsl = Object.hasOwn(SSL_VALUES, key)
+    if (values.some(hasControlChars)) return { reason: `invalid query parameter ${TARGET_PARAMS.includes(key) || isSsl ? key : '(name hidden)'}` }
     if (!TARGET_PARAMS.includes(key)) {
-      if (key in SSL_VALUES && !values.every((v) => SSL_VALUES[key].includes(v))) return { reason: `invalid ${key} value` }
+      if (isSsl && !values.every((v) => SSL_VALUES[key].includes(v))) return { reason: `invalid ${key} value` }
       continue
     }
     for (const v of values) {

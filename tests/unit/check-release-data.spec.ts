@@ -91,6 +91,10 @@ describe('P2 follow-up: empty port, control characters, target-changing query pa
     ['?dbname= another db', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?dbname=other_db`, /query parameter dbname conflicts/],
     ['?ssl=false (pg would turn TLS on)', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?ssl=false`, /invalid ssl value/],
     ['?sslmode= typo', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?sslmode=requird`, /invalid sslmode value/],
+    // inherited object property names as query keys
+    ['?constructor=', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?constructor=x`, /query parameter name not allowed/],
+    ['?toString=', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?toString=x`, /query parameter name not allowed/],
+    ['?__proto__=', `postgres://checker:not-a-secret@127.0.0.1:${port}/file_db?__proto__=x`, /query parameter name not allowed/],
   ]
   const leaks = ['not-a-secret', 'checker', '127.0.0.1', '10.9.8.7', 'file_db', 'other_db', '6543', 'postgresql%2F', '/var/run']
 
