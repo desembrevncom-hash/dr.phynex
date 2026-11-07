@@ -94,7 +94,8 @@ const products = [
     line: 'mx',
     accent: 'mx-cyan',
     volume: '8 mL × 5',
-    name: { ko: '닥터피넥스 엠엑스 01 포마', en: 'MX-01 FORMA', vi: 'Tế bào gốc Dr. PhynEX MX-01 FORMA' },
+    // VI name decided by the owner on 07/11/2026 (M6).
+    name: { ko: '닥터피넥스 엠엑스 01 포마', en: 'MX-01 FORMA', vi: 'Ampoule Dr. PhynEX MX-01 FORMA' },
     image: 'mx-01-forma-vial.webp',
     note: 'Source: New folder/Generated Image October 16, 2026 - 1_46PM.jpg (0° tile only; back views in that file have Korean typos). Preview only.',
   },
@@ -103,7 +104,8 @@ const products = [
     line: 'mx',
     accent: 'mx-pink',
     volume: '8 mL × 5',
-    name: { ko: '닥터피넥스 엠엑스 02 루마', en: 'MX-02 LUMA', vi: 'Tế bào gốc Dr. PhynEX MX-02 LUMA' },
+    // VI name decided by the owner on 07/11/2026 (M6).
+    name: { ko: '닥터피넥스 엠엑스 02 루마', en: 'MX-02 LUMA', vi: 'Ampoule Dr. PhynEX MX-02 LUMA' },
     image: 'mx-02-luma-vial.webp',
     note: 'Source: New folder/Generated Image October 16, 2026 - 11_30AM.jpg (front vial). Label checked against vial artwork. Preview only.',
   },
