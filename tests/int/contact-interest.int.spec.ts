@@ -110,6 +110,38 @@ describe('contact from a product page', () => {
     expect(await stored()).toHaveLength(6)
   })
 
+  it('same fields + same language: stored once; same fields from another language page: stored separately, with its language', async () => {
+    const same = { topic: 'other', message: 'Cùng một nội dung' }
+    await submitContact({ status: 'idle' }, form({ ...same, locale: 'vi' }))
+    expect(await submitContact({ status: 'idle' }, form({ ...same, locale: 'vi' }))).toEqual({ status: 'success' })
+    expect(await stored()).toHaveLength(1)
+    const en = await submitContact({ status: 'idle' }, form({ ...same, locale: 'en' }))
+    expect(en.leadId).toBeTruthy()
+    const docs = await stored()
+    expect(docs).toHaveLength(2)
+    expect(docs.map((d) => d.locale).sort()).toEqual(['en', 'vi'])
+    expect(new Set(docs.map((d) => d.message))).toEqual(new Set(['Cùng một nội dung']))
+    // Repeating the English one is again not stored.
+    await submitContact({ status: 'idle' }, form({ ...same, locale: 'en' }))
+    expect(await stored()).toHaveLength(2)
+  })
+
+  it('missing or unknown language: validation error, nothing stored', async () => {
+    for (const locale of ['', 'fr', 'KO']) {
+      expect(await submitContact({ status: 'idle' }, form({ locale }))).toMatchObject({ status: 'error', code: 'invalid', errors: { locale: 'required' } })
+    }
+    const f = form()
+    f.delete('locale')
+    expect(await submitContact({ status: 'idle' }, f)).toMatchObject({ status: 'error', code: 'invalid' })
+    expect(await stored()).toHaveLength(0)
+  })
+
+  it('an over-long product value (81 characters) is ignored; the request itself is stored', async () => {
+    await submitContact({ status: 'idle' }, form({ product: 'a'.repeat(81) }))
+    const [doc] = await stored()
+    expect(doc.message).toBe('Tôi muốn hỏi giá và cách mua.')
+  })
+
   it('a submission without phone/topic is matched as a repeat too (empty optional fields)', async () => {
     await submitContact({ status: 'idle' }, form({ topic: '' }))
     expect(await submitContact({ status: 'idle' }, form({ topic: '' }))).toEqual({ status: 'success' })

@@ -25,6 +25,7 @@ const form = (extra: Record<string, string> = {}) => {
     country: 'VN',
     businessType: 'retailer',
     consent: 'on',
+    locale: 'vi',
     ...extra,
   }
   for (const [k, v] of Object.entries(values)) f.set(k, v)

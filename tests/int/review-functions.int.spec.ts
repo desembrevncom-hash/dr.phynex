@@ -7,7 +7,7 @@ it('returns translated form error state when Payload initialization fails, for b
  const log=vi.spyOn(console,'error').mockImplementation(() => {})
  try {
   const form = new FormData()
-  for (const [k,v] of Object.entries({name:'Test',email:'test@example.invalid',message:'Fixture',company:'Test company',contactName:'Test',country:'VN',businessType:'retailer',consent:'on'})) form.set(k,v)
+  for (const [k,v] of Object.entries({name:'Test',email:'test@example.invalid',message:'Fixture',company:'Test company',contactName:'Test',country:'VN',businessType:'retailer',consent:'on',locale:'vi'})) form.set(k,v)
   for (const action of [submitContact, submitPartnership]) {
    const result=await action({status:'idle'},form)
    expect(result).toMatchObject({status:'error',code:'server'})

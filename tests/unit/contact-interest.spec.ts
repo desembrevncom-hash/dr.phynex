@@ -62,6 +62,47 @@ describe('product of interest', () => {
   })
 })
 
+describe('language of the request', () => {
+  it('missing or unknown locale → validation error; nothing looked up, rate-limited or stored', async () => {
+    for (const bad of [{ locale: '' }, { locale: 'fr' }, { locale: 'VI' }, { locale: 'vi ' + 'x'.repeat(10) }]) {
+      const r = await submitContact({ status: 'idle' }, form({ ...bad, product: 'mx-01-forma' }))
+      expect(r).toMatchObject({ status: 'error', code: 'invalid' })
+      expect(r.errors?.locale).toMatch(/^(required|tooLong)$/)
+    }
+    const f = form()
+    f.delete('locale')
+    expect(await submitContact({ status: 'idle' }, f)).toMatchObject({ status: 'error', code: 'invalid', errors: { locale: 'required' } })
+    expect(findPublicBySlug).not.toHaveBeenCalled()
+    expect(find).not.toHaveBeenCalled()
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('a valid locale is stored as sent and used for the product lookup', async () => {
+    await submitContact({ status: 'idle' }, form({ locale: 'ko', product: 'mx-01-forma' }))
+    expect(findPublicBySlug).toHaveBeenCalledWith('products', 'mx-01-forma', 'ko', 0)
+    expect(stored().locale).toBe('ko')
+  })
+})
+
+describe('one slug rule for page and action', () => {
+  const at80 = 'a'.repeat(80)
+  const at81 = 'a'.repeat(81)
+  it('80 characters are accepted, 81 are ignored, by the shared helper', () => {
+    expect(interestSlug(at80)).toBe(at80)
+    expect(interestSlug(at81)).toBeUndefined()
+  })
+  it('the action applies the same rule: 81 characters are not looked up and not echoed', async () => {
+    await submitContact({ status: 'idle' }, form({ product: at80 }))
+    expect(findPublicBySlug).toHaveBeenCalledWith('products', at80, 'vi', 0)
+    findPublicBySlug.mockClear()
+    const r = await submitContact({ status: 'idle' }, form({ product: at81, email: 'bad' }))
+    expect(r.values?.product).toBeUndefined()
+    await submitContact({ status: 'idle' }, form({ product: at81 }))
+    expect(findPublicBySlug).not.toHaveBeenCalled()
+    expect(stored().message).toBe('Hello')
+  })
+})
+
 describe('repeated submissions', () => {
   it('the same email + message within 10 minutes is not stored twice and not counted as a second lead', async () => {
     find.mockResolvedValueOnce({ docs: [{ id: 1 }] })
@@ -73,6 +114,7 @@ describe('repeated submissions', () => {
     expect(where).toContain('"name":{"equals":"Test"}')
     expect(where).toContain('"phone":{"exists":false}')
     expect(where).toContain('"topic":{"exists":false}')
+    expect(where).toContain('"locale":{"equals":"vi"}')
     expect(where).toContain('"message":{"equals":"Hello"}')
   })
 
