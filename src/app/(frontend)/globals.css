@@ -1410,6 +1410,62 @@
     gap: 64px;
   }
 }
+/* With the contact block (Site settings → Thông tin liên hệ): brand, two link lists, contact.
+   Phones: the two short link lists sit side by side; brand and contact take the full width. */
+@media (max-width: 767.98px) {
+  .site-footer-grid--contact {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px 24px;
+  }
+  .site-footer-grid--contact > :first-child,
+  .site-footer-grid--contact > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 768px) {
+  .site-footer-grid--contact {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px 48px;
+  }
+}
+@media (min-width: 1024px) {
+  .site-footer-grid--contact {
+    grid-template-columns: 1.4fr 0.8fr 0.8fr 1.4fr;
+    gap: 48px;
+  }
+}
+.site-footer-contact {
+  display: grid;
+  gap: 12px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.site-footer-contact dt {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a9aae;
+}
+.site-footer-contact dd {
+  margin-top: 2px;
+  color: #cbd5e1;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.site-footer-contact a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: #f8fafc;
+  text-decoration: underline;
+  text-decoration-color: #475569;
+  text-underline-offset: 3px;
+  transition: color 150ms var(--ease-out-soft), text-decoration-color 150ms var(--ease-out-soft);
+}
+.site-footer-contact a:hover {
+  text-decoration-color: currentColor;
+}
 .site-footer-brand {
   font-family: var(--font-display);
   font-size: 1.25rem;

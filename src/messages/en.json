@@ -143,9 +143,9 @@
     "title": "Contact",
     "formTitle": "Send us a message",
     "email": "Email",
-    "phone": "Phone",
+    "phone": "Hotline",
     "address": "Address",
-    "hours": "Hours",
+    "hours": "Business hours",
     "lead": "Questions about products or where to buy.",
     "otherWays": "Other ways to reach us",
     "detailsTitle": "Contact details",
@@ -304,7 +304,8 @@
   "footer": {
     "products": "Products",
     "about": "About",
-    "rights": "All rights reserved."
+    "rights": "All rights reserved.",
+    "contact": "Contact"
   },
   "staffReview": {
     "title": "Review note (staff only, draft preview)",

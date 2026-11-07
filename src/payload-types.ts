@@ -1578,10 +1578,25 @@ export interface PartnershipPage {
 export interface SiteSetting {
   id: number;
   logo?: (number | null) | Media;
+  /**
+   * Một nơi duy nhất cho thông tin liên hệ công khai: trang Liên hệ và chân trang cùng đọc khối này. Sửa ở đây, lưu, duyệt và xuất bản từng ngôn ngữ là cả hai nơi cùng cập nhật.
+   */
   contact?: {
+    /**
+     * Dùng chung cho mọi ngôn ngữ; khách bấm để gửi thư. Đây không phải email nhận thông báo nội bộ khi có yêu cầu mới (địa chỉ đó cấu hình riêng trên máy chủ và không hiển thị trên website).
+     */
     email?: string | null;
+    /**
+     * Dùng chung cho mọi ngôn ngữ; khách bấm để gọi. Ghi kèm mã quốc gia, ví dụ +82 10-0000-0000.
+     */
     phone?: string | null;
+    /**
+     * Theo từng ngôn ngữ (đổi ngôn ngữ nội dung ở góc trên để nhập bản KO/EN/VI).
+     */
     address?: string | null;
+    /**
+     * Theo từng ngôn ngữ; ghi rõ múi giờ, ví dụ "giờ Hàn Quốc (KST, UTC+9)".
+     */
     hours?: string | null;
   };
   social?:

@@ -7,10 +7,13 @@ import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
 import { ConsentSettingsButton } from '@/components/analytics/ConsentSettingsButton'
 import { locales, type Locale } from '@/i18n/locales'
 import { trackingConfig } from '@/lib/analytics/config'
+import { contactRows } from '@/lib/contact-details'
+import { findPublicGlobal } from '@/lib/content'
 import { getPreviewUser } from '@/lib/preview'
 import { localizedPath } from '@/lib/seo'
 import { productBriefs } from '@/lib/product-brief'
 
+import { ContactDetailsList } from './ContactDetailsList'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileMenu } from './MobileMenu'
 
@@ -63,7 +66,13 @@ export async function PageShell({
   search = '',
   children,
 }: Props) {
-  const [t, preview] = await Promise.all([getTranslations(), getPreviewUser()])
+  const [t, preview, settings] = await Promise.all([
+    getTranslations(),
+    getPreviewUser(),
+    // Same block as the Contact page (published + approved for this language; drafts in preview).
+    findPublicGlobal('site-settings', locale),
+  ])
+  const contact = contactRows(settings?.contact)
   const href = (p: string) => localizedPath(locale, p)
   // Off by default (env flag + IDs); never in staff preview. The admin has no PageShell.
   const tracking = trackingConfig()
@@ -162,7 +171,7 @@ export async function PageShell({
 
       <footer className="site-footer on-dark">
         <div className="container-page">
-          <div className="site-footer-grid">
+          <div className={`site-footer-grid${contact.length > 0 ? ' site-footer-grid--contact' : ''}`}>
             <div>
               <p className="site-footer-brand" lang="en">
                 Dr.PhynEX
@@ -194,6 +203,14 @@ export async function PageShell({
                 ))}
               </ul>
             </nav>
+            {contact.length > 0 ? (
+              <section aria-labelledby="footer-contact">
+                <h2 id="footer-contact" className="site-footer-heading">
+                  {t('footer.contact')}
+                </h2>
+                <ContactDetailsList rows={contact} variant="footer" />
+              </section>
+            ) : null}
           </div>
           <div className="site-footer-bottom">
             <p>
