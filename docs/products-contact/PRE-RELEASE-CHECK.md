@@ -12,14 +12,17 @@ Các script seed đều từ chối mọi database không có marker thử, nên
 
 ## Cách chạy (chỉ đọc)
 
-Trỏ tới file `.env` của môi trường sẽ phát hành:
+**Cách khuyến nghị:** trỏ tới file `.env` của đúng môi trường sắp phát hành.
 
 ```powershell
 node scripts/check-release-data.mjs <đường dẫn tới .env của môi trường phát hành>
 ```
 
-hoặc `npm run check:release-data` (đọc `./.env`).
+hoặc `npm run check:release-data -- <đường dẫn .env>`.
 
+- **Khi có truyền file**, `DATABASE_URL` chỉ được lấy từ chính file đó. File không tồn tại, không đọc được, hoặc không có hay để trống `DATABASE_URL` thì trả **exit 2 trước khi kết nối**. Script **không bao giờ** chuyển sang `DATABASE_URL` của shell, nên gõ sai đường dẫn không thể khiến nó kiểm nhầm một DB khác.
+- **Khi không truyền file** (`node scripts/check-release-data.mjs` hoặc `npm run check:release-data`), script dùng `DATABASE_URL` của shell. Nếu shell không có biến này thì trả exit 2.
+- Dòng đầu kết quả in tên database và nguồn đã dùng (`source: env file …` hoặc `source: shell DATABASE_URL`). **Đối chiếu tên này với DB đích** trước khi tin kết quả.
 - Script mở transaction READ ONLY, không ghi gì và không in mật khẩu hay chuỗi kết nối.
 - Kiểm cả bản đã xuất bản lẫn các phiên bản nháp hoặc lịch sử (`_stores_v`, `_products_v`).
 - Kết quả:
@@ -32,3 +35,15 @@ hoặc `npm run check:release-data` (đọc `./.env`).
 `drphynex-products-review-evidence/contact-block/12-release-data-check.log`:
 - DB thử `drphynex_independent_review_test`: **NOT CLEAN** (đúng như mong đợi): 9 bản ghi điểm bán minh họa, các phiên bản nháp của chúng, sản phẩm mẫu, 3 tài khoản thử; exit 1.
 - DB thật cục bộ `drphynex` (chỉ đọc): **CLEAN**, exit 0.
+
+Sau khi sửa cách chọn nguồn (`contact-review/release-check-fix/02-real-cases.log`). Trong mọi trường hợp dưới đây, shell đều đặt sẵn `DATABASE_URL` trỏ tới DB thử:
+
+| Trường hợp | Kết quả |
+|---|---|
+| Đường dẫn `.env` sai | exit 2, không dùng shell |
+| `.env` không có `DATABASE_URL` | exit 2, không dùng shell |
+| File trỏ DB thử, shell trỏ cổng không tồn tại | Dùng DB trong file: `source: env file …`, NOT CLEAN, exit 1 |
+| Không truyền file | Dùng shell, exit 1 |
+| DB thật qua file `.env` của nó (chỉ đọc) | CLEAN, exit 0 |
+
+Regression: `tests/unit/check-release-data.spec.ts`, 6/6. Test này dùng hai listener TCP giả để chứng minh script không kết nối khi phải từ chối, và chỉ kết nối tới DB trong file.
