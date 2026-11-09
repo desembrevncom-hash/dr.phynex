@@ -1,6 +1,6 @@
 # Bộ dựng landing page sản phẩm (Payload + Next.js) — 09/11/2026
 
-Nhánh `products-contact`. Đã dựng mẫu **MX-02 LUMA** trên bản xem thử `localhost:3021` (DB thử `drphynex_independent_review_test`). FORMA, BALM và SHEET **chưa** được cấu hình: chúng vẫn hiển thị bố cục hiện tại cho tới khi mẫu được duyệt. Không đụng DB thật hay cổng 3000; không xuất bản nội dung thật.
+Nhánh `products-contact`. Bố cục mẫu **MX-02 LUMA** đã được duyệt (09/11). FORMA, BALM và SHEET đã được lưu **bản nháp** với cùng bộ khối trên bản xem thử `localhost:3021` (DB thử `drphynex_independent_review_test`) và đang chờ duyệt nội dung (mục 4). Không đụng DB thật hay cổng 3000; không xuất bản nội dung thật.
 
 ## 1. Dữ liệu
 
@@ -49,7 +49,11 @@ Payload xuất bản theo ngôn ngữ, nhưng **trường dùng chung đi theo b
   - Nếu bản cấu trúc khác bản đang công khai, **mọi ngôn ngữ đang công khai** (đã xuất bản và đã duyệt) cũng phải duyệt đúng bản mới. Nếu thiếu, server trả 409 và nêu tên ngôn ngữ; **bản công khai cũ được giữ nguyên**.
   - Ngôn ngữ **chưa từng công khai** vẫn ở nháp, được duyệt riêng trước lần xuất bản đầu.
   - Xuất bản lại khi chữ và cấu trúc không đổi vẫn chạy được.
-- Admin (tab Landing page, phần đầu): "Duyệt cấu trúc của bản đã lưu (dùng chung): KO/EN/VI: đã duyệt | cần duyệt". Server tính giá trị này khi đọc (trường ảo `landingApprovalState`, không lưu, không cần migration). Vì vậy nó phản ánh **bản nháp đã lưu**, không phải thay đổi chưa lưu trong form.
+- **Hai trạng thái duyệt trong Admin** (phần đầu tab Landing page). Một ngôn ngữ cần có cả hai mới xuất bản được:
+  1. **Duyệt nội dung** (trường "Trạng thái duyệt" ở cột phải): riêng từng ngôn ngữ, cho chữ của ngôn ngữ đó.
+  2. **Duyệt cấu trúc landing**: dùng chung KO/EN/VI. Server tính khi đọc (trường ảo `landingApprovalState`, không lưu, không cần migration), nên nó phản ánh **bản nháp đã lưu**, không phải thay đổi chưa lưu trong form.
+  - Chọn "Đã duyệt" rồi lưu nháp (không kèm thay đổi khác) sẽ ghi cả hai cho ngôn ngữ đó.
+  - Nếu một ngôn ngữ ghi "Đã duyệt" ở mục 1 nhưng mục 2 là "cần duyệt" (cấu trúc vừa đổi từ ngôn ngữ khác), Admin nhắc lưu nháp lại ngôn ngữ đó.
 
 ## 2. Migration (ĐỀ XUẤT, chưa duyệt)
 
@@ -105,6 +109,25 @@ Seed: `scripts/seed-product-review.ts luma-landing`, bản nháp do tài khoản
 | 5 | Chi tiết sản phẩm | Đọc từ trường có sẵn |
 | 6 | CTA cuối trang | Nền tối |
 
+### FORMA, BALM, SHEET (bản nháp, cùng bộ khối, chờ duyệt nội dung)
+
+Seed: `scripts/seed-product-review.ts landing-drafts`. Bộ khối và thứ tự giống LUMA, nền giống LUMA. Chỉ dùng nội dung và ảnh của chính sản phẩm đó; mục nào chưa có nguồn đã duyệt thì để trống.
+
+| # | Khối | MX-01 FORMA · RX Matrix Balm · RX Matrix Sheet |
+|---|---|---|
+| 1 | Hero | **Câu giới thiệu để trống**: chưa có câu slider được duyệt cho ba sản phẩm này (M4 chỉ duyệt câu của LUMA). h1 là tên sản phẩm. Đoạn mở đầu lấy mô tả ngắn có sẵn, quy cách lấy từ "Dung tích": FORMA 8 mL × 5, Balm 40 mL (M1), Sheet 25 mL × 5 |
+| 2 | Dải ảnh lớn | Ảnh của chính sản phẩm: lọ FORMA, hộp Balm, túi Sheet. Ảnh chưa công khai nên chỉ hiện trong xem trước. Mô tả ảnh tả đúng vật trong ảnh (lọ/hộp/túi + tên) |
+| 3 | Thành phần nổi bật | **Ẩn**: chưa có danh sách thành phần nổi bật được duyệt (M3 cho FORMA, M5 cho tên PDRN/Sodium DNA). Nếu để trống mà không ẩn, khối sẽ lấy "Thành phần chính" của sản phẩm, là danh sách đang tranh chấp. Bỏ ẩn sau khi có danh sách đã duyệt |
+| 4 | Lưới điểm nổi bật | **Để trống** (công dụng chờ nguồn); khách không thấy |
+| 5 | Chi tiết sản phẩm | Đọc từ trường có sẵn (quy cách, INCI, cách dùng, lưu ý) |
+| 6 | CTA cuối trang | Nền tối |
+
+Phần lấy từ trường có sẵn **vẫn đang chờ duyệt** theo từng ngôn ngữ. Cần duyệt khi xem trước:
+- mô tả ngắn: FORMA nhắc "đa peptide" (M3); Balm VI do AI dịch, M8;
+- INCI, cách dùng, lưu ý.
+
+Khi lưu landing, VI của Balm và Sheet chuyển từ "Bản nháp AI" sang "Đang xem xét", đúng như khi biên tập viên lưu trong Admin. Phần chữ AI dịch không thay đổi, vẫn cần duyệt.
+
 ## 5. Nghiệm thu (log trong `drphynex-products-review-evidence/landing/`)
 
 - **Biên tập trên 3021** (`08-admin-accept.log`), qua trình duyệt headless thật:
@@ -143,4 +166,4 @@ Seed: `scripts/seed-product-review.ts luma-landing`, bản nháp do tài khoản
   - Muốn duyệt lại ngôn ngữ đó: người duyệt mở ngôn ngữ đó, giữ "Đã duyệt", không sửa gì khác và **lưu nháp**.
 - Ảnh lớn, texture và campaign cho LUMA: chưa có ảnh được phép công khai.
 - Khối "Ảnh + nội dung" và FAQ chưa có nội dung thật.
-- Sau khi mẫu LUMA được duyệt: cấu hình FORMA, BALM, SHEET (chỉ là nhập liệu, không cần mã mới).
+- FORMA, BALM, SHEET: đã lưu bản nháp landing, chờ duyệt nội dung. Chờ nguồn: câu giới thiệu hero, thành phần nổi bật (M3/M5), công dụng.
