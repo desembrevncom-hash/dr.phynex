@@ -36,6 +36,19 @@ export const publishOnlyRequestedLocale: CollectionBeforeOperationHook = ({
       )
     }
     const savingDraft = options.draft === true || options.draft === 'true'
+    // "Save as draft" that also asks to publish: Payload would publish (its own draft flag
+    // yields to `_status: 'published'`), while every guard here would treat it as a draft save
+    // and skip the approval checks. Refused before anything is written; the Admin never sends it
+    // (Publish has no draft flag, Save draft sends `_status: 'draft'`).
+    const status = (options.data as Record<string, unknown> | undefined)?._status
+    if (savingDraft && status === 'published') {
+      throw new APIError(
+        'Yêu cầu mâu thuẫn: lưu bản nháp (draft=true) không được kèm trạng thái "published". Lưu nháp hoặc xuất bản riêng từng ngôn ngữ.',
+        400,
+        null,
+        true,
+      )
+    }
     req.context.reviewSavingDraft = savingDraft
     req.context.reviewApprovalIntent = (
       options.data as Record<string, unknown> | undefined
