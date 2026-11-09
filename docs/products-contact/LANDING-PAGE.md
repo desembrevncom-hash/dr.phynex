@@ -85,16 +85,81 @@ Payload xuất bản theo ngôn ngữ, nhưng **trường dùng chung đi theo b
 - **Bảo toàn dữ liệu** trên DB thử (`landing-approval/02-counts-before.txt` và `04-counts-after.txt`): số dòng và checksum chữ sản phẩm giữ nguyên; số migration tăng từ 7 lên 8.
 - Kế hoạch áp dụng nơi khác giống migration trên. Áp hai migration theo thứ tự tên file.
 
-## 3. Hướng dẫn biên tập: thêm khối → nhập nội dung → xem trước → gửi duyệt
+## 3. Trình dựng trực quan (tab "Landing page")
 
-1. Admin → Sản phẩm → chọn sản phẩm → tab **Landing page**. Khung đầu tab cho biết landing đang dùng hay chưa, khối nào còn thiếu ở ngôn ngữ đang chọn, và có link xem trước KO/EN/VI.
-2. **Thêm: Khối** → chọn loại khối. Kéo biểu tượng ⋮⋮ để sắp xếp, hoặc mở menu "…" → **Di chuyển lên/xuống**. Tích "Ẩn khối này" để tạm ẩn mà không mất nội dung (thao tác này chỉ biên tập viên làm được).
-3. Chọn **Ngôn ngữ nội dung** ở góc trên (KO/EN/VI), rồi nhập chữ cho ngôn ngữ đó. Tiêu đề mỗi khối hiện trạng thái:
-   - "Đủ nội dung (VI)";
-   - "Hiển thị; nên bổ sung …";
-   - "Khách chưa thấy: thiếu …".
-4. **Lưu bản nháp**, rồi bấm link xem trước của ngôn ngữ đó. Xem trước chỉ hiện bản nháp **đã lưu**.
-5. Gửi duyệt: ngôn ngữ đã sửa tự về "Đang xem xét". Người duyệt kiểm xem trước, đặt "Đã duyệt" ở một lần lưu riêng không sửa nội dung, rồi **Xuất bản trong [ngôn ngữ]**.
+Dùng lại 8 loại khối, dữ liệu, Media, preview và quy trình duyệt hiện có. **Không thêm schema, không thêm migration.** Trình dựng chỉ là giao diện Admin trên cùng form Payload.
+
+### Cách dùng (biên tập viên)
+
+1. Admin → Sản phẩm → chọn sản phẩm → tab **Landing page** → **Mở trình dựng**. Trình dựng phủ toàn màn hình, gồm 3 vùng:
+   - **trái:** danh sách khối và trạng thái từng khối ở ngôn ngữ đang chỉnh;
+   - **giữa:** xem trước bản nháp đã lưu;
+   - **phải:** các trường của khối đang chọn.
+2. **+ Thêm khối**: 8 loại khối, mỗi loại có tên tiếng Việt và một câu mô tả khi nào nên dùng. Khối mới được chèn sau khối đang chọn.
+3. **Đổi thứ tự:**
+   - kéo biểu tượng ⋮⋮;
+   - hoặc dùng nút **↑ Lên / ↓ Xuống**: nhấn Tab tới nút rồi Enter, có thông báo cho trình đọc màn hình;
+   - với tay nắm ⋮⋮ cũng dùng được bàn phím: Space, phím mũi tên, rồi Space để thả.
+4. **Nhân bản**, **Thu gọn** (▾/▸), **Ẩn / Hiện lại** và **Xoá**:
+   - Ẩn giữ nguyên nội dung để bật lại.
+   - Xoá có hộp xác nhận, gợi ý dùng "Ẩn" nếu chỉ muốn tạm không hiển thị.
+5. **Ảnh trong khối:**
+   - Có **Tạo mới** (tải lên ngay trong khối) và **Chọn từ thư viện** của Payload, kèm ảnh thu nhỏ.
+   - Khi đã có ảnh: **Thay ảnh** (tải ảnh mới hoặc chọn từ thư viện) và **Gỡ ảnh**.
+   - Có dòng báo ảnh riêng tư hay đã được phép công khai.
+   - Quyền Media giữ nguyên: ảnh mới luôn riêng tư cho tới khi tích "Đã duyệt cho phép công khai" trong Media.
+   - Alt theo ngôn ngữ là trường alt bắt buộc của Media. Dải ảnh lớn có thêm alt riêng trong khối và ảnh điện thoại tuỳ chọn.
+6. **Nhãn phạm vi** cạnh từng trường:
+   - **Riêng ngôn ngữ**: chữ nhập cho ngôn ngữ đang chỉnh.
+   - **Dùng chung KO/EN/VI**: ẩn/hiện, ảnh, nền, bố cục, số thẻ/câu hỏi.
+7. **Xem trước:**
+   - Chọn Điện thoại 390 / Máy tính bảng 768 / Máy tính 1440.
+   - Bấm vào một khối trong xem trước để mở đúng khối đó ở bảng chỉnh.
+   - **Xem như khách**: khối trống, khối ẩn và ảnh riêng tư biến mất hẳn, kể cả dải nền, và không có đánh dấu nhân sự.
+   - Xem trước chỉ hiện **bản nháp đã lưu**. Khi có thay đổi chưa lưu, khung xem trước hiện "**Lưu nháp để xem thay đổi**", và tự tải lại sau mỗi lần lưu.
+   - Cảnh báo thiếu nội dung nằm trong Admin: trạng thái ở danh sách khối và ở đầu bảng chỉnh.
+8. **Lưu bản nháp** nằm ở thanh trên của trình dựng. **Xuất bản** vẫn là thao tác riêng ở thanh tài liệu, sau khi đóng trình dựng.
+9. **Đổi ngôn ngữ** bằng KO/EN/VI trên thanh trình dựng; trình dựng mở lại ở ngôn ngữ mới.
+   - Nếu còn thay đổi chưa lưu, trình dựng hỏi trước. Bộ chọn ngôn ngữ ở header của Payload cũng hỏi như vậy.
+   - Rời trang khi chưa lưu: trình duyệt cảnh báo.
+10. **Biên dịch viên** mở cùng trình dựng nhưng không có nút thêm, xoá, nhân bản, đổi thứ tự hay ẩn/hiện. Các trường dùng chung chỉ đọc; chữ riêng ngôn ngữ sửa được. Server vẫn chặn (403) như trước.
+11. Quy tắc duyệt cấu trúc (mục 1) áp dụng nguyên vẹn. Mọi thay đổi dùng chung xoá duyệt cấu trúc của KO/EN/VI khi lưu nháp. Đầu tab hiện cả hai loại duyệt.
+
+### Mã nguồn
+
+- `src/components/admin/landing/LandingBuilder.tsx`: component Field của `landing`. Dùng `RenderFields`, `addFieldRow`/`moveFieldRow`/`DUPLICATE_ROW`/`removeFieldRow`, `DraggableSortable`, `ConfirmationModal`, `SaveDraftButton` của Payload.
+- `LandingImageField.tsx`: upload chuẩn của Payload cùng nút Thay/Gỡ và trạng thái công khai.
+- `ScopedLabel.tsx`: nhãn phạm vi.
+- `useLandingRows.ts`, `blockStatus.ts`: dữ liệu và trạng thái khối, dùng chung với tiêu đề khối cũ và phần đầu tab.
+- `src/components/admin/LocaleSwitchGuard.tsx`: hỏi trước khi đổi ngôn ngữ ở header khi có thay đổi chưa lưu.
+- Xem trước:
+  - `src/components/landing/LandingPreviewBridge.tsx`: chọn khối bằng `postMessage` cùng origin.
+  - `data-lp-id`: chỉ có trong xem trước của nhân sự (`?lp=staff|guest`).
+  - `src/lib/guest-view.ts`: chế độ "Xem như khách", có unit test.
+- `src/fields/landing.ts`: chỉ thêm `admin.components` (nhãn, trường ảnh, Field). DB không đổi; `payload-types` không đổi.
+
+### Sửa lỗi có sẵn: "Tài liệu đã được sửa đổi" sau mỗi lần lưu nháp
+
+- **Hiện tượng:** ở mọi tài liệu nội dung, kể cả khi sửa bằng trường gốc (ví dụ "Ghi chú biên tập"), sau một lần lưu nháp, lần sửa tiếp theo bật hộp "Tài liệu đã được sửa đổi… bởi người dùng khác". Lần lưu sau bị chặn cho tới khi tải lại.
+- **Nguyên nhân:** hook `publishOnlyRequestedLocale` ép `publishSpecificLocale` cả khi lưu nháp.
+  - Payload khi đó ghi thêm một phiên bản "snapshot" làm bản nháp mới nhất, mang `updatedAt` **cũ** của tài liệu (DB thử: mỗi lần lưu tạo hai dòng `_products_v`).
+  - Bước kiểm tra dữ liệu cũ của Admin so `updatedAt` này với giá trị lần lưu trả về, nên báo nhầm.
+- **Sửa:** `src/hooks/publishLocale.ts` chỉ đặt `publishSpecificLocale` khi **xuất bản**. Kiểm tra ngôn ngữ hợp lệ, chặn "xuất bản mọi ngôn ngữ" và ngữ cảnh duyệt giữ nguyên.
+- **Kiểm tra:**
+  - Integration đầy đủ 152/152.
+  - Test mới `Admin stale-data check after a draft save` **thất bại** khi bỏ sửa đổi (`builder/06-mutation-stale.log`) và đạt khi có sửa đổi.
+  - Đây là thay đổi ở hook dùng chung của quy trình xuất bản theo ngôn ngữ, cần review riêng.
+
+### Schema: đề xuất, chưa làm
+
+Luồng nghiệm thu không cần trường mới. Nếu muốn mọi khối ảnh có đủ "alt theo ngôn ngữ trong khối" và "ảnh điện thoại" như Dải ảnh lớn, cần thêm các trường sau:
+
+| Khối | Trường thiếu | Lý do | Tác động DB |
+|---|---|---|---|
+| Ảnh + nội dung (`split`) | `alt` (riêng ngôn ngữ), `mobileImage` (dùng chung) | Alt hiện lấy từ alt của Media (đã theo ngôn ngữ) nên không đổi được theo ngữ cảnh khối; điện thoại dùng cùng ảnh | Thêm cột `alt` vào `lp_split_locales` và `_lp_split_v_locales`; cột `mobile_image_id` kèm khoá ngoại vào `lp_split` và `_lp_split_v` |
+| Hero (`hero`) | `alt` (riêng ngôn ngữ), `mobileImage` (dùng chung) | Như trên | Tương tự với các bảng `lp_hero*` |
+
+Nếu được duyệt, các trường này sẽ thành **migration đề xuất thứ ba**, chỉ thêm cột cho phép NULL. Chưa tạo, chưa chạy.
 
 ## 4. Mẫu LUMA trên DB thử
 
@@ -159,6 +224,31 @@ Khi lưu landing, VI của Balm và Sheet chuyển từ "Bản nháp AI" sang "�
   - Toàn bộ: integration 151/151, unit 651/651, typecheck 0, eslint 0, build 0. DB thử được sao lưu bằng `pg_dump` trước khi chạy và khôi phục sau đó.
   - Trước khi chạy integration, DB thử được sao lưu bằng `pg_dump` và khôi phục sau đó.
 
+### Nghiệm thu trình dựng (log và ảnh trong `drphynex-products-review-evidence/builder/`)
+
+Headless Chrome thật trên 3021 (DB thử), dùng tài khoản biên tập viên thử, chuột và bàn phím thật. Kết quả: `builder/02-accept.log` **ALL PASS**, ảnh từng bước trong `builder/steps/`. Các bước:
+
+1. Mở LUMA trong trình dựng.
+2. Menu "Thêm khối" có 8 loại khối, tên và mô tả tiếng Việt. Thêm "Ảnh + nội dung".
+3. Tải ảnh ([MẪU]) ngay trong khối: có ảnh thu nhỏ và nút Thay/Gỡ; ảnh riêng tư theo mặc định.
+4. Nhập chữ VI ([MẪU]); mọi trường có nhãn phạm vi.
+5. Kéo bằng chuột xuống một vị trí; Lên/Xuống bằng Enter, có thông báo cho trình đọc màn hình.
+6. Lưu nháp:
+   - xem trước tải lại với khối ở vị trí 3;
+   - ảnh riêng tư có đánh dấu "[Xem trước]";
+   - tài liệu vẫn là bản nháp, chữ VI được lưu.
+7. Bấm khối trong xem trước mở đúng khối. Xem trên điện thoại 390. "Xem như khách": không còn khối Dải ảnh lớn, Ảnh + nội dung hay Lưới điểm, không có đánh dấu.
+8. Ẩn rồi lưu: khối biến khỏi xem trước, nội dung vẫn lưu. Hiện lại rồi lưu: tiêu đề, đoạn mô tả và ảnh còn nguyên.
+9. Thay đổi cấu trúc: duyệt cấu trúc KO/EN/VI bị xoá; đầu tab hiện "cần duyệt".
+10. Đổi ngôn ngữ khi có sửa chưa lưu:
+    - trình dựng và header Payload đều hỏi; bấm Huỷ thì vẫn ở VI và giữ thay đổi;
+    - rời trang có cảnh báo;
+    - bấm OK thì sang KO, trình dựng mở lại, thay đổi chưa lưu không bị ghi.
+11. FORMA mở cùng trình dựng. Ở cửa sổ hẹp 900 px, mỗi lần chỉ hiện một vùng.
+12. Biên dịch viên: không có thao tác cấu trúc; trường dùng chung chỉ đọc; chữ sửa được.
+
+Kiểm tra mã: unit 653/653, integration 152/152 (DB thử được sao lưu trước và khôi phục sau), typecheck 0, eslint 0, build 0. Sau nghiệm thu, LUMA được nạp lại về mẫu 6 khối.
+
 ## 6. Giới hạn và việc tiếp theo
 
 - Duyệt cấu trúc dùng chung: đã triển khai (mục 1). Giới hạn UX:
@@ -166,4 +256,6 @@ Khi lưu landing, VI của Balm và Sheet chuyển từ "Bản nháp AI" sang "�
   - Muốn duyệt lại ngôn ngữ đó: người duyệt mở ngôn ngữ đó, giữ "Đã duyệt", không sửa gì khác và **lưu nháp**.
 - Ảnh lớn, texture và campaign cho LUMA: chưa có ảnh được phép công khai.
 - Khối "Ảnh + nội dung" và FAQ chưa có nội dung thật.
+- Trình dựng: xem trước cập nhật **sau khi lưu nháp**, chưa cập nhật trực tiếp khi gõ. Trang khách là server component, và Live Preview của Payload chưa được bật cho dự án.
+- Mỗi lần nghiệm thu tải một ảnh `mau-anh-thu*.png` (riêng tư, alt [MẪU]) vào Media của DB thử. Các ảnh này chưa xoá.
 - FORMA, BALM, SHEET: đã lưu bản nháp landing, chờ duyệt nội dung. Chờ nguồn: câu giới thiệu hero, thành phần nổi bật (M3/M5), công dụng.
