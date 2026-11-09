@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 
 import { PageShell } from '@/components/layout/PageShell'
 import { ProductGallery, type GalleryImage } from '@/components/product/ProductGallery'
+import { ProductLanding } from '@/components/landing/ProductLanding'
 import { StaffReviewNote } from '@/components/product/StaffReviewNote'
 import { accentBar, accentText, ProductTile } from '@/components/product/ProductTile'
 import { Arrow } from '@/components/ui/Arrow'
@@ -13,6 +14,7 @@ import { mediaSrc } from '@/components/ui/MediaImage'
 import { Pending, type PendingKey } from '@/components/ui/Pending'
 import { RichText } from '@/components/ui/RichText'
 import { contactHrefFor } from '@/lib/contact-interest'
+import { landingActive } from '@/lib/landing'
 import { approvedLocalesFor, findPublic, findPublicBySlug, populated, populatedList } from '@/lib/content'
 import { pageLocale, type SlugParams } from '@/lib/locale'
 import { getPreviewUser } from '@/lib/preview'
@@ -158,6 +160,13 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
 
       {preview ? <StaffReviewNote product={product} locale={locale} /> : null}
 
+      {/* Landing page blocks when the product has at least one visible block; otherwise the
+          existing product layout below, unchanged. */}
+      {landingActive(product.landing) ? (
+        <article>
+          <ProductLanding product={product} locale={locale} preview={!!preview} />
+        </article>
+      ) : (
       <article>
         {/* DOM order is name → images → details, so phones and tablets reach the name and
             pack size first and screen readers meet a single h1. On desktop the grid places the
@@ -300,6 +309,7 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
           </InfoSection>
         </div>
       </article>
+      )}
 
       {related.length > 0 ? (
         <section aria-labelledby="related-title" className="bg-surface">

@@ -320,5 +320,8 @@
     "published": "Published",
     "privateImages": "{count, plural, one {# image is} other {# images are}} not cleared for publication: visitors will not see {count, plural, one {it} other {them}}.",
     "note": "Editorial note: content sources and open questions"
+  },
+  "landing": {
+    "faq": "Frequently asked questions"
   }
 }

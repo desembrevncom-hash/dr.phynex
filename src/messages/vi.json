@@ -320,5 +320,8 @@
     "published": "Đã xuất bản",
     "privateImages": "{count} ảnh chưa được phép công khai: khách sẽ không thấy.",
     "note": "Ghi chú biên tập: nguồn nội dung và điểm cần xác nhận"
+  },
+  "landing": {
+    "faq": "Câu hỏi thường gặp"
   }
 }
