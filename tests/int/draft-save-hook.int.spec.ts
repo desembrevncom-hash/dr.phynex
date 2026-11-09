@@ -129,6 +129,34 @@ describe.each(targets)('$label', (t) => {
     expect((await t.guest('vi'))?.[t.field]).toMatch(/VI công khai/)
   })
 
+  it('regression: two draft saves that also pass publishSpecificLocale "vi" behave the same (no snapshot, matching updatedAt)', async () => {
+    // Everything is observed first, so a failure shows updatedAt, snapshot and visitor text together.
+    const seen: Record<string, unknown>[] = []
+    for (const text of ['[MẪU] nháp kèm publishSpecificLocale 1', '[MẪU] nháp kèm publishSpecificLocale 2']) {
+      const saved = await t.save('vi', { [t.field]: text }, { draft: true, publishSpecificLocale: 'vi' })
+      const readBack = await t.readDraft('vi', true)
+      seen.push({
+        sameUpdatedAt: readBack.updatedAt === saved.updatedAt,
+        latestIsSnapshot: (await latestVersion(t.versions, t.parentId)).snapshot ?? false,
+        draftText: (await t.readDraft('vi'))[t.field],
+        // A draft never reaches visitors, whatever the client passed.
+        guestVi: (await t.guest('vi'))?.[t.field],
+        guestKo: (await t.guest('ko'))?.[t.field],
+      })
+    }
+    const publicVi = seen[0].guestVi
+    expect(publicVi).toMatch(/VI công khai/)
+    expect(seen).toEqual(
+      ['[MẪU] nháp kèm publishSpecificLocale 1', '[MẪU] nháp kèm publishSpecificLocale 2'].map((draftText) => ({
+        sameUpdatedAt: true,
+        latestIsSnapshot: false,
+        draftText,
+        guestVi: publicVi,
+        guestKo: '[샘플] KO 공개',
+      })),
+    )
+  })
+
   it('publishing VI changes only VI: KO keeps its public text and its unpublished draft', async () => {
     await t.save('ko', { [t.field]: '[샘플] KO 초안 (미공개)' })
     await t.save('vi', { [t.field]: '[MẪU] VI mới' })

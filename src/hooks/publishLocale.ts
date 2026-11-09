@@ -37,8 +37,10 @@ export const publishOnlyRequestedLocale: CollectionBeforeOperationHook = ({
     // Publishing only ever applies to the requested language. A draft save publishes nothing, so
     // it does not use Payload's single-locale publish path: that path also stores a "snapshot"
     // version as the latest draft carrying the document's OLD updatedAt, which made the Admin
-    // report every edit after a save as "modified by another user".
-    if (!savingDraft) options.publishSpecificLocale = req.locale
+    // report every edit after a save as "modified by another user". A publishSpecificLocale sent
+    // with a draft (already checked above to match the request) is therefore dropped as well.
+    if (savingDraft) delete options.publishSpecificLocale
+    else options.publishSpecificLocale = req.locale
     options.publishAllLocales = false
   }
   return args
