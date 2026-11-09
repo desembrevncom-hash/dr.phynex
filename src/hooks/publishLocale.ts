@@ -14,10 +14,17 @@ export const publishOnlyRequestedLocale: CollectionBeforeOperationHook = ({
   if (operation === 'create' || operation === 'update') {
     const options = args as unknown as Record<string, unknown>
     const rawLocale = req.searchParams?.get('locale') ?? req.query?.locale
+    // REST: compare with the locale written on the request itself. For globals Payload has already
+    // replaced req.locale with publishSpecificLocale before any hook runs, so a "?locale=vi" request
+    // asking to publish KO would otherwise go through. Local API callers are checked by
+    // lib/content-mutations.ts before Payload is called.
+    const restLocaleMismatch =
+      req.payloadAPI === 'REST' && options.publishSpecificLocale != null && options.publishSpecificLocale !== rawLocale
     if (
       (rawLocale != null && !isLocale(rawLocale)) ||
       !isLocale(req.locale) ||
       (options.publishSpecificLocale != null && options.publishSpecificLocale !== req.locale) ||
+      restLocaleMismatch ||
       options.publishAllLocales === true ||
       options.publishAllLocales === 'true'
     ) {

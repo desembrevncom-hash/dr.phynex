@@ -23,6 +23,7 @@ import { join } from 'node:path'
 import { getPayload, type Migration } from 'payload'
 
 import { migrations } from '@/migrations'
+import { withContentLocaleGuard } from '@/lib/content-mutations'
 import config from '@/payload.config'
 
 import { assertDisposableDatabase } from '../tests/helpers/database'
@@ -33,7 +34,8 @@ const phase = process.argv[2]
 const phases = ['reset', 'guest', 'migrate', 'luma-landing', 'landing-drafts']
 if (!phases.includes(phase)) throw new Error(`Usage: seed-product-review.ts ${phases.join('|')}`)
 
-const payload = await getPayload({ config: await config })
+// Project writes go through the locale guard (publishSpecificLocale must equal the locale).
+const payload = withContentLocaleGuard(await getPayload({ config: await config }))
 try {
   await assertDisposableDatabase(payload)
 

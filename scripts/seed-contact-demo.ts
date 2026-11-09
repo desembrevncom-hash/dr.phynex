@@ -18,6 +18,7 @@ import 'dotenv/config'
 
 import { getPayload } from 'payload'
 
+import { withContentLocaleGuard } from '@/lib/content-mutations'
 import config from '@/payload.config'
 
 import { assertDisposableDatabase } from '../tests/helpers/database'
@@ -47,7 +48,8 @@ const sampleStores = [
   { order: 3, city: { ko: '인천', en: 'Incheon', vi: 'Incheon' } },
 ] as const
 
-const payload = await getPayload({ config: await config })
+// Project writes go through the locale guard (publishSpecificLocale must equal the locale).
+const payload = withContentLocaleGuard(await getPayload({ config: await config }))
 try {
   await assertDisposableDatabase(payload)
 
