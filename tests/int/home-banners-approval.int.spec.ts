@@ -300,8 +300,12 @@ describe('calls without a user (system exemption)', () => {
       { bannerApprovals: { ko: sharedRevision({}) } },
     ]) {
       const res = await rest('globals/home-page?locale=ko&draft=true', body)
-      expect([401, 403], JSON.stringify(body)).toContain(res.status)
+      // draft=true + published is a contradictory request, refused (400) before the access check.
+      const refused = '_status' in body ? [400] : [401, 403]
+      expect(refused, JSON.stringify(body)).toContain(res.status)
     }
+    // A guest publish without the draft flag still meets the access check.
+    expect([401, 403]).toContain((await rest('globals/home-page?locale=ko', { _status: 'published' })).status)
     expect(JSON.stringify((await latest('ko')).bannerApprovals)).toBe(before)
   })
 
