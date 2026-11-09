@@ -32,19 +32,24 @@ Landing page đọc trực tiếp từ sản phẩm: tên, dòng sản phẩm, d
 
 - **Biên dịch viên** sửa được chữ trong khối. Họ **không** thêm, xoá hay sắp xếp khối được: server trả lỗi 403. Các field dùng chung (ẩn, ảnh, kiểu nền, bố cục) là field chỉ biên tập viên ghi được, nên giá trị biên dịch viên gửi lên bị bỏ qua.
 - **Mọi thay đổi trong landing** (chữ hoặc cấu trúc) là thay đổi nội dung của **ngôn ngữ đang lưu**. Ngôn ngữ đó về "Đang xem xét", phải lưu nháp, duyệt ở một lần lưu riêng, rồi mới xuất bản (`guardPublishing` đã được mở rộng cho trường blocks). Xuất bản lại với dữ liệu landing không đổi thì không bị chặn nhầm.
+- Thay đổi **cấu trúc** còn ảnh hưởng mọi ngôn ngữ: xem mục kế tiếp.
 - Khách chỉ nhận bản đã xuất bản và đã duyệt của đúng ngôn ngữ. Ảnh private không bao giờ được trả cho khách: chỉ có id, không có file.
 
-### ⚠ Cần bạn quyết định: thay đổi cấu trúc ảnh hưởng mọi ngôn ngữ
+### Duyệt cấu trúc dùng chung (đã triển khai, cùng cơ chế banner trang chủ)
 
-Payload xuất bản theo ngôn ngữ, nhưng **trường dùng chung đi theo bản nháp**. Đã thử trên DB thử (`landing/10-sample-publish-vi.log`, `11-cases.log`):
-- Thêm landing cho sản phẩm mẫu, duyệt và xuất bản **chỉ VI**.
-- Kết quả: trang khách **KO cũng chuyển sang bố cục landing**, dù KO không được duyệt lại. Chữ KO còn trống nên được ẩn gọn, nhưng cấu trúc đã thay đổi.
+Payload xuất bản theo ngôn ngữ, nhưng **trường dùng chung đi theo bản nháp**. Trước đây, duyệt và xuất bản chỉ VI có thể làm khách KO thấy bố cục mới dù KO chưa duyệt. Quy tắc hiện tại (`src/hooks/guardLanding.ts` → `guardLandingApproval`, `src/lib/landing-approval.ts`):
 
-Đề xuất: áp dụng đúng quy tắc mà banner trang chủ đang dùng:
-- Thay đổi cấu trúc dùng chung phải lưu nháp, và **xoá duyệt của mọi ngôn ngữ**.
-- Xuất bản một ngôn ngữ chỉ được phép khi **mọi ngôn ngữ đang công khai** bị ảnh hưởng cũng đã được duyệt lại.
-
-Quy tắc này chưa được triển khai trong đợt này; cần bạn đồng ý.
+- **Cấu trúc** = mọi thứ trong landing trừ chữ theo ngôn ngữ: thêm/xoá/đổi thứ tự khối, ẩn/hiện, ảnh, kiểu nền, bố cục, thành phần được chọn. Mã băm SHA-256 của phần này là "bản cấu trúc".
+- Server tự ghi `landingApprovals` = { ngôn ngữ → bản cấu trúc mà ngôn ngữ đó đã duyệt }. Giá trị client gửi lên bị thay thế.
+- **Đổi cấu trúc**: bắt buộc lưu nháp (xuất bản kèm thay đổi cấu trúc bị từ chối, 409). Khi lưu, **duyệt cấu trúc của KO/EN/VI bị xoá**, ngôn ngữ đang lưu về "Đang xem xét".
+- **Chỉ sửa chữ của một ngôn ngữ**: chỉ ngôn ngữ đó về "Đang xem xét" và mất duyệt; các ngôn ngữ khác giữ nguyên.
+- **Duyệt lại**: lưu nháp với "Đã duyệt" và không kèm thay đổi khác. Lần lưu này ghi duyệt của ngôn ngữ đó cho đúng bản cấu trúc hiện tại.
+- **Xuất bản ngôn ngữ X** (kiểm ở server):
+  - X phải đã duyệt đúng bản cấu trúc hiện tại.
+  - Nếu bản cấu trúc khác bản đang công khai, **mọi ngôn ngữ đang công khai** (đã xuất bản và đã duyệt) cũng phải duyệt đúng bản mới. Nếu thiếu, server trả 409 và nêu tên ngôn ngữ; **bản công khai cũ được giữ nguyên**.
+  - Ngôn ngữ **chưa từng công khai** vẫn ở nháp, được duyệt riêng trước lần xuất bản đầu.
+  - Xuất bản lại khi chữ và cấu trúc không đổi vẫn chạy được.
+- Admin (tab Landing page, phần đầu): "Duyệt cấu trúc của bản đã lưu (dùng chung): KO/EN/VI: đã duyệt | cần duyệt". Server tính giá trị này khi đọc (trường ảo `landingApprovalState`, không lưu, không cần migration). Vì vậy nó phản ánh **bản nháp đã lưu**, không phải thay đổi chưa lưu trong form.
 
 ## 2. Migration (ĐỀ XUẤT, chưa duyệt)
 
@@ -64,6 +69,17 @@ Quy tắc này chưa được triển khai trong đợt này; cần bạn đồn
   4. Đối chiếu số đếm và checksum như trên.
   5. Không nhập nội dung landing nào cho tới khi biên tập viên cấu hình và duyệt.
 - DB thử: `node_modules/.bin/tsx scripts/seed-product-review.ts migrate` chỉ chạy các migration còn chờ, có kiểm marker.
+
+### Migration thứ hai: duyệt cấu trúc (ĐỀ XUẤT, chưa duyệt)
+
+- File `src/migrations/20261109_024237_landing_approvals.ts`, SHA-256 `b10c36e95916b8cc3b2a7e80a4716f2a6d79f5663e14c32ff71370f0544ba8e7`, nằm trong `deploy/migrations.proposed.json` cùng migration trên. `approved.json` vẫn không đổi.
+- `up()` gồm đúng 2 lệnh, đều chỉ thêm mới (có test kiểm):
+  - `ALTER TABLE "products" ADD COLUMN "landing_approvals" jsonb;`
+  - `ALTER TABLE "_products_v" ADD COLUMN "version_landing_approvals" jsonb;`
+- Cột cho phép NULL, không có giá trị mặc định, không sửa dòng nào. `down()` xoá đúng 2 cột này.
+- Dữ liệu cũ: NULL được hiểu là "chưa ngôn ngữ nào duyệt cấu trúc". Sản phẩm chưa có landing (cấu trúc rỗng) không bị chặn.
+- **Bảo toàn dữ liệu** trên DB thử (`landing-approval/02-counts-before.txt` và `04-counts-after.txt`): số dòng và checksum chữ sản phẩm giữ nguyên; số migration tăng từ 7 lên 8.
+- Kế hoạch áp dụng nơi khác giống migration trên. Áp hai migration theo thứ tự tên file.
 
 ## 3. Hướng dẫn biên tập: thêm khối → nhập nội dung → xem trước → gửi duyệt
 
@@ -109,11 +125,22 @@ Seed: `scripts/seed-product-review.ts luma-landing`, bản nháp do tài khoản
 
   Không trang nào tràn ngang.
 - **Kiểm tra:** unit 650/650, integration 146/146 (gồm `tests/int/landing.int.spec.ts` 6 test), typecheck 0, eslint toàn repo 0, build 0.
+- **Duyệt cấu trúc dùng chung** (log trong `landing-approval/`):
+  - `tests/int/landing.int.spec.ts`, 11/11 test. Regression tái hiện lỗi:
+    - KO đang công khai, đổi thứ tự khối, chỉ duyệt VI rồi xuất bản VI → **bị chặn** ("…khách đang thấy ở KO…").
+    - Khách KO và VI vẫn thấy thứ tự cũ và chữ KO cũ.
+    - KO duyệt đúng bản mới → xuất bản VI thành công, khách cả hai ngôn ngữ thấy thứ tự mới.
+    - Chỉ sửa chữ VI (biên dịch viên): chỉ VI mất duyệt, KO giữ duyệt và chữ công khai. Duyệt VI → xuất bản được, không cần KO duyệt lại.
+    - Ngoài ra kiểm: xuất bản lại không đổi; EN chưa từng công khai được duyệt riêng rồi xuất bản lần đầu; giá trị duyệt do client gửi bị thay thế; tình trạng duyệt trong Admin.
+  - Kiểm đột biến (`06-mutation.log`): tắt tạm kiểm tra chéo ngôn ngữ thì test regression **thất bại** như kỳ vọng. Mã đã được khôi phục.
+  - Toàn bộ: integration 151/151, unit 651/651, typecheck 0, eslint 0, build 0. DB thử được sao lưu bằng `pg_dump` trước khi chạy và khôi phục sau đó.
   - Trước khi chạy integration, DB thử được sao lưu bằng `pg_dump` và khôi phục sau đó.
 
 ## 6. Giới hạn và việc tiếp theo
 
-- Quy tắc duyệt chéo ngôn ngữ cho thay đổi cấu trúc: chờ quyết định (mục 1).
+- Duyệt cấu trúc dùng chung: đã triển khai (mục 1). Giới hạn UX:
+  - Khi cấu trúc đổi, các ngôn ngữ khác vẫn hiện nhãn "Đã duyệt" ở trường trạng thái dịch, dù duyệt cấu trúc của chúng đã bị xoá. Phần đầu tab Landing page hiện đúng "cần duyệt".
+  - Muốn duyệt lại ngôn ngữ đó: người duyệt mở ngôn ngữ đó, giữ "Đã duyệt", không sửa gì khác và **lưu nháp**.
 - Ảnh lớn, texture và campaign cho LUMA: chưa có ảnh được phép công khai.
 - Khối "Ảnh + nội dung" và FAQ chưa có nội dung thật.
 - Sau khi mẫu LUMA được duyệt: cấu hình FORMA, BALM, SHEET (chỉ là nhập liệu, không cần mã mới).
