@@ -264,6 +264,27 @@ export const landingBlocks: Block[] = [
   },
 ]
 
+const scopedLabel = '/components/admin/landing/ScopedLabel#ScopedLabel'
+const imageField = '/components/admin/landing/LandingImageField#LandingImageField'
+
+/**
+ * Admin only (no schema change): every block field shows its scope next to its label, and
+ * images get the builder's image field (replace / remove, visibility).
+ */
+function withScope(fields: Field[]): Field[] {
+  return fields.map((f) => {
+    if (!('name' in f) || f.type === 'ui') return f
+    const admin = { ...(f.admin ?? {}) } as Record<string, unknown>
+    const components = { ...((admin.components as Record<string, unknown>) ?? {}), Label: scopedLabel }
+    if (f.type === 'upload') (components as Record<string, unknown>).Field = imageField
+    admin.components = components
+    const next = { ...f, admin } as Field
+    if (f.type === 'array') (next as { fields: Field[] }).fields = withScope(f.fields)
+    return next
+  })
+}
+for (const block of landingBlocks) block.fields = withScope(block.fields)
+
 export const landingField: Field = {
   name: 'landing',
   type: 'blocks',
@@ -273,6 +294,7 @@ export const landingField: Field = {
   maxRows: 20,
   admin: {
     initCollapsed: true,
+    components: { Field: '/components/admin/landing/LandingBuilder#LandingBuilder' },
     description:
       'Thứ tự, ẩn/hiện, ảnh và kiểu nền dùng chung cho KO/EN/VI; chữ trong từng khối nhập riêng theo ngôn ngữ đang chọn ở góc trên. Khối thiếu nội dung bị ẩn với khách và được đánh dấu ở tiêu đề khối. Chưa có khối nào thì trang sản phẩm giữ bố cục hiện tại.',
   },

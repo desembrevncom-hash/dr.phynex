@@ -12,6 +12,8 @@ import { populated, populatedList } from '@/lib/content'
 import { blockIssues, type ProductProvides, type Tone } from '@/lib/landing'
 import { localizedPath } from '@/lib/seo'
 import { keepBrandTogether } from '@/lib/text'
+
+import { LandingPreviewBridge } from './LandingPreviewBridge'
 import type { Ingredient, Media, Product, ProductLine } from '@/payload-types'
 
 type Block = NonNullable<Product['landing']>[number]
@@ -82,10 +84,13 @@ export async function ProductLanding({
   product,
   locale,
   preview,
+  editable = false,
 }: {
   product: Product
   locale: Locale
   preview: boolean
+  /** Staff preview inside the Admin builder (also "view as guest"): blocks can be clicked to edit. */
+  editable?: boolean
 }) {
   const t = await getTranslations()
   const href = (p: string) => localizedPath(locale, p)
@@ -108,6 +113,7 @@ export async function ProductLanding({
   const blocks = (product.landing ?? []).filter((b) => b.hidden !== true)
   const rendered: ReactNode[] = []
   for (const block of blocks) {
+    const start = rendered.length
     const viewer = blockIssues(block as never, forViewer, (v) => usable(v) !== null)
     const guest = blockIssues(block as never, forGuest, isPublic)
     // Visitors: a block with missing required content is left out entirely.
@@ -368,6 +374,16 @@ export async function ProductLanding({
         break
       }
     }
+    // Builder preview only: tag the block's markup so a click can open it in Admin.
+    if (editable && block.id) {
+      for (let k = start; k < rendered.length; k++) {
+        rendered[k] = (
+          <div key={`lp-${block.id}-${k}`} data-lp-id={block.id} data-lp-type={block.blockType}>
+            {rendered[k]}
+          </div>
+        )
+      }
+    }
   }
   // Every product page keeps exactly one h1: without a hero block, a compact title opens the page.
   const hasHero = blocks.some((b) => b.blockType === 'hero')
@@ -381,6 +397,7 @@ export async function ProductLanding({
         </header>
       )}
       {rendered}
+      {editable ? <LandingPreviewBridge /> : null}
     </>
   )
 }

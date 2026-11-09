@@ -17,6 +17,7 @@ import { contactHrefFor } from '@/lib/contact-interest'
 import { landingActive } from '@/lib/landing'
 import { approvedLocalesFor, findPublic, findPublicBySlug, populated, populatedList } from '@/lib/content'
 import { pageLocale, type SlugParams } from '@/lib/locale'
+import { asGuestView } from '@/lib/guest-view'
 import { getPreviewUser } from '@/lib/preview'
 import { alternatesFor, localizedPath, publicImage, withSocial } from '@/lib/seo'
 import { breadcrumbLd, productLd } from '@/lib/structured-data'
@@ -72,17 +73,30 @@ function InfoSection({
   )
 }
 
-export default async function ProductPage({ params }: { params: SlugParams }) {
+export default async function ProductPage({
+  params,
+  searchParams,
+}: {
+  params: SlugParams
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const locale = await pageLocale(params)
   const { slug } = await params
-  const product = await findPublicBySlug('products', slug, locale)
-  if (!product) notFound()
+  const found = await findPublicBySlug('products', slug, locale)
+  if (!found) notFound()
 
-  const [t, available, preview] = await Promise.all([
+  const [t, available, previewUser, query] = await Promise.all([
     getTranslations(),
     approvedLocalesFor('products', slug),
     getPreviewUser(),
+    searchParams,
   ])
+  // Admin landing builder: "Xem như khách" shows the draft exactly as a visitor would get it
+  // (no staff marks, private files dropped). Only for signed-in staff in draft preview.
+  const asGuest = !!previewUser && query.lp === 'guest'
+  const editable = !!previewUser && (query.lp === 'guest' || query.lp === 'staff')
+  const preview = asGuest ? null : previewUser
+  const product = asGuest ? asGuestView(found) : found
   const line = populated<ProductLine>(product.line)
   const ingredients = populatedList<Ingredient>(product.keyIngredients)
   const technologies = populatedList<Technology>(product.technologies)
@@ -164,7 +178,7 @@ export default async function ProductPage({ params }: { params: SlugParams }) {
           existing product layout below, unchanged. */}
       {landingActive(product.landing) ? (
         <article>
-          <ProductLanding product={product} locale={locale} preview={!!preview} />
+          <ProductLanding product={product} locale={locale} preview={!!preview} editable={editable} />
         </article>
       ) : (
       <article>

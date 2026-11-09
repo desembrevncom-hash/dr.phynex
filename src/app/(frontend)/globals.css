@@ -1651,3 +1651,22 @@
     transform: none;
   }
 }
+
+/* Admin landing builder preview only (html.lp-builder-frame is set inside the Admin frame). */
+.lp-builder-frame [data-lp-id] {
+  position: relative;
+  cursor: pointer;
+}
+.lp-builder-frame [data-lp-id]:hover::after,
+.lp-builder-frame [data-lp-id][data-lp-selected]::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  pointer-events: none;
+  border: 2px dashed #2563eb;
+  border-radius: 4px;
+}
+.lp-builder-frame [data-lp-id][data-lp-selected]::after {
+  border-style: solid;
+  border-width: 3px;
+}

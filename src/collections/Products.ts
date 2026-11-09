@@ -16,6 +16,7 @@ export const Products = contentCollection({
     defaultColumns: ['name', 'line', 'slug', '_status', 'translationStatus'],
     description:
       'Introduction only: no prices or purchase links. Calls to action point to Stores and Contact.',
+    components: { edit: { beforeDocumentControls: ['/components/admin/LocaleSwitchGuard#LocaleSwitchGuard'] } },
   },
   fields: [
     {

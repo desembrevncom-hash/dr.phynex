@@ -22,7 +22,11 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { LandingOverview as LandingOverview_e1d98798230575910aab365be9db8b37 } from '../../../components/admin/LandingOverview'
+import { ScopedLabel as ScopedLabel_1034ea4c75962126e4e250e9d8f29395 } from '../../../components/admin/landing/ScopedLabel'
+import { LandingImageField as LandingImageField_8762b1754e71cffc34aa6ce499f49c88 } from '../../../components/admin/landing/LandingImageField'
 import { LandingBlockLabel as LandingBlockLabel_66570f4c6f324436bf43b4aa9c81ff4b } from '../../../components/admin/LandingBlockLabel'
+import { LandingBuilder as LandingBuilder_84788edae2dc1b3524f720616361eba5 } from '../../../components/admin/landing/LandingBuilder'
+import { LocaleSwitchGuard as LocaleSwitchGuard_da0bd92e90d4dc9601a5268ef7fe9e2e } from '../../../components/admin/LocaleSwitchGuard'
 import { SlotLabel as SlotLabel_f4d8bbe4241b537a554a78f085b3604a } from '../../../components/admin/SlotLabel'
 import { ApprovalPanel as ApprovalPanel_2f2c03a8c1c2994eab307a6de093ef5e } from '../../../components/admin/ApprovalPanel'
 import { Dashboard as Dashboard_16b88e9b8c48e393fa86591406efd08f } from '../../../components/admin/Dashboard'
@@ -55,7 +59,11 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/components/admin/LandingOverview#LandingOverview": LandingOverview_e1d98798230575910aab365be9db8b37,
+  "/components/admin/landing/ScopedLabel#ScopedLabel": ScopedLabel_1034ea4c75962126e4e250e9d8f29395,
+  "/components/admin/landing/LandingImageField#LandingImageField": LandingImageField_8762b1754e71cffc34aa6ce499f49c88,
   "/components/admin/LandingBlockLabel#LandingBlockLabel": LandingBlockLabel_66570f4c6f324436bf43b4aa9c81ff4b,
+  "/components/admin/landing/LandingBuilder#LandingBuilder": LandingBuilder_84788edae2dc1b3524f720616361eba5,
+  "/components/admin/LocaleSwitchGuard#LocaleSwitchGuard": LocaleSwitchGuard_da0bd92e90d4dc9601a5268ef7fe9e2e,
   "/components/admin/SlotLabel#SlotLabel": SlotLabel_f4d8bbe4241b537a554a78f085b3604a,
   "/components/admin/ApprovalPanel#ApprovalPanel": ApprovalPanel_2f2c03a8c1c2994eab307a6de093ef5e,
   "/components/admin/Dashboard#Dashboard": Dashboard_16b88e9b8c48e393fa86591406efd08f,

@@ -4,6 +4,7 @@ import { useFormFields, useLocale } from '@payloadcms/ui'
 
 import { blockIssues, blockTitles, landingActive, type LandingBlockType } from '@/lib/landing'
 
+import { useLandingRows } from './landing/useLandingRows'
 import { chosen, useProductProvides } from './landingProvides'
 
 const locales = [
@@ -22,26 +23,7 @@ export function LandingOverview() {
   const { code } = useLocale()
   const provides = useProductProvides()
   const slug = useFormFields(([fields]) => fields.slug?.value) as string | undefined
-  // Rebuild each block's data from the flat form state ("landing.<i>.<field>").
-  const blocks = useFormFields(([fields]) => {
-    const out: Record<string, unknown>[] = []
-    for (const [path, field] of Object.entries(fields)) {
-      const m = /^landing\.(\d+)\.(.+)$/.exec(path)
-      if (!m) continue
-      const i = Number(m[1])
-      out[i] ??= {}
-      const parts = m[2].split('.')
-      // "landing.<i>.items" holds the row count; the rows themselves come as "items.<n>.<field>".
-      if (parts.length === 1 && !Array.isArray(out[i][parts[0]])) out[i][parts[0]] = field.value
-      else if (parts.length === 3) {
-        if (!Array.isArray(out[i][parts[0]])) out[i][parts[0]] = []
-        const list = out[i][parts[0]] as Record<string, unknown>[]
-        list[Number(parts[1])] ??= {}
-        list[Number(parts[1])][parts[2]] = field.value
-      }
-    }
-    return out.filter(Boolean)
-  })
+  const blocks = useLandingRows()
   const lang = String(code ?? '').toUpperCase()
   const active = landingActive(blocks)
   // Which languages approved the structure of the SAVED draft (server-computed on read).

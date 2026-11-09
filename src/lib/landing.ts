@@ -84,6 +84,18 @@ export const blockTitles: Record<LandingBlockType, string> = {
   cta: 'CTA cuối trang',
 }
 
+/** Short help shown in the "Thêm khối" menu of the Admin builder: when to pick each kind. */
+export const blockDescriptions: Record<LandingBlockType, string> = {
+  hero: 'Phần mở đầu: tên sản phẩm, câu giới thiệu, ảnh, quy cách và nút tư vấn. Thường là khối đầu tiên.',
+  band: 'Một ảnh lớn tràn ngang (sản phẩm, texture, campaign), có ảnh riêng cho điện thoại.',
+  split: 'Ảnh đặt cạnh tiêu đề và đoạn mô tả. Dùng để giải thích một ý.',
+  points: 'Lưới 2–6 thẻ ngắn. Chỉ dùng cho đặc điểm hoặc công dụng đã duyệt, có nguồn.',
+  ingredients: 'Danh sách thành phần nổi bật; để trống sẽ lấy "Thành phần chính" của sản phẩm.',
+  details: 'Quy cách, INCI, cách dùng và lưu ý lấy từ dữ liệu có sẵn của sản phẩm.',
+  faq: 'Câu hỏi và câu trả lời mở/đóng được.',
+  cta: 'Dải kêu gọi cuối trang: mở form tư vấn và tìm điểm bán.',
+}
+
 /** The landing page is used as soon as one block is not hidden; otherwise the existing layout. */
 export const landingActive = (blocks: unknown) => rows(blocks).some((b) => b.hidden !== true)
 
