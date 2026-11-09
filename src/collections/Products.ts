@@ -1,5 +1,7 @@
 import { editorsField, staffField } from '@/access/roles'
 import { seoField, slugField } from '@/fields/common'
+import { landingField } from '@/fields/landing'
+import { guardLanding } from '@/hooks/guardLanding'
 
 import { contentCollection } from './factory'
 
@@ -7,6 +9,7 @@ const editorOnly = { create: editorsField, update: editorsField }
 
 export const Products = contentCollection({
   slug: 'products',
+  hooks: { beforeChange: [guardLanding] },
   admin: {
     useAsTitle: 'name',
     group: 'Catalog',
@@ -108,6 +111,19 @@ export const Products = contentCollection({
           ],
         },
         { label: 'SEO', fields: [seoField] },
+        {
+          label: 'Landing page',
+          description:
+            'Trang giới thiệu dạng khối cho sản phẩm này. Thêm khối, kéo để sắp xếp, nhập chữ theo ngôn ngữ đang chọn, lưu nháp rồi mở xem trước. Quy trình duyệt và xuất bản theo từng ngôn ngữ giữ nguyên.',
+          fields: [
+            {
+              name: 'landingOverview',
+              type: 'ui',
+              admin: { components: { Field: '/components/admin/LandingOverview#LandingOverview' } },
+            },
+            landingField,
+          ],
+        },
       ],
     },
     slugField,

@@ -1,5 +1,10 @@
 {
   "version": 1,
-  "status": "No proposals. The banner migration was approved by moving its entry into deploy/migrations.approved.json (see git history).",
-  "files": []
+  "status": "PROPOSED for review: product landing page blocks (additive only: new lp_*/_lp_* tables, enums, indexes and foreign keys; no existing table, column or row is changed). Applied only to the disposable test database. Approve by moving the entry into deploy/migrations.approved.json.",
+  "files": [
+    {
+      "filename": "20261107_050810_landing_blocks.ts",
+      "sha256": "1d36f01a798c0edcfbe58b484517b104142362cd069c990fcde5ca6eb7ba0b30"
+    }
+  ]
 }
