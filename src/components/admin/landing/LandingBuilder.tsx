@@ -154,6 +154,11 @@ export function LandingBuilder(props: BlocksFieldClientProps) {
   const [pendingDelete, setPendingDelete] = useState<number | null>(null)
   const [announce, setAnnounce] = useState('')
   const [frameKey, setFrameKey] = useState(0)
+  // What the frame reported it shows ('guest' | 'staff'), and one automatic reload on mismatch.
+  const [frameReport, setFrameReport] = useState<{ src: string; view: 'guest' | 'staff' } | null>(null)
+  const guestRef = useRef(false)
+  const srcRef = useRef<string | null>(null)
+  const retriesRef = useRef(0)
   const [narrowPane, setNarrowPane] = useState<'list' | 'preview' | 'edit'>('edit')
   const frameRef = useRef<HTMLIFrameElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -255,6 +260,15 @@ export function LandingBuilder(props: BlocksFieldClientProps) {
     return `/preview?path=${encodeURIComponent(page)}`
   }, [slug, code, guest, frameKey, savedAt])
 
+  // Keep the message handler in step with the current choice and frame (refs, no re-render).
+  useEffect(() => {
+    if (guestRef.current !== guest) retriesRef.current = 0
+    guestRef.current = guest
+    srcRef.current = previewSrc
+  }, [guest, previewSrc])
+  const frameView = frameReport && frameReport.src === previewSrc ? frameReport.view : null
+  const frameLoading = frameView === null
+
   useEffect(() => {
     const el = stageRef.current
     if (!el) return
@@ -269,6 +283,17 @@ export function LandingBuilder(props: BlocksFieldClientProps) {
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== window.location.origin || e.data?.source !== PREVIEW_SOURCE) return
+      if (e.data.type === 'ready') {
+        // The frame says which view it rendered. A guest view must carry no staff marks.
+        const shown: 'guest' | 'staff' = e.data.view === 'guest' && !e.data.staffMarks ? 'guest' : 'staff'
+        const wanted = guestRef.current ? 'guest' : 'staff'
+        if (srcRef.current) setFrameReport({ src: srcRef.current, view: shown })
+        if (shown !== wanted && retriesRef.current < 1) {
+          retriesRef.current += 1
+          setFrameKey((k) => k + 1)
+        }
+        return
+      }
       if (e.data.type === 'select' && typeof e.data.id === 'string') {
         if (rows.some((r) => r.id === e.data.id)) {
           setSelectedId(e.data.id)
@@ -639,6 +664,12 @@ export function LandingBuilder(props: BlocksFieldClientProps) {
                 Tải lại
               </button>
             </div>
+            {frameView !== null && frameView !== (guest ? 'guest' : 'staff') && !frameLoading ? (
+              <p className="dx-lp-builder__stale" role="alert">
+                <strong>Khung xem trước chưa khớp chế độ đã chọn</strong> (đang hiện{' '}
+                {frameView === 'guest' ? 'chế độ khách' : 'chế độ nhân sự'}). Bấm &ldquo;Tải lại&rdquo;.
+              </p>
+            ) : null}
             {modified ? (
               <p className="dx-lp-builder__stale" role="status">
                 <strong>Lưu nháp để xem thay đổi.</strong> Xem trước hiển thị bản nháp đã lưu gần

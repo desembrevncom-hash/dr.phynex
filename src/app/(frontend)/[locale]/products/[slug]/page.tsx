@@ -105,9 +105,20 @@ export default async function ProductPage({
   const claims = product.claims ?? []
 
   // Related: editor's choice first, otherwise the rest of the same line.
+  // "Xem như khách" reads them exactly as a visitor would (published + approved, released files only).
   let related = populatedList<Product>(product.related)
+  if (asGuest && related.length > 0) {
+    const { docs } = await findPublic('products', locale, {
+      publicOnly: true,
+      where: { id: { in: related.map((p) => p.id) } },
+      limit: related.length,
+    })
+    const visible = new Set(docs.map((d) => d.id))
+    related = docs.length ? related.filter((p) => visible.has(p.id)).map((p) => docs.find((d) => d.id === p.id)!) : []
+  }
   if (related.length === 0 && line) {
     const { docs } = await findPublic('products', locale, {
+      publicOnly: asGuest,
       where: { and: [{ line: { equals: line.id } }, { id: { not_equals: product.id } }] },
       sort: 'createdAt',
       limit: 6,

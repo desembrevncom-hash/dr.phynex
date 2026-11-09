@@ -33,7 +33,16 @@ export function LandingPreviewBridge() {
     }
     document.addEventListener('click', onClick, true)
     window.addEventListener('message', onMessage)
-    window.parent.postMessage({ source: PREVIEW_SOURCE, type: 'ready' }, origin)
+    // Tell the builder which view this frame really shows, so it can catch a stale frame.
+    window.parent.postMessage(
+      {
+        source: PREVIEW_SOURCE,
+        type: 'ready',
+        view: new URLSearchParams(window.location.search).get('lp'),
+        staffMarks: document.body.innerText.includes('[Xem trước]'),
+      },
+      origin,
+    )
     return () => {
       document.removeEventListener('click', onClick, true)
       window.removeEventListener('message', onMessage)
