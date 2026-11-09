@@ -3,9 +3,15 @@ import { getPayload, type Migration, type Payload } from 'payload'
 import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
+const preview = vi.hoisted(() => ({ user: null as unknown }))
 vi.mock('server-only', () => ({}))
-vi.mock('@/lib/preview', () => ({ getPreviewUser: async () => null }))
+vi.mock('@/lib/preview', () => ({ getPreviewUser: async () => preview.user }))
 
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+
+import { internalHref, RichText } from '@/components/ui/RichText'
+import { findGuestGlobal, findPublicGlobal } from '@/lib/content'
 import { withVisitorRelations } from '@/lib/guest-relations'
 import { asGuestView } from '@/lib/guest-view'
 import { migrations } from '@/migrations'
@@ -55,6 +61,37 @@ const doc = (d: unknown) => {
   return { id: o.id, name: o.name, slug: o.slug, image: media(o.image ?? o.heroImage) }
 }
 const list = (v: unknown) => (Array.isArray(v) ? v.map(doc).filter(Boolean) : [])
+type Lex = { type?: string; text?: string; fields?: { linkType?: string; doc?: { relationTo?: string; value?: unknown } }; children?: Lex[] }
+const textOf = (n: Lex): string => n.text ?? (n.children ?? []).map(textOf).join('')
+/** Internal links of a rich text field as the page renders them: words + href (null = shown without a link). */
+const richLinks = (value: unknown) => {
+  const out: { text: string; href: string | null }[] = []
+  const walk = (n?: Lex) => {
+    if (!n) return
+    if (n.type === 'link' && n.fields?.linkType === 'internal') out.push({ text: textOf(n), href: internalHref(n.fields.doc as never, 'vi') })
+    for (const c of n.children ?? []) walk(c)
+  }
+  walk((value as { root?: Lex } | null)?.root)
+  return out
+}
+const textNode = (text: string) => ({ type: 'text', text, format: 0, detail: 0, mode: 'normal', style: '', version: 1 })
+/** Lexical rich text: one paragraph "Xem <link>" per target, internal links to CMS documents. */
+const richText = (links: { relationTo: string; value: number; text: string }[]) => ({
+  root: {
+    type: 'root', format: '', indent: 0, version: 1, direction: 'ltr',
+    children: links.map((l) => ({
+      type: 'paragraph', format: '', indent: 0, version: 1, direction: 'ltr', textFormat: 0, textStyle: '',
+      children: [
+        textNode('Xem '),
+        {
+          type: 'link', format: '', indent: 0, version: 3, direction: 'ltr',
+          fields: { linkType: 'internal', newTab: false, doc: { relationTo: l.relationTo, value: l.value } },
+          children: [textNode(l.text)],
+        },
+      ],
+    })),
+  },
+})
 /** What the page shows from the related documents: breadcrumb/JSON-LD line, types, ingredients, technologies. */
 const shown = (p: Product) => ({
   line: doc(p.line),
@@ -62,6 +99,8 @@ const shown = (p: Product) => ({
   keyIngredients: list(p.keyIngredients),
   technologies: list(p.technologies),
   landingIngredients: (p.landing ?? []).flatMap((b) => (b.blockType === 'ingredients' ? (b.items ?? []).map((i) => doc(i.ingredient)).filter(Boolean) : [])),
+  howToUseLinks: richLinks(p.howToUse),
+  cautionsLinks: richLinks(p.cautions),
 })
 
 /** Public page read (lib/content.ts guest read of findPublicBySlug: no user, published, depth 2). */
@@ -93,7 +132,22 @@ beforeAll(async () => {
       await payload.create({
         collection: 'products',
         locale: 'vi',
-        data: { name: `[MẪU] Sản phẩm ${state}`, slug: `int-gr-product-${state}`, line, categories: [category], keyIngredients: [ingredient], technologies: [technology], translationStatus: 'approved', _status: 'published' } as never,
+        data: {
+          name: `[MẪU] Sản phẩm ${state}`,
+          slug: `int-gr-product-${state}`,
+          line,
+          categories: [category],
+          keyIngredients: [ingredient],
+          technologies: [technology],
+          // Rich text links to the documents in this state (words stay; a link only when public in VI).
+          howToUse: richText([{ relationTo: 'ingredients', value: ingredient, text: `thành phần ${state}` }]),
+          cautions: richText([
+            { relationTo: 'product-lines', value: line, text: `dòng ${state}` },
+            { relationTo: 'technologies', value: technology, text: `công nghệ ${state}` },
+          ]),
+          translationStatus: 'approved',
+          _status: 'published',
+        } as never,
         overrideAccess: true,
       })
     ).id
@@ -122,12 +176,12 @@ describe('Xem như khách: related documents read like the public page (VI)', ()
 
   it('draft links: nothing from them in guest view (no line in breadcrumb, no type, ingredient or technology)', async () => {
     const guest = await withVisitorRelations(asGuestView(await staffRead(products.draft, 'vi')), 'vi')
-    expect(shown(guest)).toEqual({ line: null, categories: [], keyIngredients: [], technologies: [], landingIngredients: [] })
+    expect(shown(guest)).toMatchObject({ line: null, categories: [], keyIngredients: [], technologies: [], landingIngredients: [] })
   })
 
   it('links public only in KO: nothing from them in the VI guest view (no KO text, no fallback)', async () => {
     const guest = await withVisitorRelations(asGuestView(await staffRead(products['ko-only'], 'vi')), 'vi')
-    expect(shown(guest)).toEqual({ line: null, categories: [], keyIngredients: [], technologies: [], landingIngredients: [] })
+    expect(shown(guest)).toMatchObject({ line: null, categories: [], keyIngredients: [], technologies: [], landingIngredients: [] })
     // Not vacuous: the same documents are public for KO visitors, and not for VI visitors.
     for (const collection of ['product-lines', 'product-categories', 'ingredients', 'technologies'] as const) {
       const where = { slug: { equals: `int-gr-${collection}-ko-only` } }
@@ -157,5 +211,85 @@ describe('Xem như khách: related documents read like the public page (VI)', ()
     const koOnly = shown(await staffRead(products['ko-only'], 'vi'))
     expect(koOnly.line).toMatchObject({ name: '[MẪU] product-lines ko-only VI' })
     expect(koOnly.technologies).toMatchObject([{ name: '[MẪU] technologies ko-only VI' }])
+  })
+})
+
+describe('Xem như khách: CMS links in "Cách dùng" and "Lưu ý" (VI)', () => {
+  const render = (value: unknown) => renderToStaticMarkup(createElement(RichText, { data: value, locale: 'vi' }))
+
+  it('draft and KO-only targets: the words stay, the link is dropped (same as the public page)', async () => {
+    for (const state of ['draft', 'ko-only'] as const) {
+      const guest = await withVisitorRelations(asGuestView(await staffRead(products[state], 'vi')), 'vi')
+      expect(richLinks(guest.howToUse)).toEqual([{ text: `thành phần ${state}`, href: null }])
+      expect(richLinks(guest.cautions)).toEqual([
+        { text: `dòng ${state}`, href: null },
+        { text: `công nghệ ${state}`, href: null },
+      ])
+      const html = render(guest.howToUse) + render(guest.cautions)
+      expect(html).toContain(`thành phần ${state}`)
+      expect(html).toContain(`công nghệ ${state}`)
+      expect(html).not.toContain('<a ')
+      const pub = (await publicPage(products[state], 'vi'))!
+      expect(render(pub.howToUse) + render(pub.cautions)).toBe(html)
+    }
+  })
+
+  it('targets public in VI: links work and point at the VI page', async () => {
+    const guest = await withVisitorRelations(asGuestView(await staffRead(products['vi-public'], 'vi')), 'vi')
+    expect(richLinks(guest.howToUse)).toEqual([{ text: 'thành phần vi-public', href: '/vi/ingredients/int-gr-ingredients-vi-public' }])
+    expect(richLinks(guest.cautions)).toEqual([
+      { text: 'dòng vi-public', href: '/vi/products/line/int-gr-product-lines-vi-public' },
+      { text: 'công nghệ vi-public', href: '/vi/technologies/int-gr-technologies-vi-public' },
+    ])
+    const html = render(guest.howToUse) + render(guest.cautions)
+    expect(html).toContain('href="/vi/ingredients/int-gr-ingredients-vi-public"')
+    const pub = (await publicPage(products['vi-public'], 'vi'))!
+    expect(render(pub.howToUse) + render(pub.cautions)).toBe(html)
+  })
+
+  it('staff view still links to the draft and KO-only targets', async () => {
+    expect(richLinks((await staffRead(products.draft, 'vi')).howToUse)).toEqual([
+      { text: 'thành phần draft', href: '/vi/ingredients/int-gr-ingredients-draft' },
+    ])
+    expect(richLinks((await staffRead(products['ko-only'], 'vi')).cautions)[0]).toEqual({
+      text: 'dòng ko-only',
+      href: '/vi/products/line/int-gr-product-lines-ko-only',
+    })
+  })
+})
+
+describe('Xem như khách: footer contact (Site settings) read with the visitor permissions', () => {
+  const PUBLIC_HOTLINE = '+82 10-1111-1111 [MẪU công khai]'
+  const DRAFT_HOTLINE = '+82 10-2222-2222 [MẪU nháp]'
+  beforeAll(async () => {
+    await payload.updateGlobal({
+      slug: 'site-settings',
+      locale: 'vi',
+      data: { contact: { phone: PUBLIC_HOTLINE, address: '[MẪU] Địa chỉ' }, translationStatus: 'approved', _status: 'published' } as never,
+      overrideAccess: true,
+    })
+    await payload.updateGlobal({
+      slug: 'site-settings',
+      locale: 'vi',
+      draft: true,
+      data: { contact: { phone: DRAFT_HOTLINE, address: '[MẪU] Địa chỉ' } } as never,
+      user: editor,
+      overrideAccess: false,
+    })
+  })
+
+  it('guest view (PageShell guestView → findGuestGlobal) shows the public hotline; staff view the draft one', async () => {
+    preview.user = null
+    expect((await findGuestGlobal('site-settings', 'vi'))?.contact?.phone).toBe(PUBLIC_HOTLINE)
+    // The public page itself (no preview user) shows the same hotline.
+    expect((await findPublicGlobal('site-settings', 'vi'))?.contact?.phone).toBe(PUBLIC_HOTLINE)
+    // Staff preview (signed-in editor): the draft hotline, as before; guest view still the public one.
+    preview.user = editor
+    try {
+      expect((await findPublicGlobal('site-settings', 'vi'))?.contact?.phone).toBe(DRAFT_HOTLINE)
+      expect((await findGuestGlobal('site-settings', 'vi'))?.contact?.phone).toBe(PUBLIC_HOTLINE)
+    } finally {
+      preview.user = null
+    }
   })
 })

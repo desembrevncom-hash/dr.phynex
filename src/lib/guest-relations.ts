@@ -4,6 +4,7 @@ import type { CollectionSlug } from 'payload'
 
 import type { Locale } from '@/i18n/locales'
 import type { Product } from '@/payload-types'
+import { linkableCollections } from '@/components/ui/RichText'
 
 import { findPublic } from './content'
 
@@ -26,11 +27,36 @@ const relations = [
 type LandingBlock = NonNullable<Product['landing']>[number]
 type IngredientItem = { ingredient?: Ref } & Record<string, unknown>
 
+/** Rich text fields of the product shown on the page; their internal links point at CMS documents. */
+const richTextFields = ['howToUse', 'cautions'] as const
+type LexNode = {
+  type?: string
+  fields?: { linkType?: string; doc?: { relationTo?: string; value?: unknown } } & Record<string, unknown>
+  children?: LexNode[]
+} & Record<string, unknown>
+type Link = { relationTo: string; value: unknown }
+const internalLink = (node: LexNode): Link | null => {
+  const doc = node.fields?.linkType === 'internal' ? node.fields.doc : undefined
+  return doc && typeof doc.relationTo === 'string' ? (doc as Link) : null
+}
+const eachNode = (node: LexNode | undefined, fn: (n: LexNode) => void) => {
+  if (!node || typeof node !== 'object') return
+  fn(node)
+  for (const child of node.children ?? []) eachNode(child, fn)
+}
+const mapNodes = (node: LexNode, fn: (n: LexNode) => LexNode): LexNode => {
+  const next = fn(node)
+  return next.children ? { ...next, children: next.children.map((c) => mapNodes(c, fn)) } : next
+}
+const rootOf = (value: unknown) =>
+  value && typeof value === 'object' && 'root' in value ? (value as { root: LexNode }).root : undefined
+
 /**
  * "Xem như khách": the staff member's draft read of the product, with every related document
  * (product line, product types, key ingredients, technologies, concerns, related products and the
- * ingredients picked in landing blocks) read again with the visitor query of the public page:
- * no user, published only, approved for this locale, no fallback. One depth level less than the
+ * ingredients picked in landing blocks, documents linked from "how to use" and "cautions") read
+ * again with the visitor query of the public page: no user, published only, approved for this
+ * locale, no fallback. One depth level less than the
  * product read (depth 2), so the documents come back exactly as they are populated on the public
  * page. A document the visitor cannot read stays a bare id, as the public API returns it, so the
  * page hides its name, image and link the same way. Staff view does not use this.
@@ -49,6 +75,13 @@ export async function withVisitorRelations(product: Product, locale: Locale): Pr
   }
   for (const block of product.landing ?? []) {
     if (block.blockType === 'ingredients') for (const item of (block.items ?? []) as IngredientItem[]) want('ingredients', item.ingredient)
+  }
+  // Internal links in rich text: only to collections the site links to; others never become links.
+  for (const field of richTextFields) {
+    eachNode(rootOf(product[field]), (n) => {
+      const link = internalLink(n)
+      if (link && linkableCollections.includes(link.relationTo)) want(link.relationTo as CollectionSlug, link.value)
+    })
   }
 
   const visible = new Map<CollectionSlug, Map<Id, unknown>>()
@@ -82,6 +115,22 @@ export async function withVisitorRelations(product: Product, locale: Locale): Pr
           } as LandingBlock)
         : block,
     )
+  }
+  // Rich text: the text is kept; a link whose target the visitor cannot read in this language keeps
+  // only the target id, so the page renders the words without a link (as on the public page).
+  for (const field of richTextFields) {
+    const value = product[field] as unknown
+    const root = rootOf(value)
+    if (!root) continue
+    next[field] = {
+      ...(value as object),
+      root: mapNodes(root, (n) => {
+        const link = internalLink(n)
+        if (!link) return n
+        const target = linkableCollections.includes(link.relationTo) ? asVisitor(link.relationTo as CollectionSlug, link.value) : idOf(link.value)
+        return { ...n, fields: { ...n.fields, doc: { ...link, value: target } } }
+      }),
+    }
   }
   return next as unknown as Product
 }

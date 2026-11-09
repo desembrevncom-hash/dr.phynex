@@ -133,7 +133,7 @@ export default async function ProductPage({
   const frame = `border ${product.accent === 'navy' ? 'border-navy' : 'border-current'}`
 
   return (
-    <PageShell locale={locale} path={`/products/${slug}`} available={available} bleed>
+    <PageShell locale={locale} path={`/products/${slug}`} available={available} bleed guestView={asGuest}>
       <JsonLd
         data={[
           productLd({
