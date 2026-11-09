@@ -148,7 +148,7 @@ Dùng lại 8 loại khối, dữ liệu, Media, preview và quy trình duyệt 
 - **Kiểm tra:**
   - Integration đầy đủ 152/152.
   - Test mới `Admin stale-data check after a draft save` **thất bại** khi bỏ sửa đổi (`builder/06-mutation-stale.log`) và đạt khi có sửa đổi.
-  - Đây là thay đổi ở hook dùng chung của quy trình xuất bản theo ngôn ngữ, cần review riêng.
+  - Đây là thay đổi ở hook dùng chung của quy trình xuất bản theo ngôn ngữ, nên được **review tách riêng** khỏi giao diện trình dựng. Hồ sơ nằm ở `drphynex-products-review-evidence/hook-review/` (diff `ce996f9` cùng spec `tests/int/draft-save-hook.int.spec.ts` từ commit `a298e8c`; integration 166/166).
 
 ### Schema: đề xuất, chưa làm
 
@@ -159,7 +159,7 @@ Luồng nghiệm thu không cần trường mới. Nếu muốn mọi khối ả
 | Ảnh + nội dung (`split`) | `alt` (riêng ngôn ngữ), `mobileImage` (dùng chung) | Alt hiện lấy từ alt của Media (đã theo ngôn ngữ) nên không đổi được theo ngữ cảnh khối; điện thoại dùng cùng ảnh | Thêm cột `alt` vào `lp_split_locales` và `_lp_split_v_locales`; cột `mobile_image_id` kèm khoá ngoại vào `lp_split` và `_lp_split_v` |
 | Hero (`hero`) | `alt` (riêng ngôn ngữ), `mobileImage` (dùng chung) | Như trên | Tương tự với các bảng `lp_hero*` |
 
-Nếu được duyệt, các trường này sẽ thành **migration đề xuất thứ ba**, chỉ thêm cột cho phép NULL. Chưa tạo, chưa chạy.
+**Tạm hoãn (09/11):** chưa tạo, chưa chạy migration thứ ba. Hai migration hiện có vẫn ở trạng thái đề xuất.
 
 ## 4. Mẫu LUMA trên DB thử
 
