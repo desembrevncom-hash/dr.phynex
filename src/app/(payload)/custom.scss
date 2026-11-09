@@ -267,9 +267,21 @@
   color: var(--theme-elevation-600);
 }
 .dx-lp-overview__approval {
-  margin: 0 0 8px;
+  margin: 4px 0 10px;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--theme-elevation-150);
+}
+.dx-lp-overview__approval-title {
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+.dx-lp-overview__approval-row {
+  margin: 0 0 4px;
   display: flex;
   flex-wrap: wrap;
   gap: 4px 6px;
   align-items: center;
+}
+.dx-lp-overview__approval .dx-lp-overview__hint {
+  margin: 4px 0 0;
 }

@@ -11,6 +11,7 @@ const locales = [
   ['en', 'English'],
   ['vi', 'Tiếng Việt'],
 ] as const
+const statusLabels: Record<string, string> = { 'ai-draft': 'Bản nháp AI', 'in-review': 'Đang xem xét', approved: 'Đã duyệt' }
 
 /**
  * Top of the "Landing page" tab: whether the landing page is in use, which blocks still lack
@@ -45,6 +46,8 @@ export function LandingOverview() {
   const active = landingActive(blocks)
   // Which languages approved the structure of the SAVED draft (server-computed on read).
   const approvalState = useFormFields(([fields]) => fields.landingApprovalState?.value) as Record<string, boolean> | null | undefined
+  // Content approval of the language being edited (the sidebar field, as currently selected).
+  const status = useFormFields(([fields]) => fields.translationStatus?.value) as string | undefined
   const pending = blocks
     .map((b, i) => ({ i, b, issues: blockIssues(b, provides, chosen) }))
     .filter(({ b, issues }) => b.hidden !== true && issues.required.length > 0)
@@ -71,22 +74,32 @@ export function LandingOverview() {
         )
       ) : null}
       {active && approvalState ? (
-        <p className="dx-lp-overview__approval">
-          Duyệt cấu trúc của bản đã lưu (dùng chung):{' '}
-          {locales.map(([l], i) => {
-            const ok = approvalState[l] === true
-            return (
-              <span key={l} className={ok ? 'dx-lp--ok dx-lp-badge' : 'dx-lp--missing dx-lp-badge'}>
-                {i > 0 ? ' ' : ''}
-                {l.toUpperCase()}: {ok ? 'đã duyệt' : 'cần duyệt'}
-              </span>
-            )
-          })}
-          <span className="dx-lp-overview__hint">
-            {' '}
-            Đổi khối, thứ tự, ẩn/hiện, ảnh hoặc nền sẽ xoá duyệt của mọi ngôn ngữ; muốn xuất bản, mọi ngôn ngữ đang công khai phải duyệt lại cấu trúc mới (lưu nháp với &ldquo;Đã duyệt&rdquo;, không kèm thay đổi khác).
-          </span>
-        </p>
+        <div className="dx-lp-overview__approval" role="group" aria-label="Hai loại duyệt">
+          <p className="dx-lp-overview__approval-title">Hai loại duyệt, cả hai cần có trước khi xuất bản một ngôn ngữ:</p>
+          <p className="dx-lp-overview__approval-row">
+            <strong>1. Duyệt nội dung {lang}</strong> (trường &ldquo;Trạng thái duyệt&rdquo; ở cột phải, riêng từng ngôn ngữ):{' '}
+            <span className={status === 'approved' ? 'dx-lp--ok dx-lp-badge' : 'dx-lp--missing dx-lp-badge'}>
+              {statusLabels[String(status)] ?? 'Chưa đặt'}
+            </span>
+          </p>
+          <p className="dx-lp-overview__approval-row">
+            <strong>2. Duyệt cấu trúc landing</strong> (dùng chung cho KO/EN/VI, theo bản đã lưu):{' '}
+            {locales.map(([l]) => {
+              const ok = approvalState[l] === true
+              return (
+                <span key={l} className={ok ? 'dx-lp--ok dx-lp-badge' : 'dx-lp--missing dx-lp-badge'}>
+                  {l.toUpperCase()}: {ok ? 'đã duyệt' : 'cần duyệt'}
+                </span>
+              )
+            })}
+          </p>
+          <p className="dx-lp-overview__hint">
+            {status === 'approved' && approvalState[code as string] !== true
+              ? `${lang} đang ghi "Đã duyệt" nhưng chưa duyệt cấu trúc hiện tại (cấu trúc vừa đổi). Người duyệt lưu nháp ${lang} một lần nữa, giữ "Đã duyệt", không sửa gì khác.`
+              : `Chọn "Đã duyệt" rồi lưu nháp (không kèm thay đổi khác) sẽ duyệt cả nội dung ${lang} lẫn cấu trúc hiện tại cho ${lang}.`}{' '}
+            Đổi khối, thứ tự, ẩn/hiện, ảnh hoặc nền sẽ xoá duyệt cấu trúc của mọi ngôn ngữ; các ngôn ngữ đang công khai phải duyệt lại thì mới xuất bản được. Sửa chữ chỉ ảnh hưởng ngôn ngữ đó.
+          </p>
+        </div>
       ) : null}
       {slug ? (
         <p className="dx-lp-overview__preview">
