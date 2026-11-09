@@ -5,6 +5,7 @@
  *   node_modules/.bin/tsx scripts/seed-product-review.ts reset    → drop + migrate + 3 test staff accounts
  *   (then the existing importers: scripts/import-preview-content.ts, scripts/import-product-content.ts)
  *   node_modules/.bin/tsx scripts/seed-product-review.ts guest    → one "[MẪU]" product, published + approved
+ *   node_modules/.bin/tsx scripts/seed-product-review.ts migrate  → apply pending migrations only (data kept)
  *
  * The four real products stay drafts exactly as the importers create them (packaging transcriptions,
  * KO/EN in review, VI AI draft, private images). The "[MẪU]" product exists only so the guest path
@@ -27,11 +28,76 @@ import { assertDisposableDatabase } from '../tests/helpers/database'
 export const GUEST_SAMPLE_SLUG = 'mau-san-pham-thu'
 const fixturePath = join(tmpdir(), 'drphynex-products-review-fixture.json')
 const phase = process.argv[2]
-if (phase !== 'reset' && phase !== 'guest') throw new Error('Usage: seed-product-review.ts reset|guest')
+if (phase !== 'reset' && phase !== 'guest' && phase !== 'migrate' && phase !== 'luma-landing')
+  throw new Error('Usage: seed-product-review.ts reset|guest|migrate|luma-landing')
 
 const payload = await getPayload({ config: await config })
 try {
   await assertDisposableDatabase(payload)
+
+  if (phase === 'luma-landing') {
+    // Demo landing page for MX-02 LUMA, saved as a DRAFT by the review editor (as in Admin).
+    // Only approved slider wording and names printed on the packaging; the highlight grid
+    // (claims) stays empty until sources are confirmed.
+    type Loc = 'ko' | 'en' | 'vi'
+    const editor = (await payload.find({ collection: 'users', where: { email: { equals: 'review-editor@test.local' } }, limit: 1, overrideAccess: true })).docs[0]
+    const luma = (await payload.find({ collection: 'products', where: { slug: { equals: 'mx-02-luma' } }, draft: true, limit: 1, depth: 0, overrideAccess: true })).docs[0]
+    if (!editor || !luma) throw new Error('review editor or mx-02-luma missing')
+    const image = Array.isArray(luma.images) ? luma.images[0] : undefined
+    const tagline: Record<Loc, string> = {
+      ko: '닥터피넥스 MX-02 LUMA를 만나보세요',
+      en: 'Discover Dr. PhynEX MX-02 LUMA',
+      vi: 'Khám phá Dr. PhynEX MX-02 LUMA',
+    }
+    const alt: Record<Loc, string> = { ko: 'MX-02 LUMA 바이알', en: 'MX-02 LUMA vial', vi: 'Lọ MX-02 LUMA' }
+    const ingredients: Record<Loc, string[]> = {
+      ko: ['Sodium DNA', '우유엑소좀', '17종 아미노산', '비타민 컴플렉스'],
+      en: ['Sodium DNA', 'Milk Exosome', '17 amino acids', 'Vitamin complex'],
+      vi: ['Sodium DNA', 'Exosome sữa', '17 loại axit amin', 'Phức hợp vitamin'],
+    }
+    const source =
+      'Hộp MX-02 LUMA (mx-02-luma_box.pdf): mô tả EN "Sodium DNA and Milk Exosome … 17 Amino Acids and a Vitamin Complex"; 전성분 KO "우유엑소좀".'
+    // 1) Structure + VI texts.
+    await payload.update({
+      collection: 'products',
+      id: luma.id,
+      locale: 'vi',
+      draft: true,
+      user: editor,
+      overrideAccess: false,
+      data: {
+        landing: [
+          { blockType: 'hero', tagline: tagline.vi, showPack: true, tone: 'muted' },
+          { blockType: 'band', image, alt: alt.vi, tone: 'light' },
+          { blockType: 'ingredients', items: ingredients.vi.map((name) => ({ name, sourceNote: source })), tone: 'light' },
+          { blockType: 'points', items: [], tone: 'muted' },
+          { blockType: 'details', tone: 'light' },
+          { blockType: 'cta', tone: 'dark' },
+        ],
+      } as never,
+    })
+    // 2) KO/EN texts on the same blocks (same row ids, shared fields unchanged).
+    for (const locale of ['ko', 'en'] as Loc[]) {
+      const doc = await payload.findByID({ collection: 'products', id: luma.id, locale, draft: true, depth: 0, overrideAccess: true })
+      const landing = (doc.landing ?? []).map((b) => {
+        if (b.blockType === 'hero') return { ...b, tagline: tagline[locale] }
+        if (b.blockType === 'band') return { ...b, alt: alt[locale] }
+        if (b.blockType === 'ingredients') return { ...b, items: (b.items ?? []).map((it, i) => ({ ...it, name: ingredients[locale][i] })) }
+        return b
+      })
+      await payload.update({ collection: 'products', id: luma.id, locale, draft: true, user: editor, overrideAccess: false, data: { landing } as never })
+    }
+    for (const locale of ['ko', 'en', 'vi'] as Loc[]) {
+      const doc = await payload.findByID({ collection: 'products', id: luma.id, locale, draft: true, depth: 0, overrideAccess: true })
+      console.log(`${locale}: ${(doc.landing ?? []).map((b) => b.blockType).join(' → ')} | hero "${(doc.landing?.[0] as { tagline?: string })?.tagline}" | status ${doc._status}/${doc.translationStatus}`)
+    }
+  }
+
+  if (phase === 'migrate') {
+    // Pending migrations only (already-applied ones are skipped); existing rows are kept.
+    await payload.db.migrate({ migrations: migrations as unknown as Migration[] })
+    console.log('Pending migrations applied to the disposable database')
+  }
 
   if (phase === 'reset') {
     await payload.db.dropDatabase({ adapter: payload.db as never })
