@@ -17,6 +17,7 @@ import { contactHrefFor } from '@/lib/contact-interest'
 import { landingActive } from '@/lib/landing'
 import { approvedLocalesFor, findPublic, findPublicBySlug, populated, populatedList } from '@/lib/content'
 import { pageLocale, type SlugParams } from '@/lib/locale'
+import { withVisitorRelations } from '@/lib/guest-relations'
 import { asGuestView } from '@/lib/guest-view'
 import { getPreviewUser } from '@/lib/preview'
 import { alternatesFor, localizedPath, publicImage, withSocial } from '@/lib/seo'
@@ -96,7 +97,9 @@ export default async function ProductPage({
   const asGuest = !!previewUser && query.lp === 'guest'
   const editable = !!previewUser && (query.lp === 'guest' || query.lp === 'staff')
   const preview = asGuest ? null : previewUser
-  const product = asGuest ? asGuestView(found) : found
+  // Guest view: private files dropped, and every related document (line, product types, ingredients,
+  // technologies, related products) read with the visitor query of the public page.
+  const product = asGuest ? await withVisitorRelations(asGuestView(found), locale) : found
   const line = populated<ProductLine>(product.line)
   const ingredients = populatedList<Ingredient>(product.keyIngredients)
   const technologies = populatedList<Technology>(product.technologies)
@@ -104,18 +107,8 @@ export default async function ProductPage({
   const productTypes = populatedList<ProductCategory>(product.categories).map((c) => c.name).filter(Boolean)
   const claims = product.claims ?? []
 
-  // Related: editor's choice first, otherwise the rest of the same line.
-  // "Xem như khách" reads them exactly as a visitor would (published + approved, released files only).
+  // Related: editor's choice first, otherwise the rest of the same line (guest view: visitor query).
   let related = populatedList<Product>(product.related)
-  if (asGuest && related.length > 0) {
-    const { docs } = await findPublic('products', locale, {
-      publicOnly: true,
-      where: { id: { in: related.map((p) => p.id) } },
-      limit: related.length,
-    })
-    const visible = new Set(docs.map((d) => d.id))
-    related = docs.length ? related.filter((p) => visible.has(p.id)).map((p) => docs.find((d) => d.id === p.id)!) : []
-  }
   if (related.length === 0 && line) {
     const { docs } = await findPublic('products', locale, {
       publicOnly: asGuest,
