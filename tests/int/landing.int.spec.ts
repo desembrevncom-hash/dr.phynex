@@ -165,3 +165,11 @@ describe('who may change what', () => {
     expect((staff.docs[0].landing?.find((b) => b.blockType === 'band') as { image?: { url?: string } }).image?.url).toBeTruthy()
   })
 })
+
+describe('Admin stale-data check after a draft save', () => {
+  it('the saved draft read back has the updatedAt the save returned (no "modified by another user" after own save)', async () => {
+    const saved = await save(editor, 'vi', { editorialNote: 'kiểm tra lưu nháp' })
+    const readBack = await payload.findByID({ collection: 'products', id: productId, locale: 'vi', draft: true, depth: 0, user: editor, overrideAccess: false, select: { updatedAt: true } })
+    expect(readBack.updatedAt).toBe(saved.updatedAt)
+  })
+})

@@ -28,12 +28,17 @@ export const publishOnlyRequestedLocale: CollectionBeforeOperationHook = ({
         true,
       )
     }
-    req.context.reviewSavingDraft = options.draft === true || options.draft === 'true'
+    const savingDraft = options.draft === true || options.draft === 'true'
+    req.context.reviewSavingDraft = savingDraft
     req.context.reviewApprovalIntent = (
       options.data as Record<string, unknown> | undefined
     )?.translationStatus
     req.fallbackLocale = false
-    options.publishSpecificLocale = req.locale
+    // Publishing only ever applies to the requested language. A draft save publishes nothing, so
+    // it does not use Payload's single-locale publish path: that path also stores a "snapshot"
+    // version as the latest draft carrying the document's OLD updatedAt, which made the Admin
+    // report every edit after a save as "modified by another user".
+    if (!savingDraft) options.publishSpecificLocale = req.locale
     options.publishAllLocales = false
   }
   return args
