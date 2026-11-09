@@ -290,7 +290,7 @@ describe('home banners migration is approved', () => {
     expect(names).toHaveLength(6)
     expect(names.at(-1)).toBe(name)
     // Planning only the approved files: the banner migration is the sixth and last step.
-    const approvedOnly = files.filter((f) => !f.startsWith(landing.replace(/\.ts$/, '')))
+    const approvedOnly = files.filter((f) => !f.startsWith(landing.replace(/\.ts$/, '')) && !f.startsWith(approvals.replace(/\.ts$/, '')))
     const plan = buildPlan(approvedOnly, sources, approved)
     expect(plan.steps).toHaveLength(6)
     expect(plan.steps.at(-1)?.filename).toBe(name)
@@ -308,7 +308,8 @@ describe('home banners migration is approved', () => {
 })
 
 const landing = '20261107_050810_landing_blocks.ts'
-describe('landing blocks migration is proposed, not approved', () => {
+const approvals = '20261109_024237_landing_approvals.ts'
+describe('landing migrations are proposed, not approved', () => {
   const dir = 'src/migrations'
   const files = readdirSync(dir)
   const sources = Object.fromEntries(
@@ -319,17 +320,15 @@ describe('landing blocks migration is proposed, not approved', () => {
   it('is absent from the executor allowlist, so the real executor refuses the migration set', () => {
     const approved = readFileSync('deploy/migrations.approved.json', 'utf8')
     expect(approved).not.toContain('landing_blocks')
+    expect(approved).not.toContain('landing_approvals')
     expect(() => buildPlan(files, sources, approved)).toThrow('Migration discovery differs')
   })
   it('the proposal records the exact bytes and cannot be read as an allowlist by itself', () => {
     const proposed = JSON.parse(readFileSync('deploy/migrations.proposed.json', 'utf8'))
-    expect(proposed.files).toHaveLength(1)
-    expect(proposed.files[0].filename).toBe(landing)
-    expect(
-      createHash('sha256')
-        .update(readFileSync(`${dir}/${landing}`))
-        .digest('hex'),
-    ).toBe(proposed.files[0].sha256)
+    expect(proposed.files.map((f: { filename: string }) => f.filename)).toEqual([landing, approvals])
+    for (const entry of proposed.files as Array<{ filename: string; sha256: string }>) {
+      expect(createHash('sha256').update(readFileSync(`${dir}/${entry.filename}`)).digest('hex')).toBe(entry.sha256)
+    }
     expect(() => buildPlan(files, sources, readFileSync('deploy/migrations.proposed.json', 'utf8'))).toThrow()
   })
   it('is additive only: CREATE TYPE/TABLE/INDEX and foreign keys on its own new tables', () => {
@@ -340,6 +339,15 @@ describe('landing blocks migration is proposed, not approved', () => {
     for (const sql of statements) {
       expect(sql).toMatch(/^(CREATE (TYPE|TABLE|INDEX|UNIQUE INDEX) "(public"\."enum_+lp_|_?lp_)|ALTER TABLE "_?lp_[a-z0-9_]+" ADD CONSTRAINT)/)
     }
+  })
+  it('the approvals migration only adds one nullable jsonb column to products and its versions', () => {
+    const plan = buildPlan(files, sources, testAllowlist())
+    const step = plan.steps.find((s) => s.filename === approvals)!
+    const statements = step.statements.flatMap((sql) => sql.split(/;\s*/)).map((s) => s.trim()).filter(Boolean)
+    expect(statements).toEqual([
+      'ALTER TABLE "products" ADD COLUMN "landing_approvals" jsonb',
+      'ALTER TABLE "_products_v" ADD COLUMN "version_landing_approvals" jsonb',
+    ])
   })
 })
 
@@ -361,9 +369,10 @@ describe('the approved migrations (via the test allowlist helper)', () => {
       '20261029_100000_storage_fields',
       '20261105_085002_home_banners',
       '20261107_050810_landing_blocks',
+      '20261109_024237_landing_approvals',
     ])
     expect(plan.steps.flatMap((s) => s.statements.map(validateMigrationSql))).toEqual([
-      665, 11, 2, 2, 4, 282, 234,
+      665, 11, 2, 2, 4, 282, 234, 2,
     ])
   })
 })

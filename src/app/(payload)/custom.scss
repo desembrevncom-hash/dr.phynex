@@ -266,3 +266,10 @@
 .dx-lp-overview__hint {
   color: var(--theme-elevation-600);
 }
+.dx-lp-overview__approval {
+  margin: 0 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  align-items: center;
+}

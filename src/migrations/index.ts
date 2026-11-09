@@ -5,6 +5,7 @@ import * as migration_20261029_080000_form_rate_limits from './20261029_080000_f
 import * as migration_20261029_100000_storage_fields from './20261029_100000_storage_fields';
 import * as migration_20261105_085002_home_banners from './20261105_085002_home_banners';
 import * as migration_20261107_050810_landing_blocks from './20261107_050810_landing_blocks';
+import * as migration_20261109_024237_landing_approvals from './20261109_024237_landing_approvals';
 
 export const migrations = [
   {
@@ -40,6 +41,11 @@ export const migrations = [
   {
     up: migration_20261107_050810_landing_blocks.up,
     down: migration_20261107_050810_landing_blocks.down,
-    name: '20261107_050810_landing_blocks'
+    name: '20261107_050810_landing_blocks',
+  },
+  {
+    up: migration_20261109_024237_landing_approvals.up,
+    down: migration_20261109_024237_landing_approvals.down,
+    name: '20261109_024237_landing_approvals'
   },
 ];

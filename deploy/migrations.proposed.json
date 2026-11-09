@@ -1,10 +1,14 @@
 {
   "version": 1,
-  "status": "PROPOSED for review: product landing page blocks (additive only: new lp_*/_lp_* tables, enums, indexes and foreign keys; no existing table, column or row is changed). Applied only to the disposable test database. Approve by moving the entry into deploy/migrations.approved.json.",
+  "status": "PROPOSED for review: product landing page blocks (new lp_*/_lp_* tables, enums, indexes and foreign keys) and the server-owned landing structure approvals (one nullable jsonb column on products and _products_v). No existing column or row is changed. Applied only to the disposable test database. Approve by moving the entries into deploy/migrations.approved.json.",
   "files": [
     {
       "filename": "20261107_050810_landing_blocks.ts",
       "sha256": "1d36f01a798c0edcfbe58b484517b104142362cd069c990fcde5ca6eb7ba0b30"
+    },
+    {
+      "filename": "20261109_024237_landing_approvals.ts",
+      "sha256": "b10c36e95916b8cc3b2a7e80a4716f2a6d79f5663e14c32ff71370f0544ba8e7"
     }
   ]
 }

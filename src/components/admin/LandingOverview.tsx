@@ -43,6 +43,8 @@ export function LandingOverview() {
   })
   const lang = String(code ?? '').toUpperCase()
   const active = landingActive(blocks)
+  // Which languages approved the structure of the SAVED draft (server-computed on read).
+  const approvalState = useFormFields(([fields]) => fields.landingApprovalState?.value) as Record<string, boolean> | null | undefined
   const pending = blocks
     .map((b, i) => ({ i, b, issues: blockIssues(b, provides, chosen) }))
     .filter(({ b, issues }) => b.hidden !== true && issues.required.length > 0)
@@ -67,6 +69,24 @@ export function LandingOverview() {
         ) : (
           <p className="dx-lp-overview__ok">Mọi khối đang hiện đều đủ nội dung bắt buộc ở {lang}.</p>
         )
+      ) : null}
+      {active && approvalState ? (
+        <p className="dx-lp-overview__approval">
+          Duyệt cấu trúc của bản đã lưu (dùng chung):{' '}
+          {locales.map(([l], i) => {
+            const ok = approvalState[l] === true
+            return (
+              <span key={l} className={ok ? 'dx-lp--ok dx-lp-badge' : 'dx-lp--missing dx-lp-badge'}>
+                {i > 0 ? ' ' : ''}
+                {l.toUpperCase()}: {ok ? 'đã duyệt' : 'cần duyệt'}
+              </span>
+            )
+          })}
+          <span className="dx-lp-overview__hint">
+            {' '}
+            Đổi khối, thứ tự, ẩn/hiện, ảnh hoặc nền sẽ xoá duyệt của mọi ngôn ngữ; muốn xuất bản, mọi ngôn ngữ đang công khai phải duyệt lại cấu trúc mới (lưu nháp với &ldquo;Đã duyệt&rdquo;, không kèm thay đổi khác).
+          </span>
+        </p>
       ) : null}
       {slug ? (
         <p className="dx-lp-overview__preview">

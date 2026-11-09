@@ -482,6 +482,24 @@ export interface Product {
           }
       )[]
     | null;
+  landingApprovals?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  landingApprovalState?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * Chữ thường, số và dấu gạch ngang. Dùng chung cho mọi ngôn ngữ.
    */
@@ -1217,6 +1235,8 @@ export interface ProductsSelect<T extends boolean = true> {
               blockName?: T;
             };
       };
+  landingApprovals?: T;
+  landingApprovalState?: T;
   slug?: T;
   editorialNote?: T;
   translationStatus?: T;
