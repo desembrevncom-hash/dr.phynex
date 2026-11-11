@@ -322,6 +322,10 @@
     "note": "편집 메모: 콘텐츠 출처와 확인 필요 사항"
   },
   "landing": {
-    "faq": "자주 묻는 질문"
+    "faq": "자주 묻는 질문",
+    "highlights": "주요 특징",
+    "ingredientsLabel": "성분",
+    "detailsLabel": "제품 정보 및 사용법",
+    "faqLabel": "FAQ"
   }
 }

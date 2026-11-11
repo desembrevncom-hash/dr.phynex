@@ -322,6 +322,10 @@
     "note": "Ghi chú biên tập: nguồn nội dung và điểm cần xác nhận"
   },
   "landing": {
-    "faq": "Câu hỏi thường gặp"
+    "faq": "Câu hỏi thường gặp",
+    "highlights": "Điểm nổi bật",
+    "ingredientsLabel": "Thành phần",
+    "detailsLabel": "Thông tin và cách dùng",
+    "faqLabel": "Hỏi đáp"
   }
 }

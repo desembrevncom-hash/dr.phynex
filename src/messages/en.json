@@ -322,6 +322,10 @@
     "note": "Editorial note: content sources and open questions"
   },
   "landing": {
-    "faq": "Frequently asked questions"
+    "faq": "Frequently asked questions",
+    "highlights": "Highlights",
+    "ingredientsLabel": "Ingredients",
+    "detailsLabel": "Details and use",
+    "faqLabel": "FAQ"
   }
 }

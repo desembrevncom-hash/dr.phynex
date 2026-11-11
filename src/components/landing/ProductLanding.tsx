@@ -12,6 +12,7 @@ import { populated, populatedList } from '@/lib/content'
 import { blockIssues, type ProductProvides, type Tone } from '@/lib/landing'
 import { localizedPath } from '@/lib/seo'
 import { keepBrandTogether } from '@/lib/text'
+import { productBriefs } from '@/lib/product-brief'
 
 import { LandingPreviewBridge } from './LandingPreviewBridge'
 import type { Ingredient, Media, Product, ProductLine } from '@/payload-types'
@@ -94,11 +95,6 @@ function Section({
                 </h2>
               ) : null}
             </div>
-            <span className={`text-xs font-mono tracking-tight hidden md:inline-block ${
-              tone === 'dark' ? 'text-mx-muted' : 'text-ink-muted'
-            }`}>
-              DR.PHYNEX CLINICAL FORMULA
-            </span>
           </header>
         ) : null}
         {children}
@@ -147,13 +143,9 @@ const getProductIndex = (slug: string | undefined) => {
   return ''
 }
 
-const getProductStageSpec = (slug: string | undefined) => {
-  if (slug === 'mx-01-forma') return 'MX-01 · CLINICAL AMPOULE'
-  if (slug === 'mx-02-luma') return 'MX-02 · CLINICAL AMPOULE'
-  if (slug === 'rx-matrix-balm') return 'RX-01 · CLINICAL BALM'
-  if (slug === 'rx-matrix-sheet') return 'RX-02 · CLINICAL SHEET'
-  return 'CLINICAL SPEC'
-}
+/** Agreed short product name (MX-01 FORMA, MX-02 LUMA, RX MATRIX BALM, RX MATRIX SHEET). */
+const getProductShortName = (product: Product) =>
+  productBriefs.find((p) => p.slug === product.slug)?.name ?? product.name ?? ''
 
 const getIngredientDetailLabel = (locale: Locale) => {
   if (locale === 'vi') return 'Chi tiết thành phần'
@@ -233,7 +225,7 @@ export async function ProductLanding({
                         {t.rich('home.lineHeading', { line: line.name, code: (c) => <span className="font-extrabold">{c}</span> })}
                       </Link>
                       <span className="text-line-strong">•</span>
-                      <span className="font-mono text-[10px] tracking-normal text-ink-muted/80">CLINICAL SPEC</span>
+                      <span className="font-mono text-[10px] tracking-normal text-ink-muted/80">{getProductShortName(product)}</span>
                     </div>
                   ) : null}
                   <h1 id="landing-title" className={`text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.12] tracking-tight ${headingClass(tone)}`}>
@@ -332,7 +324,7 @@ export async function ProductLanding({
                       <span className="pointer-events-none absolute bottom-3 left-3 text-[10px] font-mono text-ink-muted/50">+</span>
                       <span className="pointer-events-none absolute bottom-3 right-3 text-[10px] font-mono text-ink-muted/50">+</span>
                       <div className="pointer-events-none absolute bottom-3 left-5 text-[8px] sm:text-[9px] font-mono uppercase tracking-wider text-ink-muted/60 hidden sm:block">
-                        {getProductStageSpec(product.slug)}
+                        {getProductShortName(product)}
                       </div>
                       <MediaImage
                         media={img}
@@ -430,7 +422,7 @@ export async function ProductLanding({
         const b = block as BlockOf<'points'>
         const items = (b.items ?? []).filter((i) => filled(i.title))
         rendered.push(
-          <Section key={key} tone={tone} product={product} label={filled(b.heading) ? b.heading : t('products.claims')} mark={mark} eyebrow="CLINICAL TARGETS & EFFICACY" title={filled(b.heading) ? b.heading : t('products.claims')}>
+          <Section key={key} tone={tone} product={product} label={filled(b.heading) ? b.heading : t('products.claims')} mark={mark} eyebrow={t('landing.highlights')} title={filled(b.heading) ? b.heading : t('products.claims')}>
             <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((i) => (
                 <li
@@ -473,7 +465,7 @@ export async function ProductLanding({
             product={product}
             label={filled(b.heading) ? b.heading : t('products.keyIngredients')}
             mark={mark}
-            eyebrow="01 · CORE BIO-ACTIVE INGREDIENTS"
+            eyebrow={`01 · ${t('landing.ingredientsLabel')}`}
             title={filled(b.heading) ? b.heading : t('products.keyIngredients')}
           >
             <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -565,7 +557,7 @@ export async function ProductLanding({
             product={product}
             label={filled(b.heading) ? b.heading : t('products.details')}
             mark={mark}
-            eyebrow="02 · CLINICAL SPECIFICATIONS & USAGE"
+            eyebrow={`02 · ${t('landing.detailsLabel')}`}
             title={filled(b.heading) ? b.heading : t('products.details')}
           >
             <div
@@ -607,7 +599,7 @@ export async function ProductLanding({
         const b = block as BlockOf<'faq'>
         const items = (b.items ?? []).filter((i) => filled(i.question) && filled(i.answer))
         rendered.push(
-          <Section key={key} tone={tone} product={product} label={filled(b.heading) ? b.heading : t('landing.faq')} mark={mark} eyebrow="03 · FREQUENTLY ASKED QUESTIONS" title={filled(b.heading) ? b.heading : t('landing.faq')}>
+          <Section key={key} tone={tone} product={product} label={filled(b.heading) ? b.heading : t('landing.faq')} mark={mark} eyebrow={`03 · ${t('landing.faqLabel')}`} title={filled(b.heading) ? b.heading : t('landing.faq')}>
             <div
               className={`max-w-3xl overflow-hidden rounded-xl border shadow-2xs divide-y ${
                 tone === 'dark'
