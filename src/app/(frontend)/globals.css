@@ -1410,6 +1410,96 @@
     gap: 64px;
   }
 }
+/* Below desktop: brand on its own row, the two short link lists side by side. */
+@media (max-width: 1023.98px) {
+  .site-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px 24px;
+  }
+  .site-footer-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+/*
+ * Contact band (Site settings → Thông tin liên hệ), after the owner's reference: a centred strip of
+ * its own between the navigation and the legal line. Address first, then "LABEL | value" pairs.
+ */
+.site-footer-band {
+  border-top: 1px solid #1e293b;
+  padding: 24px 0;
+  text-align: center;
+}
+.site-footer-contact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 6px 32px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.site-footer-contact > div {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0 10px;
+  max-width: 100%;
+}
+.site-footer-contact dt {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a9aae;
+}
+/* The address speaks for itself (as in the reference); its label stays for screen readers. */
+.site-footer-contact > [data-key='address'] dt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.site-footer-contact > :not([data-key='address']) dd {
+  border-left: 1px solid #334155;
+  padding-left: 10px;
+}
+/* Phones: each item on its own centred line, label above value (no stray separators on wrap). */
+@media (max-width: 639.98px) {
+  .site-footer-contact {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .site-footer-contact > div {
+    flex-direction: column;
+    align-items: center;
+  }
+  .site-footer-contact > :not([data-key='address']) dd {
+    border-left: 0;
+    padding-left: 0;
+  }
+}
+.site-footer-contact dd {
+  color: #cbd5e1;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.site-footer-contact a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: #f8fafc;
+  text-decoration: underline;
+  text-decoration-color: #475569;
+  text-underline-offset: 3px;
+  transition: color 150ms var(--ease-out-soft), text-decoration-color 150ms var(--ease-out-soft);
+}
+.site-footer-contact a:hover {
+  text-decoration-color: currentColor;
+}
 .site-footer-brand {
   font-family: var(--font-display);
   font-size: 1.25rem;
@@ -1463,25 +1553,22 @@
 .site-footer-legal button:hover {
   color: #fff;
 }
+/* Legal links, then copyright: centred, as in the owner's reference. */
 .site-footer-bottom {
   border-top: 1px solid #1e293b;
-  padding-top: 24px;
+  padding-top: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 4px;
   font-size: 0.75rem;
   color: #8a9aae;
-}
-@media (min-width: 768px) {
-  .site-footer-bottom {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
+  text-align: center;
 }
 .site-footer-legal {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0 18px;
 }
 
@@ -1563,4 +1650,23 @@
   .home-tone-light .home-slide-cta:hover {
     transform: none;
   }
+}
+
+/* Admin landing builder preview only (html.lp-builder-frame is set inside the Admin frame). */
+.lp-builder-frame [data-lp-id] {
+  position: relative;
+  cursor: pointer;
+}
+.lp-builder-frame [data-lp-id]:hover::after,
+.lp-builder-frame [data-lp-id][data-lp-selected]::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  pointer-events: none;
+  border: 2px dashed #2563eb;
+  border-radius: 4px;
+}
+.lp-builder-frame [data-lp-id][data-lp-selected]::after {
+  border-style: solid;
+  border-width: 3px;
 }

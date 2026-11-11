@@ -7,10 +7,13 @@ import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
 import { ConsentSettingsButton } from '@/components/analytics/ConsentSettingsButton'
 import { locales, type Locale } from '@/i18n/locales'
 import { trackingConfig } from '@/lib/analytics/config'
+import { contactRows } from '@/lib/contact-details'
+import { findGuestGlobal, findPublicGlobal } from '@/lib/content'
 import { getPreviewUser } from '@/lib/preview'
 import { localizedPath } from '@/lib/seo'
 import { productBriefs } from '@/lib/product-brief'
 
+import { ContactDetailsList } from './ContactDetailsList'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileMenu } from './MobileMenu'
 
@@ -38,6 +41,8 @@ type Props = {
   bleed?: boolean
   /** Active filter query (e.g. "?line=mx") kept when switching language; slugs are shared. */
   search?: string
+  /** "Xem như khách" in the staff preview: shared blocks (footer contact) as a visitor reads them. */
+  guestView?: boolean
   children: ReactNode
 }
 
@@ -61,9 +66,17 @@ export async function PageShell({
   available = locales,
   bleed = false,
   search = '',
+  guestView = false,
   children,
 }: Props) {
-  const [t, preview] = await Promise.all([getTranslations(), getPreviewUser()])
+  const [t, preview, settings] = await Promise.all([
+    getTranslations(),
+    getPreviewUser(),
+    // Same block as the Contact page (published + approved for this language; drafts in preview,
+    // except in "Xem như khách", which reads it with the visitor's permissions).
+    guestView ? findGuestGlobal('site-settings', locale) : findPublicGlobal('site-settings', locale),
+  ])
+  const contact = contactRows(settings?.contact)
   const href = (p: string) => localizedPath(locale, p)
   // Off by default (env flag + IDs); never in staff preview. The admin has no PageShell.
   const tracking = trackingConfig()
@@ -195,10 +208,17 @@ export async function PageShell({
               </ul>
             </nav>
           </div>
+          {/* Contact band (layout after the owner's reference): its own centred strip under the
+              navigation, never mixed into the link groups. Same CMS block as the Contact page. */}
+          {contact.length > 0 ? (
+            <section aria-labelledby="footer-contact" className="site-footer-band">
+              <h2 id="footer-contact" className="sr-only">
+                {t('footer.contact')}
+              </h2>
+              <ContactDetailsList rows={contact} variant="footer" />
+            </section>
+          ) : null}
           <div className="site-footer-bottom">
-            <p>
-              © 2026 <span lang="en">Dr.PhynEX</span>. {t('footer.rights')}
-            </p>
             <ul aria-label={t('common.footerNav')} className="site-footer-legal">
               {legalNav.map(([key, p]) => (
                 <li key={key}>
@@ -211,6 +231,9 @@ export async function PageShell({
                 </li>
               ) : null}
             </ul>
+            <p>
+              © 2026 <span lang="en">Dr.PhynEX</span>. {t('footer.rights')}
+            </p>
           </div>
         </div>
       </footer>

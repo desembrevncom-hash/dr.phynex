@@ -1,5 +1,7 @@
 import { editorsField, staffField } from '@/access/roles'
 import { seoField, slugField } from '@/fields/common'
+import { landingField } from '@/fields/landing'
+import { guardLanding, guardLandingApproval, landingApprovalStateHook } from '@/hooks/guardLanding'
 
 import { contentCollection } from './factory'
 
@@ -7,12 +9,14 @@ const editorOnly = { create: editorsField, update: editorsField }
 
 export const Products = contentCollection({
   slug: 'products',
+  hooks: { beforeChange: [guardLanding, guardLandingApproval] },
   admin: {
     useAsTitle: 'name',
     group: 'Catalog',
     defaultColumns: ['name', 'line', 'slug', '_status', 'translationStatus'],
     description:
       'Introduction only: no prices or purchase links. Calls to action point to Stores and Contact.',
+    components: { edit: { beforeDocumentControls: ['/components/admin/LocaleSwitchGuard#LocaleSwitchGuard'] } },
   },
   fields: [
     {
@@ -108,6 +112,38 @@ export const Products = contentCollection({
           ],
         },
         { label: 'SEO', fields: [seoField] },
+        {
+          label: 'Landing page',
+          description:
+            'Trang giới thiệu dạng khối cho sản phẩm này. Thêm khối, kéo để sắp xếp, nhập chữ theo ngôn ngữ đang chọn, lưu nháp rồi mở xem trước. Quy trình duyệt và xuất bản theo từng ngôn ngữ giữ nguyên.',
+          fields: [
+            {
+              name: 'landingOverview',
+              type: 'ui',
+              admin: { components: { Field: '/components/admin/LandingOverview#LandingOverview' } },
+            },
+            landingField,
+            {
+              // Server-owned { ko?, en?, vi? } → landing structure revision each language approved
+              // (hooks/guardLanding.ts guardLandingApproval). Non-localized on purpose: Payload
+              // publishes non-localized fields from the draft, so approvals travel with the structure.
+              name: 'landingApprovals',
+              type: 'json',
+              label: 'Duyệt cấu trúc landing page (hệ thống ghi)',
+              admin: { hidden: true },
+            },
+            {
+              // Not stored: which languages approved the structure of the document as read (the
+              // saved draft in Admin). Shown by the Landing page overview.
+              name: 'landingApprovalState',
+              type: 'json',
+              virtual: true,
+              label: 'Tình trạng duyệt cấu trúc landing page',
+              admin: { hidden: true, readOnly: true },
+              hooks: { afterRead: [landingApprovalStateHook] },
+            },
+          ],
+        },
       ],
     },
     slugField,

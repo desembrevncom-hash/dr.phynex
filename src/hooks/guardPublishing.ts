@@ -6,12 +6,19 @@ import {
   type Field,
 } from 'payload'
 import { isEditorUser } from '@/access/roles'
+import { landingContent } from '@/lib/landing'
 
 type Data = Record<string, unknown>
-/** Compare only submitted localized content, including nested groups and SEO. */
+/**
+ * Compare only submitted localized content, including nested groups and SEO. A blocks field (the
+ * product landing page) is compared as a whole: its texts are per language and its structure is
+ * shared, and either kind of change is a content change for the language being saved.
+ */
 function localizedChanged(fields: Field[], incoming: Data, original: Data): boolean {
   return fields.some((field) => {
     if ('name' in field && field.name === 'translationStatus') return false
+    if (field.type === 'blocks' && field.name in incoming)
+      return !isDeepStrictEqual(landingContent(incoming[field.name]), landingContent(original[field.name]))
     if ('name' in field && field.name in incoming) {
       const next = incoming[field.name],
         previous = original[field.name]
@@ -35,6 +42,7 @@ function hasLocalizedContent(fields: Field[], original: Data): boolean {
     return true
   }
   return fields.some((field) => {
+    if (field.type === 'blocks') return meaningful(original[field.name])
     if ('name' in field) {
       if (field.name === 'translationStatus') return false
       if ('localized' in field && field.localized) return meaningful(original[field.name])

@@ -21,6 +21,7 @@ import { getPayload, type Migration } from 'payload'
 import sharp from 'sharp'
 
 import { migrations } from '@/migrations'
+import { withContentLocaleGuard } from '@/lib/content-mutations'
 import config from '@/payload.config'
 
 import { assertDisposableDatabase } from '../tests/helpers/database'
@@ -33,7 +34,8 @@ const demoAccounts = Object.fromEntries(
   ]),
 ) as Record<'admin' | 'editor' | 'translator', { email: string; password: string }>
 
-const payload = await getPayload({ config: await config })
+// Project writes go through the locale guard (publishSpecificLocale must equal the locale).
+const payload = withContentLocaleGuard(await getPayload({ config: await config }))
 try {
   await assertDisposableDatabase(payload)
   await payload.db.dropDatabase({ adapter: payload.db as never })

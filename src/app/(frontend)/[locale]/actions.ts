@@ -3,8 +3,9 @@
 import { randomUUID } from 'crypto'
 import { headers } from 'next/headers'
 
-import { isLocale } from '@/i18n/locales'
-import { getPayloadClient } from '@/lib/content'
+import { isLocale, locales } from '@/i18n/locales'
+import { findPublicBySlug, getPayloadClient } from '@/lib/content'
+import { duplicateWindowStart, interestMessage, interestSlug } from '@/lib/contact-interest'
 import { isBot, validate, type FormState } from '@/lib/forms'
 import { clientIp, rateLimitKey, sharedRateLimited } from '@/lib/rate-limit'
 
@@ -30,11 +31,47 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
     phone: { max: 40 },
     topic: { max: 20, options: contactTopics },
     message: { required: true, max: 5000 },
+    // The page's language (hidden field). Missing or not one of ko/en/vi = invalid request:
+    // nothing is looked up or stored, and no language is guessed.
+    locale: { required: true, max: 5, options: locales },
   })
-  if (!ok) return { status: 'error', code: 'invalid', errors, values }
+  // Same rule as the contact page (pattern + 80 characters); anything else is ignored.
+  const productSlug = formData.get('product')
+  const slug = interestSlug(typeof productSlug === 'string' ? productSlug : undefined)
+  if (slug) values.product = slug
+  if (!ok || !isLocale(values.locale)) return { status: 'error', code: 'invalid', errors, values }
+  const locale = values.locale
   try {
     if (await rateLimited('contact')) return { status: 'error', code: 'rateLimited', values }
     const payload = await getPayloadClient()
+    // The product of interest is kept only if this visitor can actually see it (same access rules
+    // as the page); anything else is dropped, never echoed. No schema field: it leads the message.
+    const product = values.product ? await findPublicBySlug('products', values.product, locale, 0) : null
+    const message = product ? interestMessage(product.name, product.slug ?? values.product, values.message) : values.message
+    // Every stored field identical within the window (validated values: name, email, phone,
+    // topic, language, final message) = a repeated click or resubmit: report success again
+    // without storing a second copy or counting a second lead. Any difference (a corrected
+    // phone or name, the same text sent from another language page) is a new request.
+    const optional = (value: string | undefined) => (value ? { equals: value } : { exists: false })
+    const repeat = await payload.find({
+      collection: 'contact-submissions',
+      overrideAccess: true,
+      depth: 0,
+      limit: 1,
+      pagination: false,
+      where: {
+        and: [
+          { email: { equals: values.email } },
+          { name: { equals: values.name } },
+          { phone: optional(values.phone) },
+          { topic: optional(values.topic) },
+          { locale: { equals: locale } },
+          { message: { equals: message } },
+          { createdAt: { greater_than: duplicateWindowStart().toISOString() } },
+        ],
+      },
+    })
+    if (repeat.docs.length > 0) return { status: 'success' }
     // Public API cannot create submissions; this trusted server path writes after validation.
     await payload.create({
       collection: 'contact-submissions',
@@ -44,9 +81,9 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
         email: values.email,
         phone: values.phone || undefined,
         topic: (values.topic || undefined) as (typeof contactTopics)[number] | undefined,
-        message: values.message,
+        message,
         consent: true,
-        locale: localeOf(formData),
+        locale,
         status: 'new',
       },
     })

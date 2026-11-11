@@ -246,6 +246,261 @@ export interface Product {
     description?: string | null;
   };
   /**
+   * Thứ tự, ẩn/hiện, ảnh và kiểu nền dùng chung cho KO/EN/VI; chữ trong từng khối nhập riêng theo ngôn ngữ đang chọn ở góc trên. Khối thiếu nội dung bị ẩn với khách và được đánh dấu ở tiêu đề khối. Chưa có khối nào thì trang sản phẩm giữ bố cục hiện tại.
+   */
+  landing?:
+    | (
+        | {
+            /**
+             * Giữ nội dung nhưng không hiển thị (kể cả trong xem trước). Dùng chung cho mọi ngôn ngữ.
+             */
+            hidden?: boolean | null;
+            /**
+             * Một câu ngắn dưới tên sản phẩm. Chỉ dùng câu chữ đã được duyệt.
+             */
+            tagline?: string | null;
+            /**
+             * Bỏ trống để dùng "Mô tả ngắn" của sản phẩm.
+             */
+            intro?: string | null;
+            /**
+             * Bỏ trống để dùng ảnh đầu tiên của sản phẩm. Dùng chung cho mọi ngôn ngữ. Khách chỉ thấy ảnh đã tích "Đã duyệt cho phép công khai".
+             */
+            image?: (number | null) | Media;
+            /**
+             * Quy cách lấy từ trường "Dung tích" của sản phẩm.
+             */
+            showPack?: boolean | null;
+            /**
+             * Bỏ trống để dùng "Yêu cầu tư vấn". Nút luôn mở form liên hệ với sản phẩm này.
+             */
+            ctaLabel?: string | null;
+            /**
+             * Preset dùng chung cho mọi ngôn ngữ; màu nhấn lấy từ "Màu nhấn" của sản phẩm.
+             */
+            tone?: ('light' | 'muted' | 'dark' | 'accent') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'hero';
+          }
+        | {
+            /**
+             * Giữ nội dung nhưng không hiển thị (kể cả trong xem trước). Dùng chung cho mọi ngôn ngữ.
+             */
+            hidden?: boolean | null;
+            /**
+             * Ảnh sản phẩm, texture hoặc ảnh campaign. Bắt buộc để khối hiển thị. Dùng chung cho mọi ngôn ngữ. Khách chỉ thấy ảnh đã tích "Đã duyệt cho phép công khai".
+             */
+            image?: (number | null) | Media;
+            /**
+             * Bỏ trống để dùng ảnh máy tính. Dùng chung cho mọi ngôn ngữ. Khách chỉ thấy ảnh đã tích "Đã duyệt cho phép công khai".
+             */
+            mobileImage?: (number | null) | Media;
+            /**
+             * Cho trình đọc màn hình. Bỏ trống để dùng mô tả có sẵn của ảnh.
+             */
+            alt?: string | null;
+            caption?: string | null;
+            /**
+             * Preset dùng chung cho mọi ngôn ngữ; màu nhấn lấy từ "Màu nhấn" của sản phẩm.
+             */
+            tone?: ('light' | 'muted' | 'dark' | 'accent') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'band';
+          }
+        | {
+            /**
+             * Giữ nội dung nhưng không hiển thị (kể cả trong xem trước). Dùng chung cho mọi ngôn ngữ.
+             */
+            hidden?: boolean | null;
+            /**
+             * Bắt buộc để khối hiển thị. Dùng chung cho mọi ngôn ngữ. Khách chỉ thấy ảnh đã tích "Đã duyệt cho phép công khai".
+             */
+            image?: (number | null) | Media;
+            /**
+             * Trên điện thoại ảnh luôn nằm trên chữ.
+             */
+            imageSide?: ('left' | 'right') | null;
+            heading?: string | null;
+            body?: string | null;
+            /**
+             * Preset dùng chung cho mọi ngôn ngữ; màu nhấn lấy từ "Màu nhấn" của sản phẩm.
+             */
+            tone?: ('light' | 'muted' | 'dark' | 'accent') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'split';
+          }
+        | {
+            /**
+             * Giữ nội dung nhưng không hiển thị (kể cả trong xem trước). Dùng chung cho mọi ngôn ngữ.
+             */
+            hidden?: boolean | null;
+            heading?: string | null;
+            /**
+             * Chỉ nhập đặc điểm hoặc công dụng ĐÃ ĐƯỢC DUYỆT, có tài liệu nguồn. Thẻ thiếu tiêu đề ở ngôn ngữ đang xem sẽ bị ẩn.
+             */
+            items?:
+              | {
+                  title?: string | null;
+                  text?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            /**
+             * Preset dùng chung cho mọi ngôn ngữ; màu nhấn lấy từ "Màu nhấn" của sản phẩm.
+             */
+            tone?: ('light' | 'muted' | 'dark' | 'accent') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'points';
+          }
+        | {
+            /**
+             * Giữ nội dung nhưng không hiển thị (kể cả trong xem trước). Dùng chung cho mọi ngôn ngữ.
+             */
+            hidden?: boolean | null;
+            /**
+             * Bỏ trống để dùng "Thành phần chính".
+             */
+            heading?: string | null;
+            /**
+             * Để trống danh sách để dùng "Thành phần chính" của sản phẩm. Thành phần thiếu tên ở ngôn ngữ đang xem sẽ bị ẩn.
+             */
+            items?:
+              | {
+                  /**
+                   * Nếu chọn, tên và mô tả trống sẽ lấy từ trang thành phần.
+                   */
+                  ingredient?: (number | null) | Ingredient;
+                  name?: string | null;
+                  text?: string | null;
+                  /**
+                   *  Dùng chung cho mọi ngôn ngữ. Khách chỉ thấy ảnh đã tích "Đã duyệt cho phép công khai".
+                   */
+                  image?: (number | null) | Media;
+                  /**
+                   * Chỉ nhân sự thấy; không hiển thị trên website hay API công khai.
+                   */
+                  sourceNote?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            /**
+             * Preset dùng chung cho mọi ngôn ngữ; màu nhấn lấy từ "Màu nhấn" của sản phẩm.
+             */
+            tone?: ('light' | 'muted' | 'dark' | 'accent') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'ingredients';
+          }
+        | {
+            /**
+             * Giữ nội dung nhưng không hiển thị (kể cả trong xem trước). Dùng chung cho mọi ngôn ngữ.
+             */
+            hidden?: boolean | null;
+            /**
+             * Bỏ trống để dùng "Thông tin sản phẩm".
+             */
+            heading?: string | null;
+            /**
+             * Nội dung lấy từ trường "Quy cách" có sẵn của sản phẩm.
+             */
+            showPack?: boolean | null;
+            /**
+             * Nội dung lấy từ trường "Bảng thành phần (INCI)" có sẵn của sản phẩm.
+             */
+            showInci?: boolean | null;
+            /**
+             * Nội dung lấy từ trường "Cách dùng" có sẵn của sản phẩm.
+             */
+            showHowToUse?: boolean | null;
+            /**
+             * Nội dung lấy từ trường "Lưu ý" có sẵn của sản phẩm.
+             */
+            showCautions?: boolean | null;
+            /**
+             * Preset dùng chung cho mọi ngôn ngữ; màu nhấn lấy từ "Màu nhấn" của sản phẩm.
+             */
+            tone?: ('light' | 'muted' | 'dark' | 'accent') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'details';
+          }
+        | {
+            /**
+             * Giữ nội dung nhưng không hiển thị (kể cả trong xem trước). Dùng chung cho mọi ngôn ngữ.
+             */
+            hidden?: boolean | null;
+            /**
+             * Bỏ trống để dùng "Câu hỏi thường gặp".
+             */
+            heading?: string | null;
+            /**
+             * Câu thiếu câu hỏi hoặc câu trả lời ở ngôn ngữ đang xem sẽ bị ẩn.
+             */
+            items?:
+              | {
+                  question?: string | null;
+                  answer?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            /**
+             * Preset dùng chung cho mọi ngôn ngữ; màu nhấn lấy từ "Màu nhấn" của sản phẩm.
+             */
+            tone?: ('light' | 'muted' | 'dark' | 'accent') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'faq';
+          }
+        | {
+            /**
+             * Giữ nội dung nhưng không hiển thị (kể cả trong xem trước). Dùng chung cho mọi ngôn ngữ.
+             */
+            hidden?: boolean | null;
+            /**
+             * Bỏ trống để dùng "Mua qua tư vấn".
+             */
+            heading?: string | null;
+            /**
+             * Bỏ trống để dùng câu mặc định của website.
+             */
+            body?: string | null;
+            /**
+             * Bỏ trống để dùng "Yêu cầu tư vấn". Nút luôn mở form liên hệ với sản phẩm này.
+             */
+            ctaLabel?: string | null;
+            /**
+             * Preset dùng chung cho mọi ngôn ngữ; màu nhấn lấy từ "Màu nhấn" của sản phẩm.
+             */
+            tone?: ('light' | 'muted' | 'dark' | 'accent') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'cta';
+          }
+      )[]
+    | null;
+  landingApprovals?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  landingApprovalState?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * Chữ thường, số và dấu gạch ngang. Dùng chung cho mọi ngôn ngữ.
    */
   slug: string;
@@ -864,6 +1119,124 @@ export interface ProductsSelect<T extends boolean = true> {
         title?: T;
         description?: T;
       };
+  landing?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              hidden?: T;
+              tagline?: T;
+              intro?: T;
+              image?: T;
+              showPack?: T;
+              ctaLabel?: T;
+              tone?: T;
+              id?: T;
+              blockName?: T;
+            };
+        band?:
+          | T
+          | {
+              hidden?: T;
+              image?: T;
+              mobileImage?: T;
+              alt?: T;
+              caption?: T;
+              tone?: T;
+              id?: T;
+              blockName?: T;
+            };
+        split?:
+          | T
+          | {
+              hidden?: T;
+              image?: T;
+              imageSide?: T;
+              heading?: T;
+              body?: T;
+              tone?: T;
+              id?: T;
+              blockName?: T;
+            };
+        points?:
+          | T
+          | {
+              hidden?: T;
+              heading?: T;
+              items?:
+                | T
+                | {
+                    title?: T;
+                    text?: T;
+                    id?: T;
+                  };
+              tone?: T;
+              id?: T;
+              blockName?: T;
+            };
+        ingredients?:
+          | T
+          | {
+              hidden?: T;
+              heading?: T;
+              items?:
+                | T
+                | {
+                    ingredient?: T;
+                    name?: T;
+                    text?: T;
+                    image?: T;
+                    sourceNote?: T;
+                    id?: T;
+                  };
+              tone?: T;
+              id?: T;
+              blockName?: T;
+            };
+        details?:
+          | T
+          | {
+              hidden?: T;
+              heading?: T;
+              showPack?: T;
+              showInci?: T;
+              showHowToUse?: T;
+              showCautions?: T;
+              tone?: T;
+              id?: T;
+              blockName?: T;
+            };
+        faq?:
+          | T
+          | {
+              hidden?: T;
+              heading?: T;
+              items?:
+                | T
+                | {
+                    question?: T;
+                    answer?: T;
+                    id?: T;
+                  };
+              tone?: T;
+              id?: T;
+              blockName?: T;
+            };
+        cta?:
+          | T
+          | {
+              hidden?: T;
+              heading?: T;
+              body?: T;
+              ctaLabel?: T;
+              tone?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
+  landingApprovals?: T;
+  landingApprovalState?: T;
   slug?: T;
   editorialNote?: T;
   translationStatus?: T;
@@ -1578,10 +1951,25 @@ export interface PartnershipPage {
 export interface SiteSetting {
   id: number;
   logo?: (number | null) | Media;
+  /**
+   * Một nơi duy nhất cho thông tin liên hệ công khai: trang Liên hệ và chân trang cùng đọc khối này. Sửa ở đây, lưu, duyệt và xuất bản từng ngôn ngữ là cả hai nơi cùng cập nhật.
+   */
   contact?: {
+    /**
+     * Dùng chung cho mọi ngôn ngữ; khách bấm để gửi thư. Đây không phải email nhận thông báo nội bộ khi có yêu cầu mới (địa chỉ đó cấu hình riêng trên máy chủ và không hiển thị trên website).
+     */
     email?: string | null;
+    /**
+     * Dùng chung cho mọi ngôn ngữ; khách bấm để gọi. Ghi kèm mã quốc gia, ví dụ +82 10-0000-0000.
+     */
     phone?: string | null;
+    /**
+     * Theo từng ngôn ngữ (đổi ngôn ngữ nội dung ở góc trên để nhập bản KO/EN/VI).
+     */
     address?: string | null;
+    /**
+     * Theo từng ngôn ngữ; ghi rõ múi giờ, ví dụ "giờ Hàn Quốc (KST, UTC+9)".
+     */
     hours?: string | null;
   };
   social?:

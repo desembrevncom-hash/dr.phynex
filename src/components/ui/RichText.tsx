@@ -16,6 +16,9 @@ const routes: Record<string, (slug: string) => string> = {
   'legal-pages': (slug) => `/${slug}`,
 }
 
+/** Collections an internal link can point at on the site (anything else is shown as text). */
+export const linkableCollections = Object.keys(routes)
+
 type LinkDoc = { relationTo?: string; value?: unknown }
 
 /**

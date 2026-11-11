@@ -52,6 +52,9 @@ const walk = (fields: any[], where: string) => { // eslint-disable-line @typescr
       else pick(o.label, `${at}.option`)
     }
     if (f.type === 'tabs') for (const t of f.tabs) { pick(t.label, `${at}.tab`); pick(t.description, `${at}.tabDesc`); walk(t.fields, at) }
+    else if (f.type === 'blocks') for (const b of f.blocks) {
+      pick(b.labels?.singular, `${at}.${b.slug}.singular`); pick(b.labels?.plural, `${at}.${b.slug}.plural`); walk(b.fields, `${at}.${b.slug}`)
+    }
     else if (Array.isArray(f.fields)) walk(f.fields, at)
   }
 }

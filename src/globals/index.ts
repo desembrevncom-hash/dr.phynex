@@ -18,14 +18,50 @@ export const SiteSettings = contentGlobal({
   admin: { group: 'Settings' },
   fields: [
     { name: 'logo', type: 'upload', relationTo: 'media', access: editorOnly },
+    // One place for the public contact details: the Contact page and the footer both read this
+    // group, so a change here shows in both. Same stored fields as before (labels/help only).
     {
       name: 'contact',
       type: 'group',
+      label: 'Thông tin liên hệ',
+      admin: {
+        description:
+          'Một nơi duy nhất cho thông tin liên hệ công khai: trang Liên hệ và chân trang cùng đọc khối này. Sửa ở đây, lưu, duyệt và xuất bản từng ngôn ngữ là cả hai nơi cùng cập nhật.',
+      },
       fields: [
-        { name: 'email', type: 'email', access: editorOnly },
-        { name: 'phone', type: 'text', access: editorOnly },
-        { name: 'address', type: 'textarea', localized: true },
-        { name: 'hours', type: 'textarea', localized: true },
+        {
+          name: 'email',
+          type: 'email',
+          label: 'Email công khai',
+          access: editorOnly,
+          admin: {
+            description:
+              'Dùng chung cho mọi ngôn ngữ; khách bấm để gửi thư. Đây không phải email nhận thông báo nội bộ khi có yêu cầu mới (địa chỉ đó cấu hình riêng trên máy chủ và không hiển thị trên website).',
+          },
+        },
+        {
+          name: 'phone',
+          type: 'text',
+          label: 'Hotline',
+          access: editorOnly,
+          admin: {
+            description: 'Dùng chung cho mọi ngôn ngữ; khách bấm để gọi. Ghi kèm mã quốc gia, ví dụ +82 10-0000-0000.',
+          },
+        },
+        {
+          name: 'address',
+          type: 'textarea',
+          label: 'Địa chỉ',
+          localized: true,
+          admin: { description: 'Theo từng ngôn ngữ (đổi ngôn ngữ nội dung ở góc trên để nhập bản KO/EN/VI).' },
+        },
+        {
+          name: 'hours',
+          type: 'textarea',
+          label: 'Giờ làm việc',
+          localized: true,
+          admin: { description: 'Theo từng ngôn ngữ; ghi rõ múi giờ, ví dụ "giờ Hàn Quốc (KST, UTC+9)".' },
+        },
       ],
     },
     {

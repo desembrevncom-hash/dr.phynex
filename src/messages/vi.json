@@ -74,7 +74,7 @@
     "byConcern": "Vấn đề da",
     "noResults": "Không có sản phẩm phù hợp với bộ lọc.",
     "line": "Dòng",
-    "volume": "Dung tích",
+    "volume": "Quy cách",
     "claims": "Công dụng",
     "keyIngredients": "Thành phần chính",
     "technologies": "Công nghệ",
@@ -82,7 +82,7 @@
     "howToUse": "Cách dùng",
     "cautions": "Lưu ý",
     "related": "Sản phẩm liên quan",
-    "ctaTitle": "Mua ở đâu",
+    "ctaTitle": "Mua qua tư vấn",
     "ctaStores": "Tìm điểm bán",
     "ctaContact": "Liên hệ",
     "breadcrumb": "Đường dẫn",
@@ -94,7 +94,10 @@
     "relatedSameLine": "Sản phẩm khác của dòng {line}",
     "count": "{count, plural, =0 {Chưa có sản phẩm} other {# sản phẩm}}",
     "viewAll": "Xem tất cả sản phẩm",
-    "filterLabel": "Lọc theo dòng"
+    "filterLabel": "Lọc theo dòng",
+    "productType": "Loại sản phẩm",
+    "ctaBody": "Gửi yêu cầu kèm sản phẩm này. Dr.PhynEX sẽ phản hồi qua email hoặc số điện thoại bạn để lại.",
+    "ctaConsult": "Yêu cầu tư vấn"
   },
   "ingredients": {
     "title": "Thành phần & Công nghệ",
@@ -140,12 +143,14 @@
     "title": "Liên hệ",
     "formTitle": "Gửi tin nhắn",
     "email": "Email",
-    "phone": "Điện thoại",
+    "phone": "Hotline",
     "address": "Địa chỉ",
     "hours": "Giờ làm việc",
     "lead": "Câu hỏi về sản phẩm hoặc điểm bán.",
     "otherWays": "Cách liên hệ khác",
-    "detailsTitle": "Thông tin liên hệ"
+    "detailsTitle": "Thông tin liên hệ",
+    "productLabel": "Sản phẩm quan tâm",
+    "productRemove": "Bỏ chọn sản phẩm"
   },
   "partnership": {
     "title": "Hợp tác",
@@ -216,7 +221,8 @@
     "brandBody": "câu chuyện thương hiệu và nội dung trang thương hiệu",
     "ingredientDescription": "mô tả thành phần có nguồn",
     "legalBody": "văn bản chính sách đã được pháp lý duyệt",
-    "articles": "bài viết Journal"
+    "articles": "bài viết Journal",
+    "productType": "loại sản phẩm (gán danh mục trong CMS)"
   },
   "redesign": {
     "heroTitle": "Thấu hiểu làn da. Chăm sóc có cơ sở.",
@@ -257,8 +263,8 @@
         "point3": "Chăm sóc làn da"
       },
       "mx-02-luma": {
-        "line": "Hướng đến làn da sáng và đều màu.",
-        "body": "Chăm sóc theo định hướng sáng da, đều màu và hỗ trợ hàng rào bảo vệ da.",
+        "line": "Khám phá Dr. PhynEX MX-02 LUMA",
+        "body": "Công thức chứa Sodium DNA, exosome sữa, 17 loại axit amin và phức hợp vitamin.",
         "point1": "Niacinamide 2%",
         "point2": "17 amino acid",
         "point3": "Hỗ trợ hàng rào da"
@@ -298,6 +304,28 @@
   "footer": {
     "products": "Sản phẩm",
     "about": "Về chúng tôi",
-    "rights": "Bảo lưu mọi quyền."
+    "rights": "Bảo lưu mọi quyền.",
+    "contact": "Liên hệ"
+  },
+  "staffReview": {
+    "title": "Ghi chú duyệt (chỉ nhân viên thấy trong chế độ xem trước)",
+    "translation": "Bản {locale}:",
+    "publication": "Phiên bản đang xem:",
+    "status": {
+      "ai-draft": "Bản nháp AI, chưa duyệt",
+      "in-review": "Đang chờ duyệt",
+      "approved": "Đã duyệt"
+    },
+    "draft": "Nháp, chưa xuất bản",
+    "published": "Đã xuất bản",
+    "privateImages": "{count} ảnh chưa được phép công khai: khách sẽ không thấy.",
+    "note": "Ghi chú biên tập: nguồn nội dung và điểm cần xác nhận"
+  },
+  "landing": {
+    "faq": "Câu hỏi thường gặp",
+    "highlights": "Điểm nổi bật",
+    "ingredientsLabel": "Thành phần",
+    "detailsLabel": "Thông tin và cách dùng",
+    "faqLabel": "Hỏi đáp"
   }
 }
