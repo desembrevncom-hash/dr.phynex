@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
-import { accentBar, accentText } from '@/components/product/ProductTile'
+import { accentBar } from '@/components/product/ProductTile'
 import { Arrow } from '@/components/ui/Arrow'
 import { MediaImage } from '@/components/ui/MediaImage'
 import { RichText } from '@/components/ui/RichText'
@@ -77,10 +77,14 @@ function Section({
       <div className="container-page py-16 lg:py-24">
         {mark}
         {eyebrow || title ? (
-          <header className="mb-10 lg:mb-12 border-b border-line pb-4 flex flex-col md:flex-row md:items-end justify-between gap-3">
+          <header className={`mb-10 lg:mb-12 border-b pb-4 flex flex-col md:flex-row md:items-end justify-between gap-3 ${
+            tone === 'dark' ? 'border-white/10' : 'border-line'
+          }`}>
             <div>
               {eyebrow ? (
-                <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+                <span className={`font-mono text-[11px] font-bold uppercase tracking-wider ${
+                  tone === 'dark' ? 'text-mx-muted' : 'text-ink-muted'
+                }`}>
                   {eyebrow}
                 </span>
               ) : null}
@@ -90,7 +94,9 @@ function Section({
                 </h2>
               ) : null}
             </div>
-            <span className="text-xs text-ink-muted font-mono tracking-tight hidden md:inline-block">
+            <span className={`text-xs font-mono tracking-tight hidden md:inline-block ${
+              tone === 'dark' ? 'text-mx-muted' : 'text-ink-muted'
+            }`}>
               DR.PHYNEX CLINICAL FORMULA
             </span>
           </header>
@@ -105,24 +111,32 @@ function Rule({ product, className = '' }: { product: Product; className?: strin
   return <span aria-hidden="true" className={`block h-[3px] w-12 rounded-full ${accentBar[product.accent]} ${className}`} />
 }
 
-const getLineDisplayName = (locale: Locale, lineSlug: string | undefined, slug: string | undefined) => {
-  const isRx = lineSlug === 'rx' || slug?.startsWith('rx-')
-  if (locale === 'vi') return isRx ? 'Dòng RX' : 'Dòng MX'
-  if (locale === 'ko') return isRx ? 'RX 라인' : 'MX 라인'
-  return isRx ? 'RX Series' : 'MX Series'
+const getLineDisplayName = (locale: Locale, line: ProductLine | null | undefined) => {
+  if (!line?.name) return null
+  if (locale === 'vi') return `Dòng ${line.name}`
+  if (locale === 'ko') return `${line.name} 라인`
+  return `${line.name} Series`
 }
 
-const getTickerText = (locale: Locale, slug: string | undefined, lineSlug: string | undefined) => {
-  const isRx = lineSlug === 'rx' || slug?.startsWith('rx-')
-  const lineLabel = locale === 'ko' ? (isRx ? 'RX 라인' : 'MX 라인') : locale === 'en' ? (isRx ? 'RX SERIES' : 'MX SERIES') : (isRx ? 'DÒNG RX' : 'DÒNG MX')
+const getTickerText = (locale: Locale, product: Product, line: ProductLine | null | undefined) => {
+  const lineName = line?.name?.trim()
+  let lineLabel = ''
+  if (lineName) {
+    if (locale === 'vi') lineLabel = `DÒNG ${lineName.toUpperCase()}`
+    else if (locale === 'ko') lineLabel = `${lineName.toUpperCase()} 라인`
+    else lineLabel = `${lineName.toUpperCase()} SERIES`
+  }
 
-  let prodCode = 'MX-02 LUMA'
+  let prodCode = ''
+  const slug = product.slug
   if (slug === 'mx-01-forma') prodCode = 'MX-01 FORMA'
   else if (slug === 'mx-02-luma') prodCode = 'MX-02 LUMA'
   else if (slug === 'rx-matrix-balm') prodCode = 'RX MATRIX BALM'
   else if (slug === 'rx-matrix-sheet') prodCode = 'RX MATRIX SHEET'
+  else if (product.name) prodCode = product.name.toUpperCase()
 
-  return `${lineLabel} — ${prodCode}`
+  if (lineLabel && prodCode) return `${lineLabel} — ${prodCode}`
+  return lineLabel || prodCode || 'DR.PHYNEX'
 }
 
 const getProductIndex = (slug: string | undefined) => {
@@ -130,7 +144,7 @@ const getProductIndex = (slug: string | undefined) => {
   if (slug === 'mx-02-luma') return '02 / 04'
   if (slug === 'rx-matrix-balm') return '03 / 04'
   if (slug === 'rx-matrix-sheet') return '04 / 04'
-  return '01 / 04'
+  return ''
 }
 
 const getProductStageSpec = (slug: string | undefined) => {
@@ -139,6 +153,12 @@ const getProductStageSpec = (slug: string | undefined) => {
   if (slug === 'rx-matrix-balm') return 'RX-01 · CLINICAL BALM'
   if (slug === 'rx-matrix-sheet') return 'RX-02 · CLINICAL SHEET'
   return 'CLINICAL SPEC'
+}
+
+const getIngredientDetailLabel = (locale: Locale) => {
+  if (locale === 'vi') return 'Chi tiết thành phần'
+  if (locale === 'ko') return '성분 상세 보기'
+  return 'Ingredient details'
 }
 
 export async function ProductLanding({
@@ -160,7 +180,6 @@ export async function ProductLanding({
   const line = populated<ProductLine>(product.line)
   const productImages = populatedList<Media>(product.images).filter((m) => m.url)
   const keyIngredients = populatedList<Ingredient>(product.keyIngredients)
-  const claims = product.claims ?? []
   const provides = (viewerImage: (v: unknown) => boolean): ProductProvides => ({
     image: productImages.some((m) => viewerImage(m)),
     packSize: filled(product.volume),
@@ -243,12 +262,14 @@ export async function ProductLanding({
                         </span>
                         <span className="font-semibold text-ink">{product.volume}</span>
                       </div>
-                      <div>
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-ink-muted">
-                          {t('products.line')}
-                        </span>
-                        <span className="font-semibold text-ink">{getLineDisplayName(locale, line?.slug, product.slug)}</span>
-                      </div>
+                      {line?.name ? (
+                        <div>
+                          <span className="block text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+                            {t('products.line')}
+                          </span>
+                          <span className="font-semibold text-ink">{getLineDisplayName(locale, line)}</span>
+                        </div>
+                      ) : null}
                       {keyIngredients.length > 0 ? (
                         <div className="col-span-2 pt-2 border-t border-line/60">
                           <span className="block text-[11px] font-bold uppercase tracking-wider text-ink-muted">
@@ -277,7 +298,7 @@ export async function ProductLanding({
                     className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy hover:text-navy-strong underline underline-offset-8 decoration-line-strong hover:decoration-navy transition-all"
                   >
                     <span>{t('products.ctaStores')}</span>
-                    <Arrow className="w-3.5 h-3.5" />
+                    <Arrow />
                   </Link>
                 </div>
               </div>
@@ -326,13 +347,15 @@ export async function ProductLanding({
             </div>
 
             {/* Clinical Ticker Strip */}
-            <div className="border-t border-line/70">
+            <div className={`border-t ${tone === 'dark' ? 'border-white/10' : 'border-line/70'}`}>
               <div className="container-page py-3 text-[11px] font-mono tracking-wider text-ink-muted flex items-center justify-between gap-3">
-                <span className="font-semibold text-navy shrink-0">Dr.PhynEX™</span>
-                <span className="uppercase text-ink-muted text-center truncate">
-                  {getTickerText(locale, product.slug, line?.slug)}
+                <span className={`font-semibold shrink-0 ${tone === 'dark' ? 'text-white' : 'text-navy'}`}>Dr.PhynEX™</span>
+                <span className={`uppercase text-center truncate ${tone === 'dark' ? 'text-mx-muted' : 'text-ink-muted'}`}>
+                  {getTickerText(locale, product, line)}
                 </span>
-                <span className="font-semibold text-ink-muted shrink-0">{getProductIndex(product.slug)}</span>
+                <span className={`font-semibold shrink-0 ${tone === 'dark' ? 'text-mx-muted' : 'text-ink-muted'}`}>
+                  {getProductIndex(product.slug)}
+                </span>
               </div>
             </div>
           </section>,
@@ -382,8 +405,14 @@ export async function ProductLanding({
               <div className={`md:col-span-6 ${right ? 'md:order-2' : ''}`}>
                 {privateNote(img)}
                 {img ? (
-                  <div className="flex h-[clamp(280px,50vh,520px)] items-center justify-center rounded-2xl border border-line bg-surface-muted/60 p-8 shadow-xs">
-                    <MediaImage media={img} sizes="(min-width: 768px) 50vw, 100vw" className="blend-panel max-h-full w-auto object-contain" />
+                  <div className={`flex h-[clamp(280px,50vh,520px)] items-center justify-center rounded-2xl border p-8 shadow-xs ${
+                    tone === 'dark' ? 'border-white/10 bg-white/5' : 'border-line bg-surface-muted/60'
+                  }`}>
+                    <MediaImage
+                      media={img}
+                      sizes="(min-width: 768px) 50vw, 100vw"
+                      className={`max-h-full w-auto object-contain ${tone === 'dark' ? '' : 'blend-panel'}`}
+                    />
                   </div>
                 ) : null}
               </div>
@@ -404,7 +433,14 @@ export async function ProductLanding({
           <Section key={key} tone={tone} product={product} label={filled(b.heading) ? b.heading : t('products.claims')} mark={mark} eyebrow="CLINICAL TARGETS & EFFICACY" title={filled(b.heading) ? b.heading : t('products.claims')}>
             <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((i) => (
-                <li key={i.id} className={`rounded-xl border border-line p-6 shadow-2xs hover:shadow-xs transition-shadow ${tone === 'dark' ? 'bg-mx-raised' : 'bg-surface'}`}>
+                <li
+                  key={i.id}
+                  className={`rounded-xl border p-6 shadow-2xs hover:shadow-xs transition-shadow ${
+                    tone === 'dark'
+                      ? 'border-white/10 bg-mx-raised text-white'
+                      : 'border-line bg-surface text-ink'
+                  }`}
+                >
                   <Rule product={product} />
                   <h3 className={`mt-4 text-lg font-bold ${headingClass(tone)}`}>{i.title}</h3>
                   {filled(i.text) ? <p className={`mt-2 text-sm leading-relaxed ${mutedClass(tone)}`}>{i.text}</p> : null}
@@ -444,31 +480,66 @@ export async function ProductLanding({
               {shown.map((i, idx) => (
                 <li
                   key={String(i.id)}
-                  className={`group rounded-xl border border-line bg-surface p-6 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between ${
-                    tone === 'dark' ? 'bg-mx-raised border-white/10' : ''
+                  className={`group flex flex-col justify-between rounded-xl border p-6 shadow-2xs hover:shadow-xs transition-all ${
+                    tone === 'dark'
+                      ? 'border-white/10 bg-mx-raised text-white'
+                      : 'border-line bg-surface text-ink'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className={`block h-[2px] w-8 ${accentBar[product.accent]}`} />
-                      <span className="font-mono text-[10px] font-bold tracking-wider text-ink-muted/60 uppercase">
+                      <span
+                        className={`font-mono text-[10px] font-bold tracking-wider uppercase ${
+                          tone === 'dark' ? 'text-mx-muted' : 'text-ink-muted/60'
+                        }`}
+                      >
                         ACT-{String(idx + 1).padStart(2, '0')}
                       </span>
                     </div>
                     {i.image ? (
-                      <div className="mb-4 flex aspect-square items-center justify-center rounded-lg bg-surface-muted/60 p-4">
-                        <MediaImage media={i.image} sizes="(min-width: 1024px) 20vw, 50vw" className="blend-panel max-h-full w-auto object-contain" />
+                      <div
+                        className={`mb-4 flex aspect-square items-center justify-center rounded-lg p-4 ${
+                          tone === 'dark' ? 'bg-white/5' : 'bg-surface-muted/60'
+                        }`}
+                      >
+                        <MediaImage
+                          media={i.image}
+                          sizes="(min-width: 1024px) 20vw, 50vw"
+                          className={`max-h-full w-auto object-contain ${
+                            tone === 'dark' ? '' : 'blend-panel'
+                          }`}
+                        />
                       </div>
                     ) : null}
-                    <h3 className={`text-lg font-bold text-navy ${tone === 'dark' ? 'text-white' : ''}`}>
-                      {i.link ? <Link href={i.link} className="hover:underline">{i.name}</Link> : i.name}
+                    <h3 className={`text-lg font-bold ${headingClass(tone)}`}>
+                      {i.link ? (
+                        <Link href={i.link} className="hover:underline">
+                          {i.name}
+                        </Link>
+                      ) : (
+                        i.name
+                      )}
                     </h3>
-                    {filled(i.text) ? <p className={`mt-2 text-sm leading-relaxed ${mutedClass(tone)}`}>{i.text}</p> : null}
+                    {filled(i.text) ? (
+                      <p className={`mt-2 text-sm leading-relaxed ${mutedClass(tone)}`}>{i.text}</p>
+                    ) : null}
                   </div>
                   {i.link ? (
-                    <div className="mt-4 pt-3 border-t border-line/60">
-                      <Link href={i.link} className="text-xs font-semibold text-navy hover:underline inline-flex items-center gap-1">
-                        <span>Chi tiết thành phần</span>
+                    <div
+                      className={`mt-4 pt-3 border-t ${
+                        tone === 'dark' ? 'border-white/10' : 'border-line/60'
+                      }`}
+                    >
+                      <Link
+                        href={i.link}
+                        className={`text-xs font-semibold hover:underline inline-flex items-center gap-1 ${
+                          tone === 'dark'
+                            ? 'text-white hover:text-white/80'
+                            : 'text-navy hover:text-navy-strong'
+                        }`}
+                      >
+                        <span>{getIngredientDetailLabel(locale)}</span>
                         <span aria-hidden="true">→</span>
                       </Link>
                     </div>
@@ -497,13 +568,34 @@ export async function ProductLanding({
             eyebrow="02 · CLINICAL SPECIFICATIONS & USAGE"
             title={filled(b.heading) ? b.heading : t('products.details')}
           >
-            <div className="rounded-xl border border-line bg-surface overflow-hidden shadow-2xs divide-y divide-line">
+            <div
+              className={`overflow-hidden rounded-xl border shadow-2xs divide-y ${
+                tone === 'dark'
+                  ? 'border-white/10 bg-mx-raised divide-white/10 text-white'
+                  : 'border-line bg-surface divide-line text-ink'
+              }`}
+            >
               {rows.map(([title, body]) => (
-                <div key={title} className="grid gap-3 p-6 md:grid-cols-12 md:gap-8 hover:bg-surface-muted/20 transition-colors">
-                  <h3 className={`text-xs sm:text-sm font-bold uppercase tracking-wider text-ink-muted md:col-span-4 self-start pt-0.5 ${headingClass(tone)}`}>
+                <div
+                  key={title}
+                  className={`grid gap-3 p-6 md:grid-cols-12 md:gap-8 transition-colors ${
+                    tone === 'dark' ? 'hover:bg-white/[0.03]' : 'hover:bg-surface-muted/20'
+                  }`}
+                >
+                  <h3
+                    className={`text-xs sm:text-sm font-bold uppercase tracking-wider md:col-span-4 self-start pt-0.5 ${
+                      tone === 'dark' ? 'text-mx-muted' : 'text-ink-muted'
+                    }`}
+                  >
                     {title}
                   </h3>
-                  <div className={`md:col-span-8 text-sm sm:text-base ${mutedClass(tone)} leading-relaxed`}>{body}</div>
+                  <div
+                    className={`md:col-span-8 text-sm sm:text-base leading-relaxed ${
+                      tone === 'dark' ? 'text-white/90' : 'text-ink'
+                    }`}
+                  >
+                    {body}
+                  </div>
                 </div>
               ))}
             </div>
@@ -516,14 +608,42 @@ export async function ProductLanding({
         const items = (b.items ?? []).filter((i) => filled(i.question) && filled(i.answer))
         rendered.push(
           <Section key={key} tone={tone} product={product} label={filled(b.heading) ? b.heading : t('landing.faq')} mark={mark} eyebrow="03 · FREQUENTLY ASKED QUESTIONS" title={filled(b.heading) ? b.heading : t('landing.faq')}>
-            <div className="max-w-3xl rounded-xl border border-line bg-surface divide-y divide-line overflow-hidden shadow-2xs">
+            <div
+              className={`max-w-3xl overflow-hidden rounded-xl border shadow-2xs divide-y ${
+                tone === 'dark'
+                  ? 'border-white/10 bg-mx-raised divide-white/10 text-white'
+                  : 'border-line bg-surface divide-line text-ink'
+              }`}
+            >
               {items.map((i) => (
-                <details key={i.id} className="group p-6">
-                  <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-base font-semibold ${headingClass(tone)}`}>
+                <details
+                  key={i.id}
+                  className={`group p-6 transition-colors ${
+                    tone === 'dark' ? 'hover:bg-white/[0.02]' : 'hover:bg-surface-muted/20'
+                  }`}
+                >
+                  <summary
+                    className={`flex cursor-pointer list-none items-center justify-between gap-4 text-base font-semibold ${headingClass(
+                      tone,
+                    )}`}
+                  >
                     {i.question}
-                    <span aria-hidden="true" className="text-xl leading-none transition-transform group-open:rotate-45 motion-reduce:transition-none">+</span>
+                    <span
+                      aria-hidden="true"
+                      className={`text-xl leading-none transition-transform group-open:rotate-45 motion-reduce:transition-none ${
+                        tone === 'dark' ? 'text-mx-muted' : 'text-ink-muted'
+                      }`}
+                    >
+                      +
+                    </span>
                   </summary>
-                  <p className={`mt-3 whitespace-pre-line text-sm leading-relaxed ${mutedClass(tone)}`}>{i.answer}</p>
+                  <p
+                    className={`mt-3 whitespace-pre-line text-sm leading-relaxed ${mutedClass(
+                      tone,
+                    )}`}
+                  >
+                    {i.answer}
+                  </p>
                 </details>
               ))}
             </div>
@@ -551,16 +671,6 @@ export async function ProductLanding({
                 <p className={`mt-4 max-w-xl text-base lg:text-lg leading-relaxed ${mutedClass(tone)}`}>
                   {filled(b.body) ? b.body : t('products.ctaBody')}
                 </p>
-                {claims.length > 0 ? (
-                  <div className="mt-6 flex flex-wrap gap-4 text-xs opacity-80">
-                    {claims.map((claim, idx) => (
-                      <span key={idx} className="flex items-center gap-1.5">
-                        <span className={`w-1.5 h-1.5 rounded-full ${accentBar[product.accent]}`} />
-                        {claim.text}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
               </div>
               <div className="flex flex-col sm:flex-row gap-3.5 md:col-span-5 md:justify-end">
                 <Link
