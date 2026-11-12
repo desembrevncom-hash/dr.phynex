@@ -135,6 +135,18 @@ const getTickerText = (locale: Locale, product: Product, line: ProductLine | nul
   return lineLabel || prodCode || 'DR.PHYNEX'
 }
 
+/**
+ * Hero image height by the proportions of the pack shot, so every kind of packaging reads at a
+ * similar visual weight: a tall narrow box needs more height than a wide pouch to stay legible
+ * (a 1:3 box at the old 180px was only 57px wide on phones). Unknown size: treated as a vial.
+ */
+const heroImageSize = (m: Media) => {
+  const ratio = m.width && m.height ? m.width / m.height : 0.5
+  if (ratio < 0.4) return 'max-h-[340px] sm:max-h-[380px] md:max-h-[460px] lg:max-h-[520px]'
+  if (ratio < 0.65) return 'max-h-[240px] sm:max-h-[280px] md:max-h-[400px] lg:max-h-[480px]'
+  return 'max-h-[220px] sm:max-h-[260px] md:max-h-[380px] lg:max-h-[460px]'
+}
+
 const getProductIndex = (slug: string | undefined) => {
   if (slug === 'mx-01-forma') return '01 / 04'
   if (slug === 'mx-02-luma') return '02 / 04'
@@ -211,13 +223,21 @@ export async function ProductLanding({
         const b = block as BlockOf<'hero'>
         const img = usable(b.image) ?? productImages.find((m) => usable(m)) ?? null
         const intro = filled(b.intro) ? b.intro : product.shortDescription
+        const heroPrivateNote = privateNote(img)
         rendered.push(
           <section key={key} aria-labelledby="landing-title" className={`${toneClass[tone]} ${tone === 'accent' ? accentBorder[product.accent] : ''} border-b border-line`}>
             <div className="container-page flex flex-col md:grid md:grid-cols-12 md:items-center gap-6 md:gap-10 py-8 lg:py-20">
-              <div className="contents md:block md:col-span-6">
+              {/* Staff notes (draft preview only): their own row above the hero content. */}
+              {mark || heroPrivateNote ? (
+                <div className="order-first md:col-span-12 flex flex-col items-start gap-2 [&>p]:mb-0">
+                  {mark}
+                  {heroPrivateNote}
+                </div>
+              ) : null}
+              {/* Without an image the viewer may see: one column, kept to a readable width on desktop. */}
+              <div className={`contents md:block ${img ? 'md:col-span-6' : 'md:col-span-12 md:max-w-3xl'}`}>
                 {/* Block A: Title & Intro (order-1 on mobile) */}
                 <div className="order-1">
-                  {mark}
                   {line ? (
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-line bg-surface/90 text-xs font-semibold tracking-wider uppercase text-ink-muted mb-3 sm:mb-4 shadow-2xs">
                       <span className={`inline-block w-2 h-2 rounded-full ${accentBar[product.accent]}`} />
@@ -287,7 +307,7 @@ export async function ProductLanding({
                   </Link>
                   <Link
                     href={href('/stores')}
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy hover:text-navy-strong underline underline-offset-8 decoration-line-strong hover:decoration-navy transition-all"
+                    className="inline-flex min-h-11 min-w-11 items-center gap-1.5 text-sm font-semibold text-navy hover:text-navy-strong underline underline-offset-8 decoration-line-strong hover:decoration-navy transition-all"
                   >
                     <span>{t('products.ctaStores')}</span>
                     <Arrow />
@@ -296,46 +316,43 @@ export async function ProductLanding({
               </div>
 
               {/* Block D: Product Visual Stage (order-2 on mobile, directly under intro) */}
-              <div className="order-2 md:order-none md:col-span-6">
-                {img ? (
-                  <>
-                    {privateNote(img)}
-                    <div className="relative flex min-h-[220px] sm:min-h-[260px] md:min-h-[440px] lg:min-h-[520px] items-center justify-center rounded-2xl border border-line bg-gradient-to-br from-[#F5F8FA] via-white to-surface-muted p-4 sm:p-6 md:p-8 lg:p-12 shadow-xs overflow-hidden">
-                      {/* Orbital concentric clinical rings from Dr. PhynEX brand identity */}
-                      <svg
-                        className="pointer-events-none absolute inset-0 w-full h-full text-navy/10"
-                        viewBox="0 0 500 500"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                      >
-                        <circle cx="250" cy="250" r="220" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
-                        <ellipse cx="250" cy="250" rx="205" ry="175" stroke="currentColor" strokeWidth="1" transform="rotate(-15 250 250)" />
-                        <ellipse cx="250" cy="250" rx="165" ry="215" stroke="currentColor" strokeWidth="0.8" transform="rotate(25 250 250)" opacity="0.6" />
-                        <circle cx="250" cy="250" r="125" stroke="currentColor" strokeWidth="0.75" />
-                      </svg>
-                      {/* Watermark formula text */}
-                      <div className="pointer-events-none absolute bottom-3 right-4 sm:bottom-4 sm:right-5 text-[8px] sm:text-[9px] font-mono tracking-[0.22em] uppercase text-navy/40">
-                        FORMULA / INSIGHT / CARE
-                      </div>
-                      {/* Corner clinical registration marks */}
-                      <span className="pointer-events-none absolute top-3 left-3 text-[10px] font-mono text-ink-muted/50">+</span>
-                      <span className="pointer-events-none absolute top-3 right-3 text-[10px] font-mono text-ink-muted/50">+</span>
-                      <span className="pointer-events-none absolute bottom-3 left-3 text-[10px] font-mono text-ink-muted/50">+</span>
-                      <span className="pointer-events-none absolute bottom-3 right-3 text-[10px] font-mono text-ink-muted/50">+</span>
-                      <div className="pointer-events-none absolute bottom-3 left-5 text-[8px] sm:text-[9px] font-mono uppercase tracking-wider text-ink-muted/60 hidden sm:block">
-                        {getProductShortName(product)}
-                      </div>
-                      <MediaImage
-                        media={img}
-                        sizes="(min-width: 768px) 50vw, 100vw"
-                        priority
-                        className="relative z-10 max-h-[180px] sm:max-h-[220px] md:max-h-[380px] lg:max-h-[460px] w-auto object-contain transition-transform duration-500 hover:scale-[1.02]"
-                      />
+              {img ? (
+                <div className="order-2 md:order-none md:col-span-6">
+                  <div className="relative flex min-h-[220px] sm:min-h-[260px] md:min-h-[440px] lg:min-h-[520px] items-center justify-center rounded-2xl border border-line bg-gradient-to-br from-[#F5F8FA] via-white to-surface-muted p-4 sm:p-6 md:p-8 lg:p-12 shadow-xs overflow-hidden">
+                    {/* Orbital concentric clinical rings from Dr. PhynEX brand identity */}
+                    <svg
+                      className="pointer-events-none absolute inset-0 w-full h-full text-navy/10"
+                      viewBox="0 0 500 500"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <circle cx="250" cy="250" r="220" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
+                      <ellipse cx="250" cy="250" rx="205" ry="175" stroke="currentColor" strokeWidth="1" transform="rotate(-15 250 250)" />
+                      <ellipse cx="250" cy="250" rx="165" ry="215" stroke="currentColor" strokeWidth="0.8" transform="rotate(25 250 250)" opacity="0.6" />
+                      <circle cx="250" cy="250" r="125" stroke="currentColor" strokeWidth="0.75" />
+                    </svg>
+                    {/* Watermark formula text */}
+                    <div className="pointer-events-none absolute bottom-3 right-4 sm:bottom-4 sm:right-5 text-[8px] sm:text-[9px] font-mono tracking-[0.22em] uppercase text-navy/40">
+                      FORMULA / INSIGHT / CARE
                     </div>
-                  </>
-                ) : null}
-              </div>
+                    {/* Corner clinical registration marks */}
+                    <span className="pointer-events-none absolute top-3 left-3 text-[10px] font-mono text-ink-muted/50">+</span>
+                    <span className="pointer-events-none absolute top-3 right-3 text-[10px] font-mono text-ink-muted/50">+</span>
+                    <span className="pointer-events-none absolute bottom-3 left-3 text-[10px] font-mono text-ink-muted/50">+</span>
+                    <span className="pointer-events-none absolute bottom-3 right-3 text-[10px] font-mono text-ink-muted/50">+</span>
+                    <div className="pointer-events-none absolute bottom-3 left-5 text-[8px] sm:text-[9px] font-mono uppercase tracking-wider text-ink-muted/60 hidden sm:block">
+                      {getProductShortName(product)}
+                    </div>
+                    <MediaImage
+                      media={img}
+                      sizes="(min-width: 768px) 50vw, 100vw"
+                      priority
+                      className={`relative z-10 ${heroImageSize(img)} w-auto max-w-full object-contain transition-transform duration-500 hover:scale-[1.02]`}
+                    />
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             {/* Clinical Ticker Strip */}
